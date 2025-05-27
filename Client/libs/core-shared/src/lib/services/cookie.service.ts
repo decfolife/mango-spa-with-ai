@@ -63,7 +63,8 @@ export class CookieService {
   }
 
   // Shared info cookie used by both SPA and V06 to share non-sensitive data
-  public static getSharedInfoCookie(clientKey: string): SharedInfo {
+  public static getSharedInfoCookie(): SharedInfo {
+    let clientKey = UtilitiesService.getClientKeyFromUrl();
     const cookieName = `${clientKey}${CookieService.SHARED_INFO_COOKIE}`;
 
     let data = this.get(cookieName);
@@ -73,10 +74,10 @@ export class CookieService {
   }
 
   public static setSharedInfoCookie(
-    clientKey: string,
     sharedInfo: SharedInfo,
     expireHours: number = 8
   ) {
+    let clientKey = UtilitiesService.getClientKeyFromUrl();
     const cookieName = `${clientKey}${CookieService.SHARED_INFO_COOKIE}`;
 
     let d: Date = new Date();
@@ -97,8 +98,7 @@ export class CookieService {
   }
 
   public static isV06Idle(): boolean {
-    let clientKey = UtilitiesService.getClientKeyFromUrl();
-    let sharedInfo = CookieService.getSharedInfoCookie(clientKey);
+    let sharedInfo = CookieService.getSharedInfoCookie();
 
     if (!sharedInfo) return true;
 
@@ -106,9 +106,7 @@ export class CookieService {
   }
 
   public static setMangoIdleCookieProperty(isMangoIdle: boolean): void {
-    let clientKey = UtilitiesService.getClientKeyFromUrl();
-
-    let sharedInfo = CookieService.getSharedInfoCookie(clientKey);
+    let sharedInfo = CookieService.getSharedInfoCookie();
     if (!sharedInfo) return;
 
     //if (sharedInfo.mangoIdle === isMangoIdle) return
@@ -118,7 +116,7 @@ export class CookieService {
     // Always default this value to true. V06 is responsible for updating this value
     sharedInfo.V06Idle = true;
 
-    CookieService.setSharedInfoCookie(clientKey, sharedInfo);
+    CookieService.setSharedInfoCookie(sharedInfo);
   }
   // Shared info cookie used by both SPA and V06
 }

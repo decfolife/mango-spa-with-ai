@@ -37,7 +37,7 @@ export class IdleEffects {
         ([user, clientKey, clientInfo]) => !!user && !!clientKey && !!clientInfo
       ),
       map(([_, clientKey, clientInfo]) => {
-        const sharedInfo = CookieService.getSharedInfoCookie(clientKey);
+        const sharedInfo = CookieService.getSharedInfoCookie();
 
         if (sharedInfo && sharedInfo.ClientIdleTimeout === 0) {
           return AppActions.noOpAction();

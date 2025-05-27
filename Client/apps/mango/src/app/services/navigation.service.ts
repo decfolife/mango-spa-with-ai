@@ -139,8 +139,7 @@ export class MangoNavigationService {
       return;
     }
    
-    let v06BaseUrl = environment.cremBaseUrl.replace('[CLIENT]', clientKey);
-    this.navigateToV06(`${v06BaseUrl}${redirectionUrl}`);   
+    this.navigateToV06(redirectionUrl);   
   }
 
   navigateHome(): void {

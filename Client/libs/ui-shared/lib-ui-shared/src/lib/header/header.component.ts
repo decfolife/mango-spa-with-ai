@@ -121,7 +121,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isEmulatedUser$ = this.facade.isEmulatedUser$;
     this.facade.clientKey$.subscribe((clientKey) => {
       this.currentProfile =
-        CookieService.getSharedInfoCookie(clientKey)?.ProfileName ??
+        CookieService.getSharedInfoCookie()?.ProfileName ??
         this.currentProfile;
     });
 

@@ -41,9 +41,7 @@ export class GlobalSessionService {
   static setBreadcrumbsCookieProperty(breadCrumbs: BreadCrumb[]): void {
     if (!breadCrumbs || breadCrumbs.length === 0) return;
 
-    let clientKey = UtilitiesService.getClientKeyFromUrl();
-
-    let sharedInfo = CookieService.getSharedInfoCookie(clientKey);
+    let sharedInfo = CookieService.getSharedInfoCookie();
     if (!sharedInfo) return;
 
     const v06Breadcrumbs =
@@ -51,6 +49,6 @@ export class GlobalSessionService {
 
     sharedInfo.BreadCrumbs = JSON.stringify(v06Breadcrumbs);
 
-    CookieService.setSharedInfoCookie(clientKey, sharedInfo);
+    CookieService.setSharedInfoCookie(sharedInfo);
   }
 }

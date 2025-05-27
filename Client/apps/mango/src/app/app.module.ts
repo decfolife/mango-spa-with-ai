@@ -179,7 +179,9 @@ export class AppModule {
           );
 
           url = decodeURIComponent(url);
-          let v06Url = environment.cremBaseUrl.replace('[CLIENT]', clientKey);
+
+          let client = UtilitiesService.getClientKeyFromUrl();
+          let v06Url = environment.cremBaseUrl.replace('[CLIENT]', client);
 
           if (
             redirectorLinks &&

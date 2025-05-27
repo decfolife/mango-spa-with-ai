@@ -623,8 +623,7 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
     let breadcrumbs: BreadCrumb[] = [];
 
     try {
-      let clientKey = UtilitiesService.getClientKeyFromUrl();
-      const sharedInfo = CookieService.getSharedInfoCookie(clientKey);
+      const sharedInfo = CookieService.getSharedInfoCookie();
 
       if (sharedInfo) {
         let v06Crumbs: V06Breadcrumb[] = JSON.parse(sharedInfo.BreadCrumbs);
