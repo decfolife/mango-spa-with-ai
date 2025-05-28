@@ -69,7 +69,7 @@ export class MangoNavigationService {
       : `${environment.cremBaseUrl.replace('[CLIENT]', clientKey)}`;
 
     if (!isUrl) {
-      v06Url += v06Url.includes('/v06/') ? `/${path}` : `/v06/${path}`;
+      v06Url += path.includes('/v06/') ? `/${path}` : `/v06/${path}`;
     }
 
     if (queryParams) {
