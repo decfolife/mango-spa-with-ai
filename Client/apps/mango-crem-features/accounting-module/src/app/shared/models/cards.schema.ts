@@ -210,7 +210,7 @@ export type IFRSAnnualDisclosuresDashboard = z.infer<
 export const DashboardSchema = (dashboardID: number) => {
   switch (dashboardID) {
     case 6: {
-      return IFRSAnnualDisclosuresDashboard;
+      return z.unknown(); // return IFRSAnnualDisclosuresDashboard;
     }
     case 7: {
       return z.unknown();

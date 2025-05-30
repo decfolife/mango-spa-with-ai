@@ -154,7 +154,7 @@ button.btn.btn-default.moreButton {
   }
 }
 
-::ng-deep {
+:host ::ng-deep {
   .dx-template-wrapper {
     overflow: hidden !important;
   }
