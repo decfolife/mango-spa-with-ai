@@ -6,6 +6,10 @@ const routes: Routes = [
   {
     path: '',
     component: ServiceAccountsComponent,
+    data: {
+      pageTitle: 'Service Accounts',
+      breadCrumb: { append: true, label: 'Service Accounts' },
+    },
   },
 ];
 
