@@ -41,18 +41,17 @@
           >Amount</crem-form-label
         >
         <crem-form-control>
-          <crem-input
+          <dx-number-box
             #AmountInput
             [id]="
               accountingSummaryService.getId(componentName, 'amount', 'input')
             "
-            [inputType]="'number'"
+            [inputAttr]="{ 'aria-label': 'Amount' }"
             [value]="amount"
-            [disallowNegative]="true"
-            [placeholder]="''"
-            [required]="true"
-            (onBlurChange)="onInputBlurChange($event, 'amountInput')"
-          ></crem-input>
+            (onValueChanged)="onInputBlurChange($event, 'amountInput')"
+            [format]="currencyFormat"
+          >
+          </dx-number-box>
         </crem-form-control>
       </crem-form-item>
 
@@ -317,7 +316,7 @@
             >First Amount</crem-form-label
           >
           <crem-form-control>
-            <crem-input
+            <dx-number-box
               [id]="
                 accountingSummaryService.getId(
                   componentName,
@@ -325,14 +324,13 @@
                   'input'
                 )
               "
-              [inputType]="'number'"
-              [value]="firstAmount"
-              [disallowNegative]="true"
+              [inputAttr]="{ 'aria-label': 'First Amount' }"
               [disabled]="prorationTypeId !== 5"
-              [placeholder]="''"
-              [required]="false"
-              (onBlurChange)="onInputBlurChange($event, 'firstAmountInput')"
-            ></crem-input>
+              [value]="firstAmount"
+              (onValueChanged)="onInputBlurChange($event, 'firstAmountInput')"
+              [format]="currencyFormat"
+            >
+            </dx-number-box>
           </crem-form-control>
         </crem-form-item>
 
@@ -348,7 +346,7 @@
             >Last Amount</crem-form-label
           >
           <crem-form-control>
-            <crem-input
+            <dx-number-box
               [id]="
                 accountingSummaryService.getId(
                   componentName,
@@ -356,14 +354,13 @@
                   'input'
                 )
               "
-              [inputType]="'number'"
-              [value]="lastAmount"
-              [disallowNegative]="true"
+              [inputAttr]="{ 'aria-label': 'Last Amount' }"
               [disabled]="prorationTypeId !== 5"
-              [placeholder]="''"
-              [required]="false"
-              (onBlurChange)="onInputBlurChange($event, 'lastAmountInput')"
-            ></crem-input>
+              [value]="lastAmount"
+              (onValueChanged)="onInputBlurChange($event, 'lastAmountInput')"
+              [format]="currencyFormat"
+            >
+            </dx-number-box>
           </crem-form-control>
         </crem-form-item>
       </ng-container>

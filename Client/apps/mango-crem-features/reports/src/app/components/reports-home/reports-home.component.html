@@ -226,13 +226,15 @@
         width="65"
         [showInColumnChooser]="false"
         [allowReordering]="false"
+        [fixed]="true"
+        [fixedPosition]="right"
       >
         <dxi-button template="moreMenuTemplate">
           <div *dxTemplate="let data of 'moreMenuTemplate'">
             <button
               id="rpts-actionsMenuButton"
               aria-label="more menu"
-              class="btn btn-link"
+              class="btn btn-link action-button"
               (click)="$event.preventDefault()"
               [matMenuTriggerFor]="expenseMoreMenu"
             >

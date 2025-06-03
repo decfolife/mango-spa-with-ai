@@ -17,7 +17,6 @@ import {
   DatePickerModule,
   DropdownModule,
   InputComponent,
-  InputLabelComponent,
   LibUiElementsModule,
   ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
@@ -27,6 +26,7 @@ import { CheckBoxComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/checkb
 import { OtherCharge } from '@accounting-summary/models/other-charge.model';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
 import { ToastState } from '@mango/data-models/lib-data-models';
+import { DxNumberBoxComponent, DxNumberBoxModule } from 'devextreme-angular';
 
 @Component({
   selector: 'mango-add-edit-other-charge-modal',
@@ -38,25 +38,26 @@ import { ToastState } from '@mango/data-models/lib-data-models';
     DropdownModule,
     LibUiElementsModule,
     InputComponent,
-    InputLabelComponent,
     CheckBoxComponent,
     DatePickerModule,
     ReactiveFormsModule,
     MatDialogModule,
     FormsModule,
     CremFormsModule,
+    DxNumberBoxModule,
   ],
   templateUrl: './add-edit-other-charge-modal.component.html',
   styleUrls: ['./add-edit-other-charge-modal.component.scss'],
 })
 export class AddEditOtherChargeModalComponent implements OnInit {
-  @ViewChild('AmountInput') amountInputComponent: InputComponent;
+  @ViewChild('AmountInput', { static: false })
+  amountInputComponent: DxNumberBoxComponent;
   @ViewChild('NameInput') nameInputComponent: InputComponent;
   @ViewChild('StartDatePicker') startDatePickerComponent: DatePickerComponent;
   @ViewChild('EndDatePicker') endDateDatePickerComponent: DatePickerComponent;
 
   componentName = 'add-edit-other-charge-modal';
-  modalTitle: string = 'Add Other Charge';
+  modalTitle = 'Add Other Charge';
   modalId: string = this.componentName + '-id';
   addEditOtherChargeResult: any;
   amount: number;
@@ -66,7 +67,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   dateFormat: string;
   chargeName: string;
   prorationTypeId: number;
-  decimalPrecision: number = 2;
+  decimalPrecision = 2;
   currencyId: number;
   defaultProrationTypeId: number;
   frequencyTypeIsCustomPeriod = false;
@@ -100,7 +101,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   originalFrequencyTypesList: any[] = [];
   otherCharge: OtherCharge;
   glEventIDs: number[] = [];
-
+  currencyFormat: string;
   private commonDropdownsData: any;
   private subs: Subscription[] = [];
   private customPeriodFrequencyTypeList: any[] = [
@@ -146,10 +147,13 @@ export class AddEditOtherChargeModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.directCostCheckboxVisible = this.remeasureType === 0;
-
+    this.currencyFormat = this.formatService.buildCurrencyMask(
+      this.decimalPrecision
+    );
     this.getFrequencyTypes();
     this.getCurrencies();
     this.getProrationTypes();
+    this.formatCurrencyInput();
     this.startDate = new Date();
 
     if (this.data.isEdit) {
@@ -223,6 +227,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   onCurrencyValueChanged(e) {
     this.currencyId = e[0].id;
     this.decimalPrecision = e[0].decimalPrecision;
+    this.formatCurrencyInput();
   }
 
   onProrationTypeValueChanged(e) {
@@ -256,19 +261,20 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   }
 
   onInputBlurChange(e, componentName) {
+    const value = e.value;
     switch (componentName) {
       case 'amountInput':
-        this.amount = this.formatValueToDecimalPrecision(e);
+        this.amount = value;
         this.updateProrationAmounts();
         break;
       case 'nameInput':
         this.chargeName = e;
         break;
       case 'firstAmountInput':
-        this.firstAmount = this.formatValueToDecimalPrecision(e);
+        this.firstAmount = value;
         break;
       case 'lastAmountInput':
-        this.lastAmount = this.formatValueToDecimalPrecision(e);
+        this.lastAmount = value;
         break;
     }
   }
@@ -483,6 +489,12 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     return date.toISOString().split('T')[0];
   }
 
+  formatCurrencyInput() {
+    this.currencyFormat = this.formatService.buildCurrencyMask(
+      this.decimalPrecision
+    );
+  }
+
   private saveOtherCharge(keepModalOpen: boolean) {
     this.otherChargeSaved = false;
     this.otherChargeErrors = '';
@@ -524,7 +536,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
         : false;
 
     let requiredFieldsIsValid =
-      this.amountInputComponent.validate() &&
+      this.amountInputComponent.instance.option('isValid') &&
       this.nameInputComponent.validate() &&
       this.startDatePickerComponent.validate() &&
       endDateValid;

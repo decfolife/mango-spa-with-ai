@@ -20,13 +20,6 @@
   }
 }
 
-::ng-deep {
-  .modalContent {
-    padding-top: 18px !important;
-    padding-bottom: 52px !important;
-  }
-}
-
 #addEditOtherChargeModal-content {
   crem-form-item {
     justify-content: center;
@@ -80,5 +73,10 @@
     crem-form-label {
       width: 28%;
     }
+  }
+
+  .dx-state-disabled {
+    background-color: #efefef4d;
+    opacity: 1;
   }
 }

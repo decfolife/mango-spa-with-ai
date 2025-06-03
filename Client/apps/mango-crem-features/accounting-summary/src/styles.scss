@@ -456,19 +456,9 @@
   }
 }
 
-.dx-menu-base .dx-menu-item.dx-menu-item-has-icon {
+.dx-icon-faCopy + .dx-menu-item-text {
   opacity: 0.5;
   cursor: copy;
-}
-
-// Change Events grid action menu cursor icon of clickable items.
-.dx-menu-base .dx-menu-item {
-  cursor: pointer;
-}
-
-// Events grid action menu cursor icon of Non-clickable items.
-.dx-menu-base .dx-menu-items-container {
-  cursor: default;
 }
 
 .p-toast .p-toast-message .p-toast-message-content {

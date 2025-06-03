@@ -92,6 +92,15 @@ button.btn.btn-default.moreButton {
       }
     }
   }
+  dx-data-grid .dx-datagrid-content .dx-datagrid-table .dx-row > td,
+  dx-data-grid .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td {
+    vertical-align: inherit;
+  }
+
+  dx-data-grid .dx-col-fixed {
+    border-left: 2px solid #ddd !important;
+  }
+
   // more menu button
   button.mat-menu-trigger.btn-link:focus {
     box-shadow: 0 0 0 0.1rem #779ede;

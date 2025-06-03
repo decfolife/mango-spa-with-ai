@@ -40,7 +40,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
 
   componentName = 'schedule-payments';
   title: string;
-  subtitle: string;
+  subtitle = '';
   schedulePaymentsData: SchedulePayment[];
   isEuroDateFormat = false;
   dateFormat = 'MM/dd/yyyy';
@@ -242,8 +242,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
   private generateTitle(localCurrencyName?: string): string {
     return (
       `Payments${localCurrencyName ? ` (${localCurrencyName})` : ''}` +
-      ' | ' +
-      this.subtitle
+      (this.subtitle ? ` | ${this.subtitle}` : '')
     );
   }
 
