@@ -67,6 +67,7 @@ import { ExportDevexDatagridService } from '@mango/core-shared';
 import { AddCompanyModalComponent } from '@mango/ui-shared/lib-ui-shared';
 import { AddContactModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-contact-modal/add-contact-modal.component';
 import { ObjectType, RequestType } from '@mango/data-models/lib-data-models';
+import { AddNoteComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-note/add-note.component';
 
 type VBBool = boolean | string;
 
@@ -1129,11 +1130,11 @@ export class ListPageComponent implements OnInit, OnDestroy {
 
   validateSecurity(cellNav: CellNav) {
     this.isButtonClick = true;
-
+    const objectId = cellNav?.objectId;
+    const objectTypeId = cellNav?.objectTypeId;
     if (cellNav.fieldType === FieldType.PopupWindow) {
       this.saveStateToSession();
-      this.router.navigateByUrl(cellNav.urlLink);
-
+      this.openNotesModal(objectId, objectTypeId);
       return;
     }
 
@@ -2960,5 +2961,29 @@ export class ListPageComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  openNotesModal(objectId, objectTypeId) {
+    const dataForNote = {
+      objectId: objectId,
+      objectTypeId: objectTypeId,
+    };
+
+    const dialogRef = this.dialog.open(AddNoteComponent, {
+      height: 'auto',
+      width: '30vw',
+      minHeight: '70vh',
+      minWidth: '25vw',
+      panelClass: 'addNoteDialog',
+      data: dataForNote,
+    });
+
+    dialogRef.afterClosed().subscribe((results) => {
+      if (results.saveSuccessful) {
+        this.populateGrid(true);
+      } else {
+        return;
+      }
+    });
   }
 }
