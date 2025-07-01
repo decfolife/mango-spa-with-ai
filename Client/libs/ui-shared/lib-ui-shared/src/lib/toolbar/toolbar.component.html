@@ -6,12 +6,12 @@
   [class.costar-second-menu]="isCostarStyle"
 >
   <ul class="crem-toolbar__modules crem-toolbar__nav">
-    <li class="nav-item" *ngFor="let link of moduleLinks">
+    <li class="nav-item" *ngFor="let link of modules">
       <a
         [id]="'toolbar__' + link?.moduleID"
         class="nav-link"
         [routerLink]="[link.spaurl || link.moduleHome]"
-        [routerLinkActive]="['active']"
+        [class.active]="link.isActive"
       >
         <span>{{ link.moduleDisplayName }}</span>
       </a>

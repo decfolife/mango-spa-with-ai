@@ -47,9 +47,13 @@ export class FieldsControlService {
       }
 
       // Check and add maxLength validator if necessary
+      // This check should not be added to dropdowns
       if (
         field.formItemMaximumLength &&
-        Number(field.formItemMaximumLength) > 0
+        Number(field.formItemMaximumLength) > 0 &&
+        field.formItemTypeID != '1' &&
+        field.formItemTypeID != '13' &&
+        field.formItemTypeID != '18'
       ) {
         conditionalValidators.push(
           Validators.maxLength(Number(field.formItemMaximumLength))

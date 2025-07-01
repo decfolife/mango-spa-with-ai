@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { of, Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -14,6 +14,7 @@ import {
   DropdownModule,
   IconModule,
   CremToastService,
+  SearchComponent,
 } from '@mango/ui-shared/lib-ui-elements';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { DevExpressModule } from 'libs/ui-shared/lib-external-libraries/src/lib/3rdParty/dev-express.module';
@@ -27,6 +28,10 @@ import {
   HttpHeaders,
   HttpResponse,
 } from '@angular/common/http';
+import { ExportDevexDatagridService } from 'libs/core-shared/src/lib/services/export-datagrid.service';
+import { environment } from '@mangoSpa/src/environments/environment.local';
+import { BenchmarkingDocument } from '@benchmarking-files/model/benchmarking-document-interface';
+import { MangoPdfViewerComponent } from '@benchmarking-files/modals/mango-pdf-viewer/mango-pdf-viewer.component';
 
 @Component({
   selector: 'mango-benchmarking-files',
@@ -34,7 +39,6 @@ import {
   imports: [
     CommonModule,
     LoaderModule,
-    MatDialogModule,
     MatCardModule,
     MatDividerModule,
     DevExpressModule,
@@ -44,7 +48,10 @@ import {
     IconModule,
     MatIconModule,
     MatMenuModule,
+    SearchComponent,
+    MangoPdfViewerComponent,
   ],
+  providers: [ExportDevexDatagridService],
   templateUrl: './benchmarking-files.component.html',
   styleUrls: ['./benchmarking-files.component.scss'],
 })
@@ -55,18 +62,30 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
   objectId!: number;
   objectTypeId!: number;
   objectTypeTypeId!: number;
-  benchmarkingFiles: any;
-  objectTypeAndName: string = '';
-  searchText: string = '';
+  benchmarkingFiles: BenchmarkingDocument[] = [];
+  objectTypeAndName = '';
+  searchText = '';
   isLoading = true;
-  isExpanded: boolean = true;
+  isExpanded = true;
+  showFilterBuilderPopup = false;
+  availableAppliedFilterCount = 0;
+  showClearFilters = false;
+  ignoreFilterCount = false;
+  showPdfModal: boolean = false;
+  pdfTitle: string = '';
+  pdfSrc: string | undefined;
+  pdfPage: number = 1;
+  selectedCount: number = 0;
+  selectedRows: number[] = [];
 
   constructor(
     @Inject(BenchmarkingService)
     public benchmarkingService: BenchmarkingService,
     private route: ActivatedRoute,
     private facade: MangoAppFacade,
-    private toastService: CremToastService
+    private toastService: CremToastService,
+    public exportToExcelService: ExportDevexDatagridService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +108,17 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
         .subscribe((result: any) => {
           if (result.success) {
             this.benchmarkingFiles = result.data;
+            this.benchmarkingFiles.forEach((x) => {
+              if (
+                sessionStorage.getItem(x.documentId.toString()) === 'downloaded'
+              ) {
+                x.downloadIcon = 'faRefresh';
+                x.downloadTitle = 'Download Again';
+              } else {
+                x.downloadIcon = 'faDownload';
+                x.downloadTitle = 'Download';
+              }
+            });
             this.isLoading = false;
           } else {
             this.handleError(result.errorMessage);
@@ -98,8 +128,66 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
   }
 
   searchDataGrid(data: string) {
+    this.ignoreFilterCount = true;
     this.searchText = data;
     this.FilesDataGrid.instance.searchByText(data);
+  }
+
+  showColumnChooser() {
+    this.FilesDataGrid.instance.showColumnChooser();
+  }
+
+  sendToExcel(): void {
+    if (this.FilesDataGrid?.instance) {
+      this.exportToExcelService.exportToExcel(
+        this.FilesDataGrid.instance,
+        `${this.benchmarkingFiles[0].clientKey ?? ''}_${
+          this.objectId ?? ''
+        }_Benchmarking_Files_${this.getTimeStamp().toLocaleString()}_${
+          environment.name
+        }`
+      );
+    }
+  }
+
+  countFilterConditions(filter: any): number {
+    if (!filter) return 0;
+    if (
+      Array.isArray(filter) &&
+      typeof filter[0] === 'string' &&
+      filter.length === 3 &&
+      !filter.some((item) => item.selectedFilterOperation)
+    ) {
+      return 1;
+    }
+    if (Array.isArray(filter)) {
+      return filter.reduce((count, item) => {
+        if (item === 'and' || item === 'or') return count;
+        return count + this.countFilterConditions(item);
+      }, 0);
+    }
+    return 0;
+  }
+
+  onGridContentReady(event: any) {
+    const filters = this.countFilterConditions(
+      this.FilesDataGrid?.instance.getCombinedFilter(true)
+    );
+    if (!this.ignoreFilterCount) {
+      this.availableAppliedFilterCount = filters;
+    }
+
+    this.ignoreFilterCount = false;
+  }
+
+  clearAvailableFilters(event: any) {
+    event.stopPropagation();
+    this.FilesDataGrid.instance.clearFilter();
+    this.showClearFilters = false;
+  }
+
+  toggleAvailableFilters(): void {
+    this.showClearFilters = !this.showClearFilters;
   }
 
   getUserPreferences() {
@@ -108,6 +196,17 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
         ? 'dd.MM.yyyy'
         : 'MM/dd/yyyy';
     });
+  }
+
+  getTimeStamp() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}${minutes}${seconds}`;
   }
 
   getObjectTypeAndName() {
@@ -124,18 +223,51 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
     );
   }
 
-  onFileDownloadClick(rowData: any): void {
+  getRowBytes(rowData: { documentTotalBytes: any }) {
+    return rowData.documentTotalBytes;
+  }
+
+  getRawDate(rowData: { dateUploaded: Date }) {
+    let dateString = rowData.dateUploaded.toString().split('T')[0];
+    return new Date(dateString);
+  }
+
+  openPdfViewerModal() {
+    let dialogRef = this.dialog.open(MangoPdfViewerComponent, {
+      data: {
+        pdfTitle: this.pdfTitle,
+        pdfSrc: this.pdfSrc,
+      },
+    });
+    dialogRef.afterClosed().subscribe((response) => {
+      if (response) {
+        let matchingFile = this.benchmarkingFiles.find(
+          (x) => x.userFileName === this.pdfTitle
+        );
+        if (matchingFile) {
+          this.MarkFileAsDownloaded(matchingFile);
+        } else {
+          console.warn(
+            'No matching file found for the given title:',
+            this.pdfTitle
+          );
+        }
+      }
+    });
+  }
+
+  onFileDownloadClick(rowData: any, preview?: boolean): void {
     if (!rowData?.documentId) {
       console.error('Document ID is missing.');
       return;
     }
 
     this.logFileDownload(rowData);
-    this.downloadBenchmarkingFile(rowData);
+    this.downloadBenchmarkingFile(rowData, preview);
   }
 
   // Download the benchmarking file from the api
-  private downloadBenchmarkingFile(rowData: any) {
+  private downloadBenchmarkingFile(rowData: any, preview?: boolean) {
     const downloadBenchmarkingFileRequest: DownloadBenchmarkingFileRequest = {
       oid: this.objectId,
       otid: this.objectTypeId,
@@ -149,10 +281,26 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
           (response: HttpResponse<Blob>) => {
             if (response.body) {
               const fileName =
-                this.getFileNameFromHeaders(response.headers) ||
-                'downloaded-file';
-              this.downloadFile(response.body, fileName);
-              this.successNotify('File Downloaded Successfully');
+                (this.fileHasExtension(rowData?.userFileName) &&
+                  rowData?.userFileName) ||
+                (this.fileHasExtension(rowData?.systemFileName) &&
+                  rowData?.systemFileName) ||
+                null;
+
+              if (preview) {
+                this.previewFile(response.body, fileName);
+              } else {
+                this.downloadFile(response.body, fileName);
+                this.successNotify('File Downloaded Successfully');
+                let download = this.benchmarkingFiles.filter(
+                  (f) => f.documentId == rowData.documentId
+                )[0];
+                this.MarkFileAsDownloaded(download);
+                console.log(
+                  sessionStorage.getItem(download.documentId.toString()) ||
+                    'session not found'
+                );
+              }
             } else {
               this.handleError('Failed to download document');
             }
@@ -162,6 +310,11 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
           }
         )
     );
+  }
+
+  fileHasExtension(fileName: string) {
+    const dot = fileName.lastIndexOf('.');
+    return dot > 0 && dot < fileName.length - 1;
   }
 
   // handle any errors returning from the file downloading
@@ -188,16 +341,6 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Get the file name from the response
-  private getFileNameFromHeaders(headers: HttpHeaders): string | null {
-    const contentDisposition = headers.get('Content-Disposition');
-    if (contentDisposition) {
-      const match = contentDisposition.match(/filename="?([^"]+)"?/);
-      return match ? match[1] : null;
-    }
-    return null;
-  }
-
   // Send file to the browser
   private downloadFile(blob: Blob, fileName: string) {
     const downloadUrl = window.URL.createObjectURL(blob);
@@ -207,6 +350,21 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(downloadUrl);
+  }
+
+  private MarkFileAsDownloaded(download: any) {
+    download.downloadIcon = 'faRefresh';
+    download.downloadTitle = 'Download Again';
+    sessionStorage.setItem(download.documentId.toString(), 'downloaded');
+  }
+
+  private previewFile(blob: Blob, fileName: string) {
+    this.showPdfModal = false;
+    this.pdfSrc = undefined;
+    this.pdfTitle = fileName;
+    const downloadUrl = window.URL.createObjectURL(blob);
+    this.pdfSrc = downloadUrl;
+    this.openPdfViewerModal();
   }
 
   // Log history that the file was opened
@@ -236,6 +394,13 @@ export class BenchmarkingFilesComponent implements OnInit, OnDestroy {
   handleError(message: any) {
     this.errorNotify(message);
     return of(null);
+  }
+
+  downloadSelected() {
+    const selected = this.FilesDataGrid.instance.getSelectedRowsData();
+    selected.forEach((x) => {
+      this.downloadBenchmarkingFile(x);
+    });
   }
 
   private toLowerParams(params: Params): Params {

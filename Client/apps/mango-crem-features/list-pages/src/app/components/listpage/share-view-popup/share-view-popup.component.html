@@ -4,7 +4,7 @@
     [showTitle]="true"
     title="{{ title }}"
     [(visible)]="popupVisible"
-    [closeOnOutsideClick]="false"
+    [hideOnOutsideClick]="false"
     (onHiding)="hidePopup($event)"
     width="50%"
     height="50%"
@@ -24,7 +24,7 @@
       [showTitle]="true"
       title="{{ unSavedChangesPopupOptions.popupTitle }}"
       [dragEnabled]="unSavedChangesPopupOptions.dragEnabled"
-      [closeOnOutsideClick]="true"
+      [hideOnOutsideClick]="true"
       [(visible)]="unSavedChangesPopupOptions.popupVisible"
       position="{ my: 'center', at: 'center', of: window }"
     >

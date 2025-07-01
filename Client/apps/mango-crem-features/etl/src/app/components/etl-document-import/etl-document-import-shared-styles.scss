@@ -1,0 +1,163 @@
+@use 'styles' as *;
+
+.step-content {
+    width: 60%;
+    display: inline-block;
+    @include costar(padding, 5);
+    @include costar(background-color, info-lightest);
+    text-align: center;
+    margin: 20px;
+}
+
+.step-title {
+  width: 95%;
+  text-align: left;
+  border-bottom: thin solid;
+  @include costar(border-bottom, gray05);
+}
+
+.text-align-left {
+  text-align: left !important;
+}
+
+.label-normal {
+  @include costar(font-size, normal);
+  @include costar(color, dark);
+}
+
+.label-small-gray {
+  @include costar(font-size, navigation);
+  @include costar(color, gray03);
+}
+
+.label-small {
+  @include costar(font-size, navigation);
+  @include costar(color, dark);
+}
+
+.label-normal {
+  @include costar(font-size, normal);
+  @include costar(color, dark);
+}
+
+.label-warning {
+  @include costar(color, danger-light);
+  @include costar(font-size, navigation);
+}
+
+.drag-drop-zone {
+  @include costar(padding-top, 4);
+  text-align: center;
+  border-style: dotted;
+  border-width: thin;
+  @include costar(color, gray03);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.drag-drop-zone-content {
+  display: inline-block;
+}
+
+.load-file-header {
+  text-align: center;
+  display: inline-block;
+  @include costar(font-size, h3);
+  @include costar(font-weight, bold);
+  @include costar(padding-bottom, 5);
+}
+
+.validation-result-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  @include costar(padding-top, 5);
+}
+
+.validation-footer {
+  width: 95%;
+  border-bottom: thin solid;
+  @include costar(border-bottom, gray05);
+}
+
+.validation-grid-container {
+  display: grid;
+  grid-template-columns: 400px 300px 400px;
+  @include costar(gap, 5);
+  @include costar(padding, 5);
+  text-align: left;
+  align-items: center;
+  .r1 {
+    text-align: right;
+    vertical-align: center;
+    @include costar(font-size, normal);
+    @include costar(color, dark);
+  }
+}
+
+.invalid-details-container {
+  display: block;
+  align-items: left;
+}
+
+.invalid-details-grid-container {
+  display: grid;
+  grid-template-columns: 400px 300px;
+  @include costar(gap, 5);
+  text-align: left;
+  @include costar(font-size, navigation);
+  @include costar(color, gray03);
+
+  .l2 {
+    @include costar(padding-left, 6);
+    @include costar(margin-left, 6);
+  }
+
+  .r2 {
+    text-align: right;
+  }
+}
+
+.button-label {
+  text-align: left;
+  display: inline-block;
+  @include costar(padding, 2);
+}
+
+.grid-container {
+  @include costar(padding, 4);
+}
+
+
+
+
+
+
+
+
+
+  .r1 {
+    text-align: right;
+    vertical-align: center;
+    @include costar(font-size, normal);
+    @include costar(color, dark);
+  }
+
+
+.label-normal {
+  @include costar(font-size, normal);
+  @include costar(color, dark);
+}
+
+.label-small-gray {
+  @include costar(font-size, navigation);
+  @include costar(color, gray03);
+}
+
+
+
+
+
+

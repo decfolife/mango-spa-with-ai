@@ -202,11 +202,22 @@ export class InitSetupEffects {
       this.actions$.pipe(
         ofType(AppActions.HANDLE_CUSTOM_QUERY_PARAMS),
         switchMap((_) => this.activatedRoute.queryParamMap),
-        map((queryParamsMap) => [
-          queryParamsMap.get('logout'),
-          queryParamsMap.get('cid'),
-          queryParamsMap.get('emu'),
-        ]),
+        map((queryParamsMap) => {
+          const queryParams = new URLSearchParams(window.location.search);
+
+          return [
+            queryParams.get('logout'),
+            queryParams.get('cid'),
+            queryParams.get('emu'),
+          ]
+
+          // Old
+          // return [
+          //   queryParamsMap.get('logout'),
+          //   queryParamsMap.get('cid'),
+          //   queryParamsMap.get('emu'),
+          // ]
+        }),
         tap(([logout, contactId, emulateUser]) => {
           // When logging out of V06, V06 will redirect to SPA with a query param to logout
           if (logout === 'true') {

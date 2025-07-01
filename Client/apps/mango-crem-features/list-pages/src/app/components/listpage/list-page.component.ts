@@ -255,7 +255,9 @@ export class ListPageComponent implements OnInit, OnDestroy {
   inCriticalViewDataError = false;
   lastGridDataRequest: GetGridDataRequest;
   public urlOID: number;
+  public urlOTID: number;
   public urlOTTID: number;
+  public urlNavPageId: number;
   public noDataText: string = 'No Data';
 
   private _userHasAddRights = false;
@@ -505,7 +507,11 @@ export class ListPageComponent implements OnInit, OnDestroy {
     this.urlOID = upperCaseParams['OID']
       ? parseInt(upperCaseParams['OID'])
       : null;
+    this.urlOTID = upperCaseParams['OTID']
+      ? parseInt(upperCaseParams['OTID'])
+      : null;
     this.urlOTTID = parseInt(upperCaseParams['OTTID'] || '0');
+    this.urlNavPageId = parseInt(upperCaseParams['NAVPAGEID'] || '0');
 
     //Set the objectTypeId from the value passed in the route instead of from the service if overrideInputSettings is true
     if (this.overrideInputSettings) {
@@ -526,70 +532,74 @@ export class ListPageComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.service.getListPageProperties().subscribe((res: ApiResponse) => {
-      if (this.overrideInputSettings === true) {
-        // this.objectTypeId = res.data.objectTypeId;
+    let glpoid = this.urlOID ? this.urlOID : 0;
+    let glpotid = this.objectTypeId;
+    let glpnavpageid = this.urlNavPageId;
+    this.service
+      .getListPageProperties(glpoid, glpotid, glpnavpageid)
+      .subscribe((res: ApiResponse) => {
+        if (this.overrideInputSettings === true && res && res.data) {
+          this._intitialListPageRequestedId = res.data.listPage ?? 0;
+          this._isSuperUser = res.data.isSuperUser;
+          this._canEditNotes = res.data.canEditNotes;
+          this._showPortfolioPicker = res.data.showPortfolioPicker;
+          this._showAddButton = res.data.showAddButton;
+          this._showDeleteButton = res.data.showDeleteButton;
+          this._showListMapToggle = res.data.showListMapToggle;
+          this.disableTerminateLeaseCharges =
+            !res.data.showTerminateLeaseCharges;
+        }
 
-        this._intitialListPageRequestedId = res.data.listPage ?? 0;
-        this._isSuperUser = res.data.isSuperUser;
-        this._canEditNotes = res.data.canEditNotes;
-        this._showPortfolioPicker = res.data.showPortfolioPicker;
-        this._showAddButton = res.data.showAddButton;
-        this._showDeleteButton = res.data.showDeleteButton;
-        this._showListMapToggle = res.data.showListMapToggle;
-        this.disableTerminateLeaseCharges = !res.data.showTerminateLeaseCharges;
-      }
+        this.dataGrid.loadPanel.enabled = true;
 
-      this.dataGrid.loadPanel.enabled = true;
-
-      this.service.getRedirectorLinkList().subscribe((res: ApiResponse) => {
-        this.rowLinks = res.data.redirectorLinks;
-      });
-
-      this.isGLEvent = this.checkGLEvent(this.objectTypeId);
-      this.service
-        .getAddWizards(this.objectTypeId, this.urlOTTID)
-        .subscribe((result) => {
-          let tempEditPages = [];
-          if (result.data && result.data.addWizards) {
-            tempEditPages = result.data.addWizards;
-          } else {
-            console.log(
-              `Response from addWizards API is either empty or invalid`
-            );
-          }
-          if (this.isGLEvent) {
-            this.archivedLabel = 'deleted';
-            this.unModifiedEditPages = tempEditPages;
-          } else {
-            this.archivedLabel = 'archived';
-            this.editPages = tempEditPages;
-          }
+        this.service.getRedirectorLinkList().subscribe((res: ApiResponse) => {
+          this.rowLinks = res.data.redirectorLinks;
         });
 
-      (window as any).OpenPopup = (url: string) => {
-        const params = url.split('?')[1].split('&');
-        const OID = params[0].split('=')[1];
-        const OTID = params[1].split('=')[1];
-        const NotetypeId = params[2].split('=')[1];
-        const CommonNoteTypeID =
-          NotetypeId === '2' || NotetypeId === '13' ? NotetypeId : 0;
+        this.isGLEvent = this.checkGLEvent(this.objectTypeId);
+        this.service
+          .getAddWizards(this.objectTypeId, this.urlOTTID)
+          .subscribe((result) => {
+            let tempEditPages = [];
+            if (result.data && result.data.addWizards) {
+              tempEditPages = result.data.addWizards;
+            } else {
+              console.log(
+                `Response from addWizards API is either empty or invalid`
+              );
+            }
+            if (this.isGLEvent) {
+              this.archivedLabel = 'deleted';
+              this.unModifiedEditPages = tempEditPages;
+            } else {
+              this.archivedLabel = 'archived';
+              this.editPages = tempEditPages;
+            }
+          });
 
-        this.noteData = { OID, OTID, CommonNoteTypeID };
-        this.showNotes = true;
-      };
+        (window as any).OpenPopup = (url: string) => {
+          const params = url.split('?')[1].split('&');
+          const OID = params[0].split('=')[1];
+          const OTID = params[1].split('=')[1];
+          const NotetypeId = params[2].split('=')[1];
+          const CommonNoteTypeID =
+            NotetypeId === '2' || NotetypeId === '13' ? NotetypeId : 0;
 
-      if (sessionStorage.getItem(this.listPageSessionKey) === null) {
-        this.populateListViewMenu(
-          true,
-          false,
-          this._intitialListPageRequestedId > 0
-        );
-        return;
-      }
+          this.noteData = { OID, OTID, CommonNoteTypeID };
+          this.showNotes = true;
+        };
 
-      this.populateListViewMenu(true, true);
-    });
+        if (sessionStorage.getItem(this.listPageSessionKey) === null) {
+          this.populateListViewMenu(
+            true,
+            false,
+            this._intitialListPageRequestedId > 0
+          );
+          return;
+        }
+
+        this.populateListViewMenu(true, true);
+      });
 
     this.service
       .getUserModuleRights(ObjectType.CONTACT.toString())

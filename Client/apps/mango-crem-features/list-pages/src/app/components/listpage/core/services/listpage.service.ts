@@ -19,28 +19,21 @@ import { Api } from '@mango/data-models/lib-data-models';
 export class ListPageService extends EndpointService {
   listpages: string = UtilitiesService.getBaseApiUrl(Api.listpages);
   formWizard: string = UtilitiesService.getBaseApiUrl(Api.formWizard);
+  // financials = 'https://localhost:64062/api/';
   financials: string = UtilitiesService.getBaseApiUrl(Api.financials);
 
   // this function's endpoint will always go to the ListPage.aspx. This is used to get
   // properties that was passed in as input variables into the old version of the list
   // pages custom element
-  getListPageProperties(): Observable<ApiResponse> {
-    //let result : ApiResponse ;
-    const result = {
-      data: {
-        objectTypeId: 4,
-        isSuperUser: true,
-        canEditNotes: true,
-        showPortfolioPicker: true,
-        showAddButton: true,
-        showListMapToggle: true,
-        showDeleteButton: true,
-      },
-      clientErrorMessage: '',
-      success: true,
-      status: null,
-    };
-    return of(result);
+  getListPageProperties(
+    objectId,
+    objectTypeId,
+    navPageId
+  ): Observable<ApiResponse> {
+    return this.callHttpGet(
+      `${this.listpages}listpage/getlistpageproperties?objectId=${objectId}&objectTypeId=${objectTypeId}&navpageid=${navPageId}`,
+      'getlistpageproperties'
+    );
   }
 
   getGridData(request: GetGridDataRequest): Observable<ApiResponse> {
@@ -228,6 +221,17 @@ export class ListPageService extends EndpointService {
     return this.callHttpGet(
       `${this.financials}Lease/GLEventInfo/${leaseAbstractID}/${glEventID}`,
       'getGLEventInfo'
+    );
+  }
+
+  deleteLeaseOption(
+    leaseOptionId: number,
+    leaseAbstractID: number
+  ): Observable<any> {
+    return this.callHttpDeleteWithBody(
+      `${this.financials}lease/DeleteLeaseOption`,
+      'deleteLeaseOption',
+      { leaseOptionId, leaseAbstractID }
     );
   }
 

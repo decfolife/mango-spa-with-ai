@@ -10,6 +10,7 @@
   position: sticky !important;
   top: 0;
 }
+
 .status-toolBar-wrapper > div {
   height: 32px;
 }
@@ -26,11 +27,11 @@
     flex-direction: row;
 
     .title {
-      @include costar-alias(header, lead);
-      @include costar(font-size, body);
       @include costar(font-weight, medium);
+      font-size: 1rem;
       line-height: 20px;
-      margin-right: 10px;
+      margin: 0px;
+      @include costar(margin-right, 2);
     }
   }
 }
@@ -45,18 +46,40 @@
   }
 }
 
-::ng-deep mango-status {
-  div.dx-datagrid.dx-gridbase-container {
-    div.dx-datagrid-pager {
-      div.dx-button-disable.dx-navigate-button {
-        &:focus {
-          outline: none !important;
-        }
-      }
-    }
+.actions {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+
+  crem-icon {
+    @include costar(margin-right, 4);
   }
-  // more menu button
-  button.mat-menu-trigger.btn-link:focus {
-    box-shadow: 0 0 0 0.1rem #779ede;
+}
+
+:host::ng-deep #benchmarking-search-input {
+  input {
+    height: 32px;
+  }
+}
+
+.controls-right {
+  display: flex;
+  column-gap: 8px;
+}
+
+#benchmarking-more-menu-icon {
+  @include costar(margin-left, 2);
+}
+
+a {
+  @include costar(color, primary-light);
+}
+
+:host::ng-deep #benchmarking-grid {
+  .dx-datagrid .dx-datagrid-content-fixed {
+    .dx-row > td:last-child {
+      border-left: 2px solid #ddd !important;
+    }
   }
 }

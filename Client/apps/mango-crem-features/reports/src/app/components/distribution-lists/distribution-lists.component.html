@@ -1,15 +1,22 @@
 <div class="distribution-lists-container">
-	<div class="dl-toolBar-wrapper">
-		<div class="controls-left">
-			<h1 class="title"> Distribution Lists </h1>
-			<div class="searchDistributionLists">
-				<cs-search #SearchBox [placeholder]="'Search...'" (changed)="searchDataGrid($event)" class="searchDistributionLists-input"></cs-search>
-			</div>
-		</div>
-		<div class="controls-right">
-			<div class="clearFilters">
-				<crem-button type="secondary">
-					<span id="clearFilters" (click)="clearAllFilters($event)">Clear Filters</span>
+  <div class="dl-toolBar-wrapper">
+    <div class="controls-left">
+      <h1 class="title">Distribution Lists</h1>
+      <div class="searchDistributionLists">
+        <cs-search
+          #SearchBox
+          [placeholder]="'Search...'"
+          (changed)="searchDataGrid($event)"
+          class="searchDistributionLists-input"
+        ></cs-search>
+      </div>
+    </div>
+    <div class="controls-right">
+      <div class="clearFilters">
+        <crem-button type="secondary">
+          <span id="clearFilters" (click)="clearAllFilters($event)"
+            >Clear Filters</span
+          >
           <div
             class="badge"
             *ngIf="activeFilterCount$ | async as activeFilterCount"
@@ -17,145 +24,236 @@
           >
             {{ activeFilterCount }}
           </div>
-				</crem-button>
-			</div>
+        </crem-button>
+      </div>
 
-			<div class="actions">
-				<button class="btn btn-default actionsButton" [matMenuTriggerFor]="actionsMenu"
-				 (click)="$event.preventDefault()">Actions <mat-icon aria-label="Actions Menu">arrow_drop_down</mat-icon>
-				</button>
-				<mat-menu #actionsMenu="matMenu" class="distributionListsActionsMenu">				
-					<button mat-menu-item class="distributionListsActionsMenu-delBtn" [disabled]="!distListSelected" (click)="deleteDistributionLists(null, false)">
-						Delete List(s)
-					</button>      
-					<button mat-menu-item class="distributionListsActionsMenu-remBtn" [disabled]="!selectedMemberIds.length"
-						(click)="removeMembers()" >Remove Member(s)
-					</button>                  
-				</mat-menu>	 
-			</div>
+      <div class="actions">
+        <button
+          class="btn btn-default actionsButton"
+          [matMenuTriggerFor]="actionsMenu"
+          (click)="$event.preventDefault()"
+        >
+          Actions <mat-icon aria-label="Actions Menu">arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #actionsMenu="matMenu" class="distributionListsActionsMenu">
+          <button
+            mat-menu-item
+            class="distributionListsActionsMenu-delBtn"
+            [disabled]="!distListSelected"
+            (click)="deleteDistributionLists(null, false)"
+          >
+            Delete List(s)
+          </button>
+          <button
+            mat-menu-item
+            class="distributionListsActionsMenu-remBtn"
+            [disabled]="!selectedMemberIds.length"
+            (click)="removeMembers()"
+          >
+            Remove Member(s)
+          </button>
+        </mat-menu>
+      </div>
 
-			<div class="more">
-				<button class="btn btn-default moreButton" [matMenuTriggerFor]="moreMenu" (click)="$event.preventDefault()">More <mat-icon aria-label="More Menu">arrow_drop_down</mat-icon></button>
-				<mat-menu #moreMenu="matMenu" class="distributionListsMatMenu">				
-					<button mat-menu-item (click)="toggleExpanded()"><span *ngIf="isExpanded">Collapse All</span><span *ngIf="!isExpanded">Expand All</span></button>      
-					<button mat-menu-item (click)="exportToFile()">Export</button>        
-				</mat-menu>	 
-			</div>
-			<div class="addDistributionLists" >
-				<crem-button id="addDistributionListButton" type="primary" (click)="addEditDistributionList('add'); $event.preventDefault()" class="addLists-Btn">
-					Add
-				</crem-button>
-			</div>
-		</div>
-	</div>
+      <div class="more">
+        <button
+          class="btn btn-default moreButton"
+          [matMenuTriggerFor]="moreMenu"
+          (click)="$event.preventDefault()"
+        >
+          More <mat-icon aria-label="More Menu">arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #moreMenu="matMenu" class="distributionListsMatMenu">
+          <button mat-menu-item (click)="toggleExpanded()">
+            <span *ngIf="isExpanded">Collapse All</span
+            ><span *ngIf="!isExpanded">Expand All</span>
+          </button>
+          <button mat-menu-item (click)="exportToFile()">Export</button>
+        </mat-menu>
+      </div>
+      <div class="addDistributionLists">
+        <crem-button
+          id="addDistributionListButton"
+          type="primary"
+          (click)="addEditDistributionList('add'); $event.preventDefault()"
+          class="addLists-Btn"
+        >
+          Add
+        </crem-button>
+      </div>
+    </div>
+  </div>
 
-	<div class="dl-dataGrid-wrapper"> 
-		<crem-loader *ngIf="!dataRetrieved"></crem-loader>
-		<dx-data-grid *ngIf="dataRetrieved"
-			class="distributionList-grid"
-			#DistributionListDataGrid
-			[showColumnLines]="false"
-			[showRowLines]="false"
-			[showBorders]="false"
-			[rowAlternationEnabled]="true"
-			[allowColumnResizing]="true"
-			columnResizingMode="widget"
-			[allowColumnReordering]="true"
-			[columnAutoWidth]="false"
-			[dataSource]="distributionListsData"
-			[hoverStateEnabled]="true"
-			keyExpr="groupID"
-			[width]="'100%'"
-			[filterSyncEnabled]="true"
-			[wordWrapEnabled]="true"
-			(onCellPrepared)="gridOnCellPrepared($event)"
-			(onContentReady)="onContentReady($event)"
-			(onRowExpanding)="onRowExpandAndCollapseClick($event, 'expanding')"
-			(onRowCollapsing)="onRowExpandAndCollapseClick($event, 'collapsing')"
-			(onEditorPreparing)="onEditorPreparing($event)"
-			(onSelectionChanged)="onSelectionChanged($event)"
-      		(onOptionChanged)="onOptionChanged($event)"
-			(onFocusedCellChanging)="onFocusedCellChanging($event)"
-		>
-		<dxo-header-filter [visible]="true" [allowSearch]="true"></dxo-header-filter>
-		<dxo-sorting mode="multiple"></dxo-sorting>
-		<dxo-scrolling mode="virtual"></dxo-scrolling>
+  <div class="dl-dataGrid-wrapper">
+    <crem-loader *ngIf="!dataRetrieved"></crem-loader>
+    <dx-data-grid
+      *ngIf="dataRetrieved"
+      class="distributionList-grid"
+      #DistributionListDataGrid
+      [showColumnLines]="false"
+      [showRowLines]="false"
+      [showBorders]="false"
+      [rowAlternationEnabled]="true"
+      [allowColumnResizing]="true"
+      columnResizingMode="widget"
+      [allowColumnReordering]="true"
+      [columnAutoWidth]="false"
+      [dataSource]="distributionListsData"
+      [hoverStateEnabled]="true"
+      keyExpr="groupID"
+      [width]="'100%'"
+      [filterSyncEnabled]="true"
+      [wordWrapEnabled]="true"
+      (onCellPrepared)="gridOnCellPrepared($event)"
+      (onContentReady)="onContentReady($event)"
+      (onRowExpanding)="onRowExpandAndCollapseClick($event, 'expanding')"
+      (onRowCollapsing)="onRowExpandAndCollapseClick($event, 'collapsing')"
+      (onEditorPreparing)="onEditorPreparing($event)"
+      (onSelectionChanged)="onSelectionChanged($event)"
+      (onOptionChanged)="onOptionChanged($event)"
+      (onFocusedCellChanging)="onFocusedCellChanging($event)"
+    >
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
+      <dxo-sorting mode="multiple"></dxo-sorting>
+      <dxo-scrolling mode="virtual"></dxo-scrolling>
 
-		<dxo-load-panel
-			[enabled]="gridLoaderVisible">
-		</dxo-load-panel>
-		
-		<dxo-paging 
-			[enabled]="true"
-			[pageSize]="25">
-		</dxo-paging>
+      <dxo-load-panel [enabled]="gridLoaderVisible"> </dxo-load-panel>
 
-		<dxo-pager
-			[showPageSizeSelector]="true"
-			[showInfo]="true"
-			[allowedPageSizes]="[25, 50, 100, 'all']"
-			[visible]="true"
-			[showNavigationButtons]="true">
-		</dxo-pager>
+      <dxo-paging [enabled]="true" [pageSize]="25"> </dxo-paging>
 
-		<dxo-selection
-			selectAllMode="allPages"
-			showCheckBoxesMode="always"
-			mode="multiple">
-		</dxo-selection>
+      <dxo-pager
+        [showPageSizeSelector]="true"
+        [showInfo]="true"
+        [allowedPageSizes]="[25, 50, 100, 'all']"
+        [visible]="true"
+        [showNavigationButtons]="true"
+      >
+      </dxo-pager>
 
-		<dxo-search-panel
-			[text]="searchText"
-			[visible]="false"
-		></dxo-search-panel>
+      <dxo-selection
+        selectAllMode="allPages"
+        showCheckBoxesMode="always"
+        mode="multiple"
+      >
+      </dxo-selection>
 
-			<dxi-column type="selection" [width]="40" [fixed]="true" fixedPosition="left" [allowSorting]="false"
-				[allowReordering]="false" [allowResizing]="false">
-			</dxi-column>
-			<dxi-column dataField="groupID" alignment="center"></dxi-column>
-			<dxi-column dataField="groupName" caption="Name" [sortIndex]="1" sortOrder="asc" [allowHiding]="false"></dxi-column>
-			<dxi-column dataField="membersCount" caption="Members" alignment="center"></dxi-column>
-			<dxi-column dataField="modifiedBy" caption="Modified By"></dxi-column>
-			<dxi-column dataField="modifiedDate" caption="Modified Date" [format]="distributionListsService.dateFormat" dataType="date" ></dxi-column>
-			<dxi-column dataField="createdBy" caption="Created By"></dxi-column>
-			<dxi-column dataField="createdDate" caption="Created Date" [format]="distributionListsService.dateFormat" dataType="date" ></dxi-column>
-			<dxi-column dataField="securityLevel" caption='Rights' ></dxi-column>
+      <dxo-search-panel
+        [text]="searchText"
+        [visible]="false"
+      ></dxo-search-panel>
 
-			<!-- Used to keep master grid row open when the search text is found in the detail row -->
-			<dxi-column dataField="members" name="memberMatchSearch" [visible]="false" [showInColumnChooser]="false" [calculateFilterExpression]="searchMembersFilterExpression" ></dxi-column>
+      <dxi-column
+        type="selection"
+        [width]="40"
+        [fixed]="true"
+        fixedPosition="left"
+        [allowSorting]="false"
+        [allowReordering]="false"
+        [allowResizing]="false"
+      >
+      </dxi-column>
+      <dxi-column dataField="groupID" alignment="center"></dxi-column>
+      <dxi-column
+        dataField="groupName"
+        caption="Name"
+        [sortIndex]="1"
+        sortOrder="asc"
+        [allowHiding]="false"
+      ></dxi-column>
+      <dxi-column
+        dataField="membersCount"
+        caption="Members"
+        alignment="center"
+      ></dxi-column>
+      <dxi-column dataField="modifiedBy" caption="Modified By"></dxi-column>
+      <dxi-column
+        dataField="modifiedDate"
+        caption="Modified Date"
+        [format]="distributionListsService.dateFormat"
+        dataType="date"
+      ></dxi-column>
+      <dxi-column dataField="createdBy" caption="Created By"></dxi-column>
+      <dxi-column
+        dataField="createdDate"
+        caption="Created Date"
+        [format]="distributionListsService.dateFormat"
+        dataType="date"
+      ></dxi-column>
+      <dxi-column dataField="securityLevel" caption="Rights"></dxi-column>
 
-			<dxi-column type="buttons" caption="Actions" width="130" [fixed]="true" fixedPosition="right" [allowSorting]="false" template="actionsMenuTemplate"
-				[allowReordering]="false" [allowResizing]="false">
-				<dxi-button template="actionsMenuTemplate">
-					<div *dxTemplate="let distributionList of 'actionsMenuTemplate'" class="actionsMenuTemplate" id="{{'distributionListActionButton' + distributionList.rowIndex}}">
-							<button (click)="addEditDistributionList('edit', distributionList.data)" 
-										*ngIf="distributionList.data.canEdit" 
-										[ngClass] ="distributionList.data.canDelete ? 'btn btn-link tam-edit  right-pad' : 'btn btn-link tam-edit'">Edit
-							</button>
-							<button (click)="deleteDistributionLists(distributionList.data, true)" 
-										*ngIf="distributionList.data.canDelete" 
-										class="btn btn-link tam-delete">Delete
-							</button>
-					</div>
-				</dxi-button>		    	
-			</dxi-column>
+      <!-- Used to keep master grid row open when the search text is found in the detail row -->
+      <dxi-column
+        dataField="members"
+        name="memberMatchSearch"
+        [visible]="false"
+        [showInColumnChooser]="false"
+        [calculateFilterExpression]="searchMembersFilterExpression"
+      ></dxi-column>
 
-			<dxo-master-detail [enabled]="true" [autoExpandAll]="isExpanded" template="memberDetails"></dxo-master-detail>
-			<div *dxTemplate="let member of 'memberDetails'">
-				<distribution-lists-members 
-						[searchText]="searchText" 
-						[rights]="member.data.securityLevel" 
-						[userModuleAddRights]="userModuleAddRights"
-						[members]="member.data.members"
-						[memberCount]="member.data.membersCount"
-						(selectedMembersEvent)="selectedMembers($event)"
-						(unSelectedMembersEvent)="unSelectedMembers($event)"
-						(selectedDistributionListAndMembersEvent)="selectedDistListAndMembers($event)"
-						(getLatestDistributionListDataEvent)="getLatestData()"
-				>
-				</distribution-lists-members>
-			</div>
-		</dx-data-grid>
-	</div>
+      <dxi-column
+        type="buttons"
+        caption="Actions"
+        width="130"
+        [fixed]="true"
+        fixedPosition="right"
+        [allowSorting]="false"
+        template="actionsMenuTemplate"
+        [allowReordering]="false"
+        [allowResizing]="false"
+      >
+        <dxi-button template="actionsMenuTemplate">
+          <div
+            *dxTemplate="let distributionList of 'actionsMenuTemplate'"
+            class="actionsMenuTemplate"
+            id="{{
+              'distributionListActionButton' + distributionList.rowIndex
+            }}"
+          >
+            <button
+              (click)="addEditDistributionList('edit', distributionList.data)"
+              *ngIf="distributionList.data.canEdit"
+              [ngClass]="
+                distributionList.data.canDelete
+                  ? 'btn btn-link tam-edit  right-pad'
+                  : 'btn btn-link tam-edit'
+              "
+            >
+              Edit
+            </button>
+            <button
+              (click)="deleteDistributionLists(distributionList.data, true)"
+              *ngIf="distributionList.data.canDelete"
+              class="btn btn-link tam-delete"
+            >
+              Delete
+            </button>
+          </div>
+        </dxi-button>
+      </dxi-column>
 
+      <dxo-master-detail
+        [enabled]="true"
+        [autoExpandAll]="isExpanded"
+        template="memberDetails"
+      ></dxo-master-detail>
+      <div *dxTemplate="let member of 'memberDetails'">
+        <distribution-lists-members
+          [searchText]="searchText"
+          [rights]="member.data.securityLevel"
+          [userModuleAddRights]="userModuleAddRights"
+          [members]="member.data.members"
+          [memberCount]="member.data.membersCount"
+          (selectedMembersEvent)="selectedMembers($event)"
+          (unSelectedMembersEvent)="unSelectedMembers($event)"
+          (selectedDistributionListAndMembersEvent)="
+            selectedDistListAndMembers($event)
+          "
+          (getLatestDistributionListDataEvent)="getLatestData()"
+        >
+        </distribution-lists-members>
+      </div>
+    </dx-data-grid>
+  </div>
 </div>

@@ -1,5 +1,5 @@
 import { Injectable, Optional } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { EndpointService } from '../../../../../../libs/core-shared/src';
 import { UtilitiesService } from '@mango/core-shared';
@@ -9,6 +9,7 @@ import { Api } from '@mango/data-models/lib-data-models';
 import { DataGridQueryDto } from '@etl/model/data-grid-query-dto';
 import { DownloadExcelTemplateDto } from '@etl/model/download-excel-template-dto';
 import { TemplateType } from '@etl/model/template-type-dto';
+import { formatDate } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
@@ -124,7 +125,7 @@ export class ETLService extends EndpointService {
 
   getDataGridFields(data: DataGridQueryDto): Observable<any> {
     let params = new HttpParams();
-    for (let key in data) {
+    for (const key in data) {
       if (data.hasOwnProperty(key)) {
         params = params.append(key, data[key]);
       }
@@ -141,6 +142,14 @@ export class ETLService extends EndpointService {
   getParentLookupValues(parentObjectTypeId: number): any {
     const url = `${this.etlServiceUrl}ETL/parentLookups/${parentObjectTypeId}`;
     return this.callHttpGetWithErrorMessage(url, 'GetParentLookupValues');
+  }
+
+  getDocumentImportParentLookupValuesQuery(parentObjectTypeId: number): any {
+    const url = `${this.etlServiceUrl}ETL/getDocumentImportParentLookupValuesQuery?parentObjectTypeId=${parentObjectTypeId}`;
+    return this.callHttpGetWithErrorMessage(
+      url,
+      'getDocumentImportParentLookupValuesQuery'
+    );
   }
 
   // for ada
@@ -166,7 +175,7 @@ export class ETLService extends EndpointService {
 
   generateExcelTemplate(data: DownloadExcelTemplateDto): Observable<any> {
     let params = new HttpParams();
-    for (let key in data) {
+    for (const key in data) {
       if (data.hasOwnProperty(key)) {
         params = params.append(key, data[key]);
       }
@@ -208,49 +217,22 @@ export class ETLService extends EndpointService {
     return this.http.post(url, 'getFilesFromSftp');
   }
 
-  validateFiles(): Observable<any> {
-    const url = `${this.etlServiceUrl}etldocumentmigration/validateFiles`;
-    return this.http.post(url, 'validateFiles');
-  }
-
   getValidateResults(): Observable<any> {
     const url = `${this.etlServiceUrl}etldocumentmigration/getvalidateresults`;
     return this.callHttpGetWithErrorMessage(url, 'getValidateResults');
   }
 
-  documentsUpload(formData: any): Observable<any> {
-    const url = `${this.etlServiceUrl}etldocumentmigration/uploadfile`;
-    return this.http.post(url, formData, {
-      headers: new HttpHeaders({ enctype: 'multipart/form-data' }),
-      reportProgress: true,
-      observe: 'events',
-    });
+  getComparisonResults(): Observable<any> {
+    const url = `${this.etlServiceUrl}etldocumentmigration/getcomparisonresults`;
+    return this.callHttpGetWithErrorMessage(url, 'getcomparisonresults');
   }
 
-  getDocumentUploadStatus(untrustedFileName: string): any {
-    const url = `${this.etlServiceUrl}etldocumentmigration/documentuploadstatus`;
-    let params = new HttpParams();
-    params = params.append('untrustedFileName', untrustedFileName);
-    return this.callHttpGetWithErrorMessage(
-      url,
-      'getDocumentUploadStatus',
-      params
-    );
+  getDocumentImportStatus(): any {
+    const url = `${this.etlServiceUrl}etldocumentmigration/getdocumentimportstatus`;
+    return this.callHttpGetWithErrorMessage(url, 'getDocumentImportStatus');
   }
 
-  updateDocumentUploadStatus(untrustedFileName: string): any {
-    const url = `${this.etlServiceUrl}etldocumentmigration/updatedocumentuploadstatus`;
-    //const url = `https://localhost:54458/api/etldocumentmigration/updatedocumentuploadstatus`;
-    let params = new HttpParams();
-    params = params.append('untrustedFileName', untrustedFileName);
-    return this.callHttpPostWithErrorMessage(
-      url,
-      'updateDocumentUploadStatus',
-      { untrustedFileName }
-    );
-  }
-
-  async chunkFileUpload(formData: any, isLastChunk: boolean): Promise<any> {
+  async chunkFileUpload(formData: any): Promise<any> {
     const url = `${this.etlServiceUrl}etldocumentmigration/uploadchunk`;
     return this.http.post(url, formData, {
       headers: new HttpHeaders({ enctype: 'multipart/form-data' }),
@@ -259,17 +241,65 @@ export class ETLService extends EndpointService {
     });
   }
 
-  downloadExcel() {
-    const url = `${this.etlServiceUrl}etldocumentmigration/downloadvalidationreslts`;
+  validateMappingTemplate(formData: any): Observable<any> {
+    const url = `${this.etlServiceUrl}etldocumentmigration/validatedocmappingtemplate`;
+    return this.http.post(url, formData, {
+      headers: new HttpHeaders({ enctype: 'multipart/form-data' }),
+    });
+  }
+
+  getDocTemplateValidateResults(): Observable<any> {
+    const url = `${this.etlServiceUrl}etldocumentmigration/gettemplatevalidateresults`;
+    return this.callHttpGetWithErrorMessage(
+      url,
+      'getDocTemplateValidateResults'
+    );
+  }
+
+  mapDocumentToObject(): Observable<any> {
+    const url = `${this.etlServiceUrl}etldocumentmigration/mapdocumenttoobject`;
+    return this.http.post(url, 'mapDocumentToObject');
+  }
+
+  downloadFileValidationReslts() {
+    const url = `${this.etlServiceUrl}etldocumentmigration/downloadvalidationresults`;
+    this.downloadExcelFile(url, 'FileValidationResults');
+  }
+
+  downloadMappingTemplateValidationResults() {
+    const url = `${this.etlServiceUrl}etldocumentmigration/downloaddoctemplatevalidationresults`;
+    this.downloadExcelFile(url, 'TemplateValidationResults');
+  }
+
+  downloadComparisonResults() {
+    const url = `${this.etlServiceUrl}etldocumentmigration/downloadcomparisonresults`;
+    this.downloadExcelFile(url, 'ComparisonResults');
+  }
+
+  private downloadExcelFile(url: string, fileName: string) {
     this.http.get(url, { responseType: 'blob' }).subscribe((blob) => {
-      const a = document.createElement('a');
       const objectUrl = URL.createObjectURL(blob);
-      a.href = objectUrl;
-      a.download = 'ValidationResults.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `${fileName}_${formatDate(
+        new Date(),
+        'yyyyMMddHHmmss',
+        'en-US'
+      )}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(objectUrl);
     });
+  }
+
+  cancelProcess(): Observable<any> {
+    const url = `${this.etlServiceUrl}etldocumentmigration/cancelprocess`;
+    return this.http.post(url, 'cancelProcess');
+  }
+
+  getDocumentImportHistory(): any {
+    const url = `${this.etlServiceUrl}etldocumentmigration/getdocumentimporthistory`;
+    return this.callHttpGetWithErrorMessage(url, 'getDocumentImportHistory');
   }
 }

@@ -9,6 +9,7 @@ import { EtlTemplatesHistoryComponent } from './components/etl-templates/history
 import { EtlDocumentImportComponent } from './components/etl-document-import/etl-document-import.component';
 import { AdminEtlComponent } from './components/admin-etl.component';
 import { MangoSubApps } from '@mango/data-models/lib-data-models';
+import { DocumentImportHistoryComponent } from './components/etl-document-import/document-import-history/document-import-history.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'templates', pathMatch: 'full' },
@@ -27,8 +28,18 @@ const routes: Routes = [
       moduleId: 6,
       breadCrumb: {
         label: 'Document Import',
-        append: true,
         activeLink: 'Document Import',
+      },
+    },
+  },
+  {
+    path: 'document-import-history',
+    component: DocumentImportHistoryComponent,
+    data: {
+      moduleId: 6,
+      breadCrumb: {
+        label: 'Document Import History',
+        activeLink: 'Document Import History',
       },
     },
   },

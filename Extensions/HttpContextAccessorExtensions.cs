@@ -12,6 +12,18 @@ public static class HttpContextAccessorExtensions
         return string.IsNullOrWhiteSpace(value) ? defaultValue : JsonSerializer.Deserialize<T>(value);
     }
 
+    public static string GetHeaderValue(this IHttpContextAccessor service, string key, string defaultValue = "")
+    {
+        string value = service.HttpContext?.Request?.Headers[key].ToString();
+        return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+    }
+
+    public static Guid GetHeaderValue(this IHttpContextAccessor context, string key, Guid defaultValue)
+    {
+        Guid.TryParse(context.GetHeaderValue(key, defaultValue.ToString()), out defaultValue);
+        return defaultValue;
+    }
+
     public static void SetHeaderValue(this IHttpContextAccessor context, string key, string value)
     {
         var request = context.HttpContext?.Request;

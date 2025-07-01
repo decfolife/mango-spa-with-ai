@@ -1,0 +1,58 @@
+<crem-modal
+  [modalTitle]="'Associate to Project'"
+  [closeIconVisible]="true"
+  [primaryFooterButtonText]="'Save'"
+  [closeOrCancelButtonText]="'Cancel'"
+  [customFooter]="true"
+  [primaryFooterButtonEnabledDisabled]="footerButtonDisabled"
+  (primaryButtonAction)="associateToProject()"
+>
+  <div modalContent class="body-content">
+    <div class="ae-projects">
+      <div class="ae-projects-label flex30">Select Project(s):</div>
+      <crem-dropdown
+        class="flex70"
+        id="df-attachExisting-projectList"
+        dropDownContainerCustomClass="df-attachExisting-projects"
+        required="true"
+        [dataSource]="projects"
+        [showClearButton]="true"
+        [showColumnHeader]="false"
+        displayExpr="transactionName"
+        valueExpr="transactionID"
+        [allowSearch]="true"
+        [useSelectBox]="true"
+        (selectedItems)="onProjectSelectionChanged($event)"
+      >
+      </crem-dropdown>
+    </div>
+
+    <crem-loader class="ae-loader" *ngIf="loadingIndicator"></crem-loader>
+  </div>
+
+  <div modalFooter class="footerContent">
+    <div footerLeftControls class="footerLeftControls ae-userMsg">
+      {{ userMsg }}
+    </div>
+    <div footerRightControls id="buttonTemplate" class="footerRightControls">
+      <crem-button
+        type="secondary"
+        id="ae-cancelBtnId"
+        class="ae-cancelChanges ae-btn"
+        (click)="closeModal()"
+      >
+        Cancel
+      </crem-button>
+      <crem-button
+        [title]="saveBtnTitle"
+        type="primary"
+        id="ae-saveBtnId"
+        class="ae-attachExisting ae-btn"
+        [disabled]="isSaveButtonDisabled()"
+        (click)="associateToProject()"
+      >
+        Save
+      </crem-button>
+    </div>
+  </div>
+</crem-modal>

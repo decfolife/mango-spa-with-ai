@@ -4,6 +4,7 @@ import {
   ButtonModule,
   DropdownComponent,
   DropdownModule,
+  InputHintComponent,
   InputLabelComponent,
   ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
@@ -38,6 +39,7 @@ import { ToastState } from '@mango/data-models/lib-data-models';
     DxTextAreaModule,
     DropdownModule,
     ModalModule,
+    InputHintComponent,
   ],
   providers: [NotesService],
 })
@@ -52,7 +54,6 @@ export class AddNoteComponent implements OnInit, OnDestroy {
   noteTypesList: any[] = [];
   selectedNoteTypeId: number;
   commonNoteText: string;
-  characterCountText: string;
   maxCommonNoteTextLength = 7000;
   newNoteSaved = false;
   noteDeleted = false;
@@ -87,7 +88,6 @@ export class AddNoteComponent implements OnInit, OnDestroy {
     this.setTitle();
     this.updateAddNoteResult();
     this.getCommonNoteTypes();
-    this.setCharacterCountText();
     if (this.noteId > 0) {
       this.isInEditMode = true;
     }
@@ -103,7 +103,6 @@ export class AddNoteComponent implements OnInit, OnDestroy {
 
   onInputEvent(e) {
     this.commonNoteText = e.event.currentTarget.value;
-    this.setCharacterCountText();
   }
 
   setTitle() {
@@ -119,14 +118,6 @@ export class AddNoteComponent implements OnInit, OnDestroy {
           }
         })
     );
-  }
-
-  setCharacterCountText() {
-    let textLength =
-      this.commonNoteText === undefined ? 0 : this.commonNoteText.length;
-    this.characterCountText = `${
-      this.maxCommonNoteTextLength - textLength
-    } characters remaining`;
   }
 
   saveNote() {
@@ -146,7 +137,7 @@ export class AddNoteComponent implements OnInit, OnDestroy {
         .saveNote(
           this.objectId,
           this.objectTypeId,
-          this.noteId,
+          this.noteId ?? 0,
           this.selectedNoteTypeId,
           this.commonNoteText
         )

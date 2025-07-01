@@ -1,13 +1,29 @@
 <div class="dialogContent">
-  <h2 class="dialogHeader" cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragHandle>
-    <mat-icon class="dialogExclamation" aria-label="Message">error</mat-icon> 
-    <span class="headerText">{{title}}</span>
+  <h2
+    class="dialogHeader"
+    cdkDrag
+    cdkDragRootElement=".cdk-overlay-pane"
+    cdkDragHandle
+  >
+    <mat-icon class="dialogExclamation" aria-label="Message">error</mat-icon>
+    <span class="headerText">{{ title }}</span>
   </h2>
-  <div class="dialogMessage"> <pre class="dialogMsgFormatted"> {{message}} </pre></div>
+  <div class="dialogMessage">
+    <pre class="dialogMsgFormatted" [innerHTML]="message"></pre>
+  </div>
   <footer class="dialogFooter">
-    <crem-button class="dialogSecBtn" type="secondary" *ngIf="secondaryBtnText"
-      (click)="secondaryButtonClicked()">{{secondaryBtnText}}
+    <crem-button
+      class="dialogSecBtn"
+      type="secondary"
+      *ngIf="secondaryBtnText"
+      (click)="secondaryButtonClicked()"
+      >{{ secondaryBtnText }}
     </crem-button>
-    <crem-button class="dialogPriBtn" type="primary" (click)="primaryButtonClicked()">{{primaryBtnText}}</crem-button>
+    <crem-button
+      class="dialogPriBtn"
+      type="primary"
+      (click)="primaryButtonClicked()"
+      >{{ primaryBtnText }}</crem-button
+    >
   </footer>
-</div>  
+</div>

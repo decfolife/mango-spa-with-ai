@@ -1,0 +1,55 @@
+<crem-modal
+  id="pdfViewer"
+  [modalTitle]="pdfTitle"
+  saveButtonText="Download"
+  closeButtonText="Close"
+  showFooter="true"
+  [closeDialogResult]="documentDownloaded"
+  primaryFooterButtonText="Download"
+  closeOrCancelButtonText="Close"
+  (primaryButtonAction)="download()"
+>
+  <div modalContent>
+    <pdf-viewer
+      [src]="pdfSrc"
+      [render-text]="true"
+      [original-size]="true"
+      [fit-to-page]="fitToPage"
+      [show-all]="true"
+      [(page)]="pdfPage"
+      [show-borders]="true"
+      [zoom]="magnification"
+      [style]="styleString"
+    ></pdf-viewer>
+    <div class="magnification-controls">
+      <div class="magnification-row">
+        <crem-button
+          icon="faMagnifyingGlassPlus"
+          color="primary"
+          (click)="changeZoom(1)"
+        ></crem-button>
+        <crem-button
+          icon="faMagnifyingGlassMinus"
+          color="primary"
+          (click)="changeZoom(-1)"
+        ></crem-button>
+      </div>
+    </div>
+    <div class="centeredRow">
+      <div class="navigation-row">
+        <crem-button
+          color="secondary"
+          (click)="changePage(-1)"
+          icon="faArrowLeft"
+          iconPack="solid"
+        ></crem-button>
+        <crem-button
+          color="secondary"
+          (click)="changePage(1)"
+          icon="faArrowRight"
+          iconPack="solid"
+        ></crem-button>
+      </div>
+    </div>
+  </div>
+</crem-modal>

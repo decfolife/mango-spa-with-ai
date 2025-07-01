@@ -58,7 +58,6 @@ enum Status {
 export class ServiceAccountsComponent implements OnDestroy {
   public pageTitle = 'Service Accounts';
   public serviceAccountsData$: Observable<ServiceAccount[]>;
-  public isRemUser$: Observable<boolean> = of(false);
   public syncMessage$: Observable<string> = of('');
   public latestSyncInfo$: Observable<string>;
 
@@ -107,11 +106,6 @@ export class ServiceAccountsComponent implements OnDestroy {
     private userMaintenanceService: UserMaintenanceService,
     private mangoAppFacade: MangoAppFacade
   ) {
-    this.isRemUser$ = this.mangoAppFacade.authenticatedUser$.pipe(
-      filter((user) => !!user),
-      map((user) => !!user.isRemUser)
-    );
-
     this.getServiceAccounts();
   }
 
@@ -185,34 +179,6 @@ export class ServiceAccountsComponent implements OnDestroy {
           delay(1200)
         )
         .subscribe((_) => this.getServiceAccounts())
-    );
-  }
-
-  syncOnPremToAWS(templateRef) {
-    this.syncMessage$ = of('Processing....  Please wait for result.');
-    let dialogRef = this.dialog.open(templateRef, {
-      width: '300px',
-      disableClose: true,
-    });
-
-    this.subs.push(
-      this.userMaintenanceService
-        .syncOnPremToAWS()
-        .pipe(
-          switchMap(
-            (result) =>
-              (this.syncMessage$ = result
-                ? of('Sync process was successful')
-                : of('Error executing the SPROC'))
-          )
-        )
-        .subscribe()
-    );
-
-    this.subs.push(
-      dialogRef.afterClosed().subscribe((result) => {
-        this.latestSyncInfo();
-      })
     );
   }
 

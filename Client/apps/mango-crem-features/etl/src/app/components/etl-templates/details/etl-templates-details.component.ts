@@ -1568,59 +1568,54 @@ export class EtlTemplatesDetailsComponent implements OnInit, OnDestroy {
     if (this.templateDetails.templateTypeId === TemplateTypes.DocumentMapping) {
       const parentObjectTypeId =
         this.templateForm.get('parentObjectTypeId').value;
-      let parentDataColumnn: string = '';
-      switch (parentObjectTypeId) {
-        case 3:
-          parentDataColumnn = 'BuildingID';
-          break;
-        case 4:
-          parentDataColumnn = 'LeaseAbstractID';
-          break;
-        case 2:
-          parentDataColumnn = 'StoreID';
-          break;
-        case 1:
-          parentDataColumnn = 'TransactionID';
-          break;
-      }
 
-      this.parentLookups = [
-        { dataColumn: 'SourceImportID' },
-        { dataColumn: parentDataColumnn },
-      ];
+      this.etlService
+        .getDocumentImportParentLookupValuesQuery(parentObjectTypeId)
+        .subscribe((result) => {
+          if (result.success) {
+            if (result.data) {
+              let parentDataColumnn: string = result.data;
 
-      this.templateForm.get('parentLookupValue').setValue('SourceImportID');
+              this.parentLookups = [
+                { dataColumn: 'SourceImportID' },
+                { dataColumn: parentDataColumnn },
+              ];
+              return;
+            }
+          }
+        });
+    } else {
+      this.etlService
+        .getParentLookupValues(this.templateDetails.parentObjectTypeId)
+        .subscribe((result) => {
+          if (result.success) {
+            if (result.data) {
+              this.parentLookups = result.data;
+              if (this.templateDetails.parentLookupValue === '') {
+                const firstObject = this.parentLookups[0];
+                if (firstObject) {
+                  this.templateForm
+                    .get('parentLookupValue')
+                    .setValue(firstObject.dataColumn);
+                  this.templateForm.get('parentLookupValue').enable();
+                  this.templateDetails.parentLookupValue =
+                    firstObject.dataColumn;
 
-      return;
-    }
-    this.etlService
-      .getParentLookupValues(this.templateDetails.parentObjectTypeId)
-      .subscribe((result) => {
-        if (result.success) {
-          if (result.data) {
-            this.parentLookups = result.data;
-            if (this.templateDetails.parentLookupValue === '') {
-              const firstObject = this.parentLookups[0];
-              if (firstObject) {
-                this.templateForm
-                  .get('parentLookupValue')
-                  .setValue(firstObject.dataColumn);
-                this.templateForm.get('parentLookupValue').enable();
-                this.templateDetails.parentLookupValue = firstObject.dataColumn;
-
-                if (
-                  this.templateDetails.templateTypeId === TemplateTypes.Notes &&
-                  !this.isFirstLoad
-                ) {
-                  this.loadGrid();
+                  if (
+                    this.templateDetails.templateTypeId ===
+                      TemplateTypes.Notes &&
+                    !this.isFirstLoad
+                  ) {
+                    this.loadGrid();
+                  }
                 }
               }
             }
+          } else {
+            this.handleError(result.errorMessage);
           }
-        } else {
-          this.handleError(result.errorMessage);
-        }
-      });
+        });
+    }
   }
 
   getTemplatesLeftNavData(): SharedLeftNavLink[] {

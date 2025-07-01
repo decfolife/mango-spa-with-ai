@@ -63,14 +63,13 @@
       (onCellClick)="onCellClicked($event)"
       (onContentReady)="addADAAttributes($event)"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-        [elementattr]="addADAtoIconClear()"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true" [elementattr]="addADAtoIconClear()">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-sorting mode="multiple"></dxo-sorting>
       <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
-      <dxo-column-chooser [allowSearch]="true" mode="select">
+      <dxo-column-chooser mode="select">
+        <dxo-search [enabled]="true"> </dxo-search>
       </dxo-column-chooser>
       <dxo-paging [pageSize]="50"></dxo-paging>
       <dxo-pager
@@ -209,7 +208,7 @@
       [showIndicator]="true"
       [showPane]="true"
       [shading]="true"
-      [closeOnOutsideClick]="false"
+      [hideOnOutsideClick]="false"
     ></dx-load-panel>
   </div>
 </div>

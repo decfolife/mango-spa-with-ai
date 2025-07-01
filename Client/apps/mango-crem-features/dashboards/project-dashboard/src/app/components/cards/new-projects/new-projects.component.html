@@ -30,10 +30,9 @@
       [wordWrapEnabled]="true"
       (onContentReady)="adaAttrNoDataGrid($event)"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-search-panel [visible]="false"></dxo-search-panel>
       <dxo-pager [visible]="false"></dxo-pager>
       <dxo-scrolling mode="virtual"></dxo-scrolling>

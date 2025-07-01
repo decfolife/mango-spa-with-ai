@@ -60,10 +60,9 @@
       (onCellPrepared)="cellPrepared($event)"
       (onRowClick)="activityRowClick($event)"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-search-panel
         [visible]="false"
         [highlightCaseSensitive]="true"

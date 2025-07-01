@@ -3,18 +3,88 @@
     <div class="controls-left">
       <h1 class="title">{{ objectTypeAndName }}</h1>
       <div class="search">
-        <cs-search
-          #SearchBox
+        <crem-search
+          id="benchmarking-search-input"
           [placeholder]="'Search...'"
+          [debounceTime]="500"
+          [searchOption]="'typing'"
           (changed)="searchDataGrid($event)"
-        ></cs-search>
+        >
+        </crem-search>
       </div>
+    </div>
+
+    <div class="controls-right">
+      <crem-button
+        *ngIf="selectedRows.length > 1"
+        type="secondary"
+        (buttonClick)="downloadSelected()"
+      >
+        Download Selected
+      </crem-button>
+      <crem-button
+        id="benchmarking-filters-button"
+        type="secondary"
+        (buttonClick)="showFilterBuilderPopup = true"
+      >
+        Filters
+        <div
+          *ngIf="availableAppliedFilterCount > 0 && !showClearFilters"
+          class="badge primary costar std-left-margin"
+          (mouseover)="toggleAvailableFilters()"
+        >
+          {{ availableAppliedFilterCount }}
+        </div>
+
+        <div
+          *ngIf="availableAppliedFilterCount > 0 && showClearFilters"
+          class="badge primary costar std-left-margin underline"
+          (mouseout)="toggleAvailableFilters()"
+          (click)="clearAvailableFilters($event)"
+        >
+          Clear {{ availableAppliedFilterCount }}
+          {{ availableAppliedFilterCount > 1 ? 'Filters' : 'Filter' }}
+        </div>
+      </crem-button>
+
+      <crem-button
+        id="benchmarking-more-menu-button"
+        color="secondary"
+        [matMenuTriggerFor]="moreMenu"
+      >
+        More
+        <crem-icon
+          id="benchmarking-more-menu-icon"
+          icon="faCaretDown"
+          pack="solid"
+          size="sm"
+        ></crem-icon>
+      </crem-button>
+
+      <mat-menu #moreMenu="matMenu">
+        <button
+          id="benchmarking-column-chooser-button"
+          mat-menu-item
+          (click)="showColumnChooser()"
+        >
+          Column Chooser
+        </button>
+
+        <button
+          id="benchmarking-send-to-excel-button"
+          mat-menu-item
+          (click)="sendToExcel()"
+        >
+          Send to Excel
+        </button>
+      </mat-menu>
     </div>
   </div>
 
   <div class="status-dataGrid-wrapper">
     <crem-loader *ngIf="isLoading"></crem-loader>
     <dx-data-grid
+      id="benchmarking-grid"
       *ngIf="!isLoading"
       #FilesDataGrid
       [showColumnLines]="false"
@@ -26,13 +96,14 @@
       [allowColumnReordering]="true"
       [columnAutoWidth]="false"
       [dataSource]="benchmarkingFiles"
-      keyExpr="path"
+      keyExpr="documentId"
       [wordWrapEnabled]="true"
+      (onContentReady)="onGridContentReady($event)"
+      [(selectedRowKeys)]="selectedRows"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-paging [pageSize]="100"></dxo-paging>
       <dxo-pager
         [showPageSizeSelector]="true"
@@ -50,31 +121,115 @@
         [shading]="true"
       >
       </dxo-load-panel>
+      <dxo-sorting mode="multiple"></dxo-sorting>
+      <dxo-grouping
+        [autoExpandAll]="false"
+        [contextMenuEnabled]="true"
+      ></dxo-grouping>
+      <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
+
+      <dxo-column-chooser mode="select" height="500" width="400">
+        <dxo-position
+          my="right top"
+          at="right top"
+          [of]="'#benchmarking-grid'"
+        ></dxo-position>
+
+        <dxo-search [enabled]="true"> </dxo-search>
+
+        <dxo-selection allowSelectAll="true" [recursive]="true">
+        </dxo-selection>
+      </dxo-column-chooser>
+
+      <dxo-filter-builder-popup
+        [width]="600"
+        [height]="600"
+        [(visible)]="showFilterBuilderPopup"
+      ></dxo-filter-builder-popup>
+
+      <dxo-filter-builder></dxo-filter-builder>
+      <dxo-selection
+        mode="multiple"
+        selectAllMode="page"
+        showCheckBoxesMode="always"
+      >
+      </dxo-selection>
+      <dxi-column
+        caption="Actions"
+        width="100"
+        alignment="center"
+        cellTemplate="descriptionCellTemplate"
+        fixed="true"
+        fixedPosition="left"
+      ></dxi-column>
+      <dxi-column
+        dataField="userFileName"
+        caption="File"
+        width="300"
+        fixed="true"
+        fixedPosition="left"
+      ></dxi-column>
       <dxi-column
         dataField="path"
         alignment="left"
         caption="Folder"
         [allowHiding]="false"
+        width="300"
       ></dxi-column>
-      <dxi-column dataField="userFileName" caption="File"></dxi-column>
+      <dxi-column
+        dataField="fileType"
+        caption="File Type"
+        width="100"
+      ></dxi-column>
+      <dxi-column
+        dataField="fileSize"
+        [calculateSortValue]="getRowBytes"
+        caption="File Size"
+        [sortIndex]="1"
+        sortOrder="desc"
+        width="100"
+      ></dxi-column>
+      <dxi-column
+        dataField="sourceImportID"
+        caption="SourceImportID"
+        [visible]="false"
+      ></dxi-column>
+      <dxi-column dataField="identifier" caption="Identifier"></dxi-column>
       <dxi-column dataField="description" caption="Description"></dxi-column>
+      <dxi-column dataField="comments" caption="Comments"></dxi-column>
       <dxi-column
         dataField="dateUploaded"
         caption="Created"
         dataType="date"
         [format]="benchmarkingService.dateFormat"
-      ></dxi-column>
-      <dxi-column
-        caption="Download"
-        width="100"
-        alignment="center"
-        cellTemplate="descriptionCellTemplate"
+        [calculateSortValue]="getRawDate"
+        [sortIndex]="0"
+        sortOrder="desc"
+        width="125"
       ></dxi-column>
       <!-- Use "cell" as the template name -->
-      <div *dxTemplate="let cell of 'descriptionCellTemplate'">
-        <a href="javascript:void(0)" (click)="onFileDownloadClick(cell.data)">
-          Open
-        </a>
+      <div *dxTemplate="let cell of 'descriptionCellTemplate'" class="actions">
+        <crem-icon
+          *ngIf="cell.data.fileType == 'PDF'"
+          id="bm-files-preview-icon"
+          aria-label="Preview"
+          title="Preview"
+          icon="faEye"
+          pack="solid"
+          color="primary"
+          size="lg"
+          (click)="onFileDownloadClick(cell.data, true)"
+        ></crem-icon>
+        <crem-icon
+          id="bm-files-download-icon"
+          aria-label="Download"
+          [title]="cell.data.downloadTitle"
+          [icon]="cell.data.downloadIcon"
+          pack="solid"
+          color="primary"
+          size="lg"
+          (click)="onFileDownloadClick(cell.data)"
+        ></crem-icon>
       </div>
     </dx-data-grid>
   </div>

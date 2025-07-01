@@ -1,7 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { MatMenuModule } from '@angular/material/menu';
 import { Meta, Story, moduleMetadata } from '@storybook/angular';
-import { DxButtonModule, DxDataGridModule, DxDropDownBoxModule, DxFormModule, DxSelectBoxModule, DxTemplateModule, DxTextBoxModule, DxTooltipModule, DxValidationSummaryModule, DxValidatorModule } from 'devextreme-angular';
+import {
+  DxButtonModule,
+  DxDataGridModule,
+  DxDropDownBoxModule,
+  DxFormModule,
+  DxSelectBoxModule,
+  DxTemplateModule,
+  DxTextBoxModule,
+  DxTooltipModule,
+  DxValidationSummaryModule,
+  DxValidatorModule,
+} from 'devextreme-angular';
 import { ButtonModule } from '../button';
 import { IconModule } from '../icon';
 import { DropdownComponent } from './dropdown.component';
@@ -29,7 +40,7 @@ export default {
         MatMenuModule,
         ButtonModule,
         IconModule,
-        DxTooltipModule
+        DxTooltipModule,
       ],
     }),
   ],
@@ -113,43 +124,4 @@ WithLabel.args = {
       valueKey: 'Pineapples',
     },
   ],
-};
-
-/** This should primarily be used as part of the page header component. */
-export const WithLabel = Template.bind({});
-WithLabel.args = {
-  initialSelectedValue: 'Watermelon',
-  selectBoxValue: 'Watermelon',
-  label: "Segment is",
-  fieldTemplate: "withLabel",
-  placeholder: 'Select Segment',
-  allowSearch: true,
-  containerized: true,
-  useSelectBox: true,
-  dataSource: [
-    {
-      displayKey: "Watermelon",
-      valueKey: "Watermelon"
-    },
-    {
-      displayKey: "Apples",
-      valueKey: "Apples"
-    },
-    {
-      displayKey: "Oranges",
-      valueKey: "Oranges"
-    },
-    {
-      displayKey: "Lemons",
-      valueKey: "Lemons"
-    },
-    {
-      displayKey: "Pears",
-      valueKey: "Pears"
-    },
-    {
-      displayKey: "Pineapples",
-      valueKey: "Pineapples"
-    },
-  ]
 };

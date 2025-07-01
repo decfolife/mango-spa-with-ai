@@ -81,6 +81,7 @@ export const cremIcons = [
   'cremInfo',
   'cremXMark',
   'cremCircleMinus',
+  'cremExportToExcel',
 ];
 export const solidIcons = [
   'faAd',

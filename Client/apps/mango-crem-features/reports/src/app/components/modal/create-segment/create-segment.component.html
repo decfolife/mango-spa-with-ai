@@ -210,18 +210,11 @@
       <crem-button
         [id]="idPrefix + 'SaveButton'"
         type="primary"
-        [attr.title]="
-          !hasObjectEditRight
-            ? 'You have View rights to this segment. Ask your administrator to grant you additional rights to edit this segment.'
-            : ''
-        "
-        [disabled]="data.archived || !hasObjectEditRight"
-        (click)="
-          !(data.archived || !hasObjectEditRight) && saveSegment($event, false)
-        "
+        [attr.title]="getSaveAttrTitle()"
+        [disabled]="isSaveDisabled()"
+        (click)="saveSegment($event, false)"
+        >Save</crem-button
       >
-        Save
-      </crem-button>
     </ng-container>
     <crem-button
       *ngIf="data.archived"

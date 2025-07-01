@@ -583,28 +583,18 @@ export const routes: Routes = [
               breadCrumb: { append: false },
             },
           },
-        ],
-      },
-
-      // REMINDERS
-      {
-        path: 'reminders',
-        canActivate: [RightsAuthGuard],
-        data: {
-          moduleId: 1,
-          breadCrumb: { label: 'Reminders', append: true },
-        },
-        children: [
           {
-            path: '',
+            path: 'reminders',
             title: 'Reminders',
+            canActivate: [RightsAuthGuard],
             loadComponent: () =>
               import(
                 '@reminders-list/components/reminders-list/reminders-list.component'
               ).then((mod) => mod.RemindersListComponent),
             data: {
-              moduleId: null,
-              breadCrumb: { append: true },
+              currentSubApp: MangoSubApps.REPORTS,
+              moduleId: 4,
+              breadCrumb: { label: 'Reminders', append: true },
             },
           },
         ],

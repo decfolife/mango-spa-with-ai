@@ -115,6 +115,7 @@
     "lodash": "^4.17.21",
     "logrocket": "^9.0.1",
     "mathjs": "^14.2.1",
+    "ng2-pdf-viewer": "^10.4.0",
     "ngx-date-fns": "^10.0.1",
     "ngx-skeleton-loader": "^7.0.0",
     "ngx-toastr": "^17.0.2",

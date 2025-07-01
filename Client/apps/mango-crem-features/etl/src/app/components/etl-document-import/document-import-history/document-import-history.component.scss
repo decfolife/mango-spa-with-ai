@@ -1,0 +1,19 @@
+@use '../../../../../../../../libs/ui-shared/common/src/styles/' as *;
+
+div.document-import-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  div.document-import-toolbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    @include costar(padding, 3);
+  }
+
+  .document-import-data-grid-wrapper {
+    height: calc(100vh - 180px);
+  }
+}

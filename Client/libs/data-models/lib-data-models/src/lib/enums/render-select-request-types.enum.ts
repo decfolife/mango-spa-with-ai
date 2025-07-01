@@ -9,6 +9,7 @@ export enum RequestType {
   CONTACT_COMPANY_LIST = 93,
   BUILDINGS_LIST = 130,
   PREMISE_TYPE_ID = 23,
+  GET_AVAILABLE_SUB_PROJECTS = 86,
 }
 
 export enum ObjectTypeTypeID {

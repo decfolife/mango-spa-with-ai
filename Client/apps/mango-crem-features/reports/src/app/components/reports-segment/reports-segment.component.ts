@@ -36,6 +36,21 @@ export class ReportsSegmentComponent implements OnInit {
   @ViewChild('SegmentsDataGrid') segmentDataGrid: DxDataGridComponent;
   @ViewChild('SearchBox') searchBox: SearchComponent;
 
+  /**
+   * Define the Module IDs names to be used to check permissions
+   */
+  private readonly MODULE_IDS: Array<number> = [
+    195, // Segments
+  ];
+
+  segmentModuleRights:
+    | 'Restricted View'
+    | 'View'
+    | 'Add'
+    | 'Edit'
+    | 'Delete'
+    | 'Block' = 'View';
+
   constructor(
     private reportsService: ReportsService,
     private dialog: MatDialog
@@ -49,6 +64,21 @@ export class ReportsSegmentComponent implements OnInit {
       this.getSegments();
       this.setSegmentColumns();
     });
+
+    // Get Module Rights
+    this.reportsService
+      .getUserMaxModuleRights(this.MODULE_IDS)
+      .subscribe((result) => {
+        if (result.data) {
+          const indexSegment: number = result.data.findIndex(
+            (e) => e.moduleDesc === 'Segments'
+          );
+          this.segmentModuleRights =
+            indexSegment >= 0
+              ? result.data[indexSegment].maxSecurityType
+              : 'View';
+        }
+      });
 
     this.reportsService.getSegmentsRights(0, 2).subscribe((result) => {
       if (result.data) {
@@ -160,6 +190,7 @@ export class ReportsSegmentComponent implements OnInit {
         maxHeight: LargeModal.MaxHeight,
         disableClose: true,
         data: {
+          segmentModuleRights: this.segmentModuleRights,
           openReportAction: 'edit',
           segmentID: data.data.segmentID,
           criteriaSetID: data.data.criteriaSetID,
@@ -188,6 +219,7 @@ export class ReportsSegmentComponent implements OnInit {
       maxHeight: LargeModal.MaxHeight,
       disableClose: true,
       data: {
+        segmentModuleRights: this.segmentModuleRights,
         segmentID: data.data.segmentID,
         criteriaSetID: data.data.criteriaSetID,
         portfolioID: data.data.portfolioID,

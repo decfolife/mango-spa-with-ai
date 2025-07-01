@@ -1,4 +1,4 @@
-import { Component, Inject, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -16,7 +16,7 @@ import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
   templateUrl: './create-segment.component.html',
   styleUrls: ['./create-segment.component.scss'],
 })
-export class CreateSegmentComponent {
+export class CreateSegmentComponent implements OnInit {
   public segmentConfig: any;
   public criteriaSetConfig: any;
   public criteriaItemConfig: any;
@@ -62,6 +62,7 @@ export class CreateSegmentComponent {
     public dialogRef: MatDialogRef<CreateSegmentComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
+      segmentModuleRights: string;
       criteriaSetID: number;
       config: any;
       redirectData: any;
@@ -475,215 +476,211 @@ export class CreateSegmentComponent {
     this.textboxHasBeenModified = true;
     this.segmentName = this.segmentName?.trim();
     this.onSegmentTextChange(this.segmentName);
+
+    if (this.loading || this.isSaveDisabled()) {
+      return;
+    }
+
     if (
-      !this.loading &&
-      (this.hasEditRight ||
-        (this.data.openReportAction === 'edit' && this.hasObjectEditRight))
+      !(
+        !this.selectedCriteriaId ||
+        !this.isItemSelected ||
+        !this.segmentLengthValid ||
+        !this.hasSegmentNameInput
+      )
     ) {
-      if (
-        !(
-          !this.selectedCriteriaId ||
-          !this.isItemSelected ||
-          !this.segmentLengthValid ||
-          !this.hasSegmentNameInput
-        )
-      ) {
-        if (this.segmentName) {
-          setTimeout(() => {
-            const dependentConfig =
-              this.criteriaForm.dependentCriteriaDynamicForm?.getConfig();
-            let requiredFieldMissing = false;
-            let saveObject = [];
-            let dependentItemSelected = false;
-            let nonDependentItemSelected = false;
-            if (dependentConfig) {
-              Object.values(dependentConfig).forEach((item: any) => {
-                if (item.required && item.value.length === 0) {
-                  requiredFieldMissing = true;
-                } else if (item.value.length !== 0) {
-                  dependentItemSelected = true;
+      if (this.segmentName) {
+        setTimeout(() => {
+          const dependentConfig =
+            this.criteriaForm.dependentCriteriaDynamicForm?.getConfig();
+          let requiredFieldMissing = false;
+          let saveObject = [];
+          let dependentItemSelected = false;
+          let nonDependentItemSelected = false;
+          if (dependentConfig) {
+            Object.values(dependentConfig).forEach((item: any) => {
+              if (item.required && item.value.length === 0) {
+                requiredFieldMissing = true;
+              } else if (item.value.length !== 0) {
+                dependentItemSelected = true;
+              }
+            });
+            saveObject = this.criteriaForm.getSaveSegmentObject(
+              dependentConfig,
+              saveObject
+            );
+          }
+
+          const config = this.criteriaForm.criteriaDynamicForm?.getConfig();
+          if (config) {
+            Object.values(config).forEach((item: any) => {
+              if (
+                item.required &&
+                ((item.value == null && (!item.value1 || !item.value2)) ||
+                  item.value?.length === 0 ||
+                  item.value1?.length === 0 ||
+                  item.value2?.length === 0)
+              ) {
+                requiredFieldMissing = true;
+              } else if (item.value?.length !== 0) {
+                nonDependentItemSelected = true;
+              }
+            });
+            saveObject = this.criteriaForm.getSaveSegmentObject(
+              config,
+              saveObject
+            );
+          }
+          if (!(dependentItemSelected || nonDependentItemSelected)) {
+            this.showNotifyMessage('noSelectedCriteria');
+          } else {
+            if (this.data.openReportAction === 'edit') {
+              saveObject.forEach((saveItem) => {
+                const segmentFieldID =
+                  this.segmentFieldIDKey[saveItem.CriteriaID];
+                if (segmentFieldID) {
+                  saveItem['segmentFieldID'] = segmentFieldID;
                 }
               });
-              saveObject = this.criteriaForm.getSaveSegmentObject(
-                dependentConfig,
-                saveObject
-              );
+
+              saveObject = this.buildEmptySaveObject(saveObject);
             }
-
-            const config = this.criteriaForm.criteriaDynamicForm?.getConfig();
-            if (config) {
-              Object.values(config).forEach((item: any) => {
-                if (
-                  item.required &&
-                  ((item.value == null && (!item.value1 || !item.value2)) ||
-                    item.value?.length === 0 ||
-                    item.value1?.length === 0 ||
-                    item.value2?.length === 0)
-                ) {
-                  requiredFieldMissing = true;
-                } else if (item.value?.length !== 0) {
-                  nonDependentItemSelected = true;
-                }
-              });
-              saveObject = this.criteriaForm.getSaveSegmentObject(
-                config,
-                saveObject
-              );
+            if (!(this.data.openReportAction === 'edit')) {
+              this.data.segmentID = 0;
             }
-            if (!(dependentItemSelected || nonDependentItemSelected)) {
-              this.showNotifyMessage('noSelectedCriteria');
-            } else {
-              if (this.data.openReportAction === 'edit') {
-                saveObject.forEach((saveItem) => {
-                  const segmentFieldID =
-                    this.segmentFieldIDKey[saveItem.CriteriaID];
-                  if (segmentFieldID) {
-                    saveItem['segmentFieldID'] = segmentFieldID;
-                  }
-                });
+            const request = {
+              SegmentID: this.data.segmentID ? this.data.segmentID : 0,
+              CriteriaSetID: this.selectedCriteriaId,
+              Name: this.segmentName,
+              SegmentFields: saveObject,
+              Active: true,
+              PortfolioID: this.criteriaForm.selectedPortfolio,
+            };
 
-                saveObject = this.buildEmptySaveObject(saveObject);
-              }
-              if (!(this.data.openReportAction === 'edit')) {
-                this.data.segmentID = 0;
-              }
-              const request = {
-                SegmentID: this.data.segmentID ? this.data.segmentID : 0,
-                CriteriaSetID: this.selectedCriteriaId,
-                Name: this.segmentName,
-                SegmentFields: saveObject,
-                Active: true,
-                PortfolioID: this.criteriaForm.selectedPortfolio,
-              };
-
-              if (!requiredFieldMissing) {
-                this.showloading = true;
-                this.reportsService
-                  .saveSegments(request)
-                  .subscribe((result) => {
-                    this.showloading = false;
-                    if (result?.data === -2) {
-                      this.setInvalidName();
-                    } else {
-                      this.toastService.show(
-                        'Segment saved successfully.',
-                        undefined,
-                        ToastState.SUCCESS,
-                        {
-                          maxWidth: '500px',
-                          duration: 3000,
-                          closeOnClick: true,
-                        }
-                      );
-                      if (isSaveAndNew) {
-                        this.saveAndNewClicked = true;
-                        this.loading = true;
-                        this.selectedCriteriaId = undefined; // Resets Criteria ID
-                        this.selectedReportCriteriaSet = undefined;
-                        this.criteriaSetModified = false; // Resets criteria set input validation
-                        // this.isItemSelected = false;
-                        // this.segmentLengthValid = true;
-                        // this.hasSegmentNameInput = false;
-                        this.segmentName = undefined;
-                        // this.defaultValues = undefined;
-                        this.data.config = undefined;
-                        this.data.criteriaSetID = undefined;
-                        this.data.redirectData = null; // Makes criteria set selectable
-                        this.data.openReportAction = 'create';
-                        this.idPrefix = 'CreateSegment';
-                        this.hintMessageText =
-                          'The segment name is the label given for the selected criteria below.';
-                        this.criteriaForm?.criteriaDynamicForm.clearForm();
-                        this.setformConfig(null);
-                        setTimeout(() => {
-                          this.loading = false;
-                        });
-                      } else {
-                        if (this.data.redirectData?.source === 'runreport') {
-                          const config =
-                            this.criteriaForm?.criteriaDynamicForm?.getConfig();
-                          const depConfig =
-                            this.criteriaForm?.dependentCriteriaDynamicForm?.getConfig();
-                          let saveObject = [];
-                          let depSaveObject = [];
-                          let newSegmentConfig = {};
-                          if (this.isItemSelected) {
-                            newSegmentConfig['PortfolioID'] =
-                              this.criteriaForm.selectedPortfolio;
-                          }
-
-                          if (config) {
-                            saveObject = this.criteriaForm.getSaveObject(
-                              config,
-                              saveObject,
-                              false
-                            );
-                          }
-                          if (depConfig) {
-                            depSaveObject = this.criteriaForm?.getSaveObject(
-                              depConfig,
-                              depSaveObject,
-                              true
-                            );
-                          }
-
-                          saveObject.forEach((x) => {
-                            if (config[x.FieldName]) {
-                              newSegmentConfig[
-                                config[x.FieldName]?.data.criteriaID
-                              ] = Object.values(x)[1];
-                            }
-                          });
-                          depSaveObject.forEach((x) => {
-                            if (depConfig[x.CriteriaID]) {
-                              newSegmentConfig[x.CriteriaID] =
-                                Object.values(x)[1];
-                            }
-                          });
-                          const reportConfig = {
-                            height: LargeModal.Height,
-                            width: LargeModal.Width,
-                            maxWidth: LargeModal.MaxWidth,
-                            maxHeight: LargeModal.MaxHeight,
-                            disableClose: true,
-                            data: {
-                              reportId: this.data.redirectData.reportID,
-                              reportName: this.data.redirectData.reportName,
-                              redirectData: {
-                                segmentValues: newSegmentConfig,
-                                newSegmentID: result.data,
-                              },
-                            },
-                          };
-                          this.dialogRef.close(reportConfig);
-                        } else {
-                          this.dialogRef.close('refresh');
-                        }
-                      }
-                    }
-                  });
-              } else {
-                if (this.data.hideToastsOn === this.currentCriteriaName) {
-                  // Do nothing
+            if (!requiredFieldMissing) {
+              this.showloading = true;
+              this.reportsService.saveSegments(request).subscribe((result) => {
+                this.showloading = false;
+                if (result?.data === -2) {
+                  this.setInvalidName();
                 } else {
                   this.toastService.show(
-                    'Required Field Missing.',
+                    'Segment saved successfully.',
                     undefined,
-                    ToastState.ERROR,
+                    ToastState.SUCCESS,
                     {
                       maxWidth: '500px',
-                      duration: 5000,
+                      duration: 3000,
                       closeOnClick: true,
                     }
                   );
+                  if (isSaveAndNew) {
+                    this.saveAndNewClicked = true;
+                    this.loading = true;
+                    this.selectedCriteriaId = undefined; // Resets Criteria ID
+                    this.selectedReportCriteriaSet = undefined;
+                    this.criteriaSetModified = false; // Resets criteria set input validation
+                    // this.isItemSelected = false;
+                    // this.segmentLengthValid = true;
+                    // this.hasSegmentNameInput = false;
+                    this.segmentName = undefined;
+                    // this.defaultValues = undefined;
+                    this.data.config = undefined;
+                    this.data.criteriaSetID = undefined;
+                    this.data.redirectData = null; // Makes criteria set selectable
+                    this.data.openReportAction = 'create';
+                    this.idPrefix = 'CreateSegment';
+                    this.hintMessageText =
+                      'The segment name is the label given for the selected criteria below.';
+                    this.criteriaForm?.criteriaDynamicForm.clearForm();
+                    this.setformConfig(null);
+                    setTimeout(() => {
+                      this.loading = false;
+                    });
+                  } else {
+                    if (this.data.redirectData?.source === 'runreport') {
+                      const config =
+                        this.criteriaForm?.criteriaDynamicForm?.getConfig();
+                      const depConfig =
+                        this.criteriaForm?.dependentCriteriaDynamicForm?.getConfig();
+                      let saveObject = [];
+                      let depSaveObject = [];
+                      let newSegmentConfig = {};
+                      if (this.isItemSelected) {
+                        newSegmentConfig['PortfolioID'] =
+                          this.criteriaForm.selectedPortfolio;
+                      }
+
+                      if (config) {
+                        saveObject = this.criteriaForm.getSaveObject(
+                          config,
+                          saveObject,
+                          false
+                        );
+                      }
+                      if (depConfig) {
+                        depSaveObject = this.criteriaForm?.getSaveObject(
+                          depConfig,
+                          depSaveObject,
+                          true
+                        );
+                      }
+
+                      saveObject.forEach((x) => {
+                        if (config[x.FieldName]) {
+                          newSegmentConfig[
+                            config[x.FieldName]?.data.criteriaID
+                          ] = Object.values(x)[1];
+                        }
+                      });
+                      depSaveObject.forEach((x) => {
+                        if (depConfig[x.CriteriaID]) {
+                          newSegmentConfig[x.CriteriaID] = Object.values(x)[1];
+                        }
+                      });
+                      const reportConfig = {
+                        height: LargeModal.Height,
+                        width: LargeModal.Width,
+                        maxWidth: LargeModal.MaxWidth,
+                        maxHeight: LargeModal.MaxHeight,
+                        disableClose: true,
+                        data: {
+                          reportId: this.data.redirectData.reportID,
+                          reportName: this.data.redirectData.reportName,
+                          redirectData: {
+                            segmentValues: newSegmentConfig,
+                            newSegmentID: result.data,
+                          },
+                        },
+                      };
+                      this.dialogRef.close(reportConfig);
+                    } else {
+                      this.dialogRef.close('refresh');
+                    }
+                  }
                 }
+              });
+            } else {
+              if (this.data.hideToastsOn === this.currentCriteriaName) {
+                // Do nothing
+              } else {
+                this.toastService.show(
+                  'Required Field Missing.',
+                  undefined,
+                  ToastState.ERROR,
+                  {
+                    maxWidth: '500px',
+                    duration: 5000,
+                    closeOnClick: true,
+                  }
+                );
               }
             }
-          });
-        }
-      } else if (!this.selectedCriteriaId || !this.isItemSelected) {
-        this.showNotifyMessage('noSelectedCriteria');
+          }
+        });
       }
+    } else if (!this.selectedCriteriaId || !this.isItemSelected) {
+      this.showNotifyMessage('noSelectedCriteria');
     }
   }
 
@@ -758,5 +755,31 @@ export class CreateSegmentComponent {
     } else {
       this.dialogRef.close();
     }
+  }
+
+  /**
+   * Determines if the Save button is enabled/disabled
+   *
+   * @return {*}  {boolean}
+   * @memberof CreateSegmentComponent
+   */
+  isSaveDisabled(): boolean {
+    if (
+      this.data.openReportAction === 'copy' &&
+      this.data.segmentModuleRights === 'Add'
+    ) {
+      return false;
+    }
+    return this.data?.archived || !this.hasObjectEditRight;
+  }
+
+  getSaveAttrTitle(): string {
+    let title = '' as string;
+
+    if (this.data.segmentModuleRights !== 'Add' && !this.hasObjectEditRight) {
+      title =
+        'You have View rights to this segment. Ask your administrator to grant you additional rights to edit this segment.';
+    }
+    return title;
   }
 }

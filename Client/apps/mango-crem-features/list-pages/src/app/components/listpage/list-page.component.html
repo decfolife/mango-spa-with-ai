@@ -1,5 +1,5 @@
 <dx-load-panel
-  [closeOnOutsideClick]="false"
+  [hideOnOutsideClick]="false"
   [visible]="isGLEvent && (isCopyCharge || isChargeAction)"
   [message]="isCopyCharge ? 'Please, wait...' : 'Loading...'"
 >
@@ -246,7 +246,7 @@
     [showTitle]="true"
     title="{{ popupInfo.popupTitle }}"
     [dragEnabled]="popupInfo.dragEnabled"
-    [closeOnOutsideClick]="true"
+    [hideOnOutsideClick]="true"
     [(visible)]="popupInfo.popupVisible"
     position="{ my: 'center', at: 'center', of: window }"
   >
@@ -316,7 +316,9 @@
   >
     <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
 
-    <dxo-column-chooser [allowSearch]="true"></dxo-column-chooser>
+    <dxo-column-chooser>
+      <dxo-search [enabled]="true"> </dxo-search>
+    </dxo-column-chooser>
 
     <dxo-scrolling columnRenderingMode="virtual"></dxo-scrolling>
 
@@ -344,10 +346,9 @@
 
     <dxo-sorting mode="multiple"></dxo-sorting>
 
-    <dxo-header-filter
-      [visible]="showHeaderFilter"
-      [allowSearch]="true"
-    ></dxo-header-filter>
+    <dxo-header-filter [visible]="showHeaderFilter">
+      <dxo-search [enabled]="true"> </dxo-search>
+    </dxo-header-filter>
 
     <dxo-filter-builder-popup
       [width]="1150"
@@ -659,7 +660,7 @@
       resizeEnabled="true"
       [(visible)]="filterBuilderMapVisible"
       title="Filter Builder - View Only"
-      closeOnOutsideClick="true"
+      [hideOnOutsideClick]="true"
     >
       <dx-filter-builder
         [fields]="filterFields"

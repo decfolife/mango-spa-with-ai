@@ -1,0 +1,99 @@
+<div *ngIf="executing">
+    <section class="step-content">
+    <div class="load-file-header">
+        Loading Documents to the Objects...
+    </div>
+    <div>
+        <div class="label-warning">
+        This will take some time, please check back later.
+        </div>
+        <div class="label-warning">
+        Additionally, you will be notified via email when this is
+        completed.
+        </div>
+    </div>
+    </section>
+</div>
+<div class="validation-result-container" *ngIf="!executing && !executingCompleted">
+    <div class="step-title label-normal">Comparison Results</div>
+    <div class="grid-container">
+    <dx-data-grid
+        id="files-provided"
+        [showColumnLines]="false"
+        [showRowLines]="false"
+        [showBorders]="false"
+        [rowAlternationEnabled]="true"
+        [allowColumnResizing]="true"
+        [allowColumnReordering]="true"
+        [columnAutoWidth]="false"
+        [dataSource]="comparisonResults"
+        [wordWrapEnabled]="true"
+        [height]="'100%'"
+    >
+        <dxo-header-filter
+        [visible]="true"
+        [allowSearch]="true"
+        ></dxo-header-filter>
+        <dxo-search-panel [visible]="false"></dxo-search-panel>
+        <dxo-paging [pageSize]="10"></dxo-paging> 
+        <dxo-pager
+        [showPageSizeSelector]="false"
+        [visible]="true"
+        [allowedPageSizes]="[10]"
+        [showInfo]="true"
+        [showNavigationButtons]="true"
+        ></dxo-pager>
+        <dxo-scrolling mode="standard"></dxo-scrolling>
+        <dxi-column
+        caption="Files - Folder Name"
+        dataField="Folder"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Files - File Name"
+        dataField="FileName"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Files - Full File Path"
+        dataField="FullFilePath"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Files - File Size"
+        dataField="FileSizeKB"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Mapping - Key Value"
+        dataField="SourceImportID"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Mapping - Parent Object Lookup Value"
+        dataField="ParentLookupValue"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Mapping - Folder Name"
+        dataField="Folder"
+        alignment="left"
+        ></dxi-column>
+        <dxi-column
+        caption="Mapping - CoStar Folder Name"
+        dataField="CoStarFolder"
+        alignment="left"
+        ></dxi-column>                    
+        <dxi-column
+        caption="Mapping - Document"
+        dataField="FileName"
+        alignment="center"
+        ></dxi-column>
+        <dxi-column
+        caption="Mapping - CoStar File Name"
+        dataField="CoStarFileName"
+        alignment="center"
+        ></dxi-column>                    
+    </dx-data-grid>
+    </div>
+</div>

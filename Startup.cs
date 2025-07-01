@@ -1,32 +1,33 @@
 using Mango.MangoSPA;
+using MangoSPA.Extensions;
+using MangoSPA.Middleware;
+using MangoSPA.Models;
+using MangoSPA.Services;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.HttpOverrides;
-using Serilog.Events;
-using Serilog;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
-using System.IO;
-using MangoSPA.Services;
-using Yarp.ReverseProxy.Transforms;
-using StackExchange.Redis;
-using MangoSPA.Extensions;
-using Microsoft.AspNetCore.DataProtection;
-using MangoSPA.Middleware;
-using static MangoSPA.Constants;
-using MangoSPA.Models;
-using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Antiforgery;
+using OpenTelemetry.Trace;
 using Prometheus;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Json;
+using StackExchange.Redis;
+using System.IO;
+using System.Net.Http.Headers;
+using System.Reflection;
+using Yarp.ReverseProxy.Transforms;
+using static MangoSPA.Constants;
 
 namespace MangoSPA;
 
@@ -79,7 +80,7 @@ public class Startup
             c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var service = p.GetRequiredService<IRequestService>();
 
-            c.DefaultRequestHeaders.Add(Constants.Headers.TrackingId, service.TrackingId.ToString());
+            c.DefaultRequestHeaders.Add(Headers.TrackingId, service.TrackingId.ToString());
         });
 
         services.AddCors(options =>
@@ -175,6 +176,7 @@ public class Startup
         app.UseHttpMetrics();
 
         app.UseAuthentication();
+        app.UseMiddleware<RequestLogContextMiddleware>();
         app.UseAuthorization();
         app.UseAntiforgery();
 
@@ -198,7 +200,7 @@ public class Startup
             });
         });
 
-        app.UseSerilogRequestLogging();
+        //app.UseSerilogRequestLogging();
 
         // Needed if we want to serve mangoSPA using .NET web server.
         // Handles all still unattended (by any other middleware) requests by returning the default page of the SPA (wwwroot/index.html).
@@ -240,12 +242,16 @@ public class Startup
         var configuration = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
             .Enrich.FromLogContext()
             .Enrich.WithEnvironmentUserName()
             .Enrich.WithMachineName()
+            .Enrich.WithClientIp()
+            .Enrich.WithExceptionStackTraceHash()
             .Enrich.WithProperty("EntryPoint", Assembly.GetEntryAssembly()?.GetName().Name)
             .Enrich.WithProperty("Version", Assembly.GetEntryAssembly()?.GetName().Version?.ToString())
-            .WriteTo.Console(LogEventLevel.Information, "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level}] {CorrelationId} - {Message}{NewLine}{Exception}");
+            .WriteTo.Console(new JsonFormatter());
+            //.WriteTo.Console(LogEventLevel.Information, "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level}] {CorrelationId} - {Message}{NewLine}{Exception}");
 
         Log.Logger = configuration.CreateLogger();
 
@@ -385,7 +391,7 @@ public class Startup
         services.AddScoped<IRequestService>(provider =>
         {
             var httpContext = provider.GetRequiredService<IHttpContextAccessor>();
-            var trackingId = httpContext.GetHeaderValue<Guid>(Headers.TrackingId, Guid.NewGuid());
+            var trackingId = httpContext.GetHeaderValue(Headers.TrackingId, Guid.NewGuid());
             httpContext.SetHeaderValue(Headers.TrackingId, trackingId.ToString());
 
             return new RequestService(trackingId);

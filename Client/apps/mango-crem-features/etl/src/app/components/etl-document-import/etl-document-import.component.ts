@@ -1,12 +1,7 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ETLService } from '@etl/services/etl.service';
+import { FileUploadService } from '@etl/services/file-upload-service';
 import { Subscription } from 'rxjs';
 import {
   PageHeaderComponent,
@@ -18,13 +13,31 @@ import {
   ToastComponent,
   CremToastService,
 } from '@mango/ui-shared/lib-ui-elements';
-import { ToastState } from '../../../../../../../libs/data-models/lib-data-models/src';
+import { ToastState } from 'libs/data-models/lib-data-models/src';
 import { MatStepperModule, MatStepper } from '@angular/material/stepper';
-import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
-import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
+import { DxFileUploaderModule } from 'devextreme-angular';
+import {
+  DxFileUploaderComponent,
+  DxFileUploaderTypes,
+} from 'devextreme-angular/ui/file-uploader';
+import {
+  ETLDocImportLongProcess,
+  ETLDocumentImportStatus,
+  ETLDocumentImportStep,
+} from '@etl/model/document-import-enums';
+import { Router, RouterStateSnapshot } from '@angular/router';
+import { MangoDialogService } from '@mango/core-shared';
+import { FilesValidationResultsComponent } from '../etl-document-import/files-validation-results/files-validation-results.component';
+import { TemplateValidationResultsComponent } from '../etl-document-import/template-validation-results/template-validation-results.component';
+import { MapToObjectsComponent } from '../etl-document-import/map-to-objects/map-to-objects.component';
 
 @Component({
   selector: 'mango-etl-document-import',
+  templateUrl: './etl-document-import.component.html',
+  styleUrls: [
+    './etl-document-import.component.scss',
+    './etl-document-import-shared-styles.scss',
+  ],
   standalone: true,
   imports: [
     CommonModule,
@@ -36,57 +49,151 @@ import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
     NoObjectsFoundComponent,
     MatStepperModule,
     ToastComponent,
+    DxFileUploaderModule,
+    FilesValidationResultsComponent,
+    TemplateValidationResultsComponent,
+    MapToObjectsComponent,
   ],
-  templateUrl: './etl-document-import.component.html',
-  styleUrls: ['./etl-document-import.component.scss'],
 })
 export class EtlDocumentImportComponent {
   @ViewChild('DocumentImportStepper', { static: false }) stepper: MatStepper;
-  clientKey = '';
-  currentStepIndex = 0;
-  isSuperUser = false;
+  routerSnapshot: RouterStateSnapshot;
+  dxfileUploaderComponent!: DxFileUploaderComponent;
   subs: Subscription[] = [];
-  hasDocumentImportRights = false;
   canAccessDocumentImportPage = true;
-  fileSelected = false;
-  fileLoadingCompleted = false;
-  fileLoading = false;
-  // fileValidating = false;
-  fileValidationCompleted = false;
-  importingMappingTemplateComplete = false;
+  currentUrl = '';
+  allowedExtensions = '';
   isFTP = false;
-  ftpPath = 'ftp.test.corp.virtualpremise.com';
-  ftpWarning =
-    'This is the directory where the .zip file should be loaded via the CoStar SFTP site.';
-  validationResult = null;
-
+  fileSelected = false;
   fileToUpload: File | null = null;
-  totalFilesUploaded: number;
-  totalSizeUploaded: number;
-  untrustedFileName: string;
-  uploadStatusHtml: string = '';
-  uploadProgress: number = 0;
-  uploadStatus: string = '';
-  selectedFileNameDisplay: string = '';
-  allowedExtensions: string = '';
-  //documentsImportStatus: boolean = false;
+  fileLoading = false;
+  uploadStatus = '';
+  uploadedFileName = '';
+  fileValidationCompleted = false;
+  filesValidationResults = null;
+  isTemplateValid = false;
+  hasValidTemplateData = false;
+  templateFile: File | null = null;
+  templateFileName = '';
+  templateValidating = false;
+  templateValidationCompleted = false;
+  templateValidationResults = null;
+  mappingTemplateCompleted = false;
+  comparisonResults = [];
+  executing = false;
+  executingCompleted = false;
+  toastDuration = 5000;
+  toastMaxWidth = '500px';
+  showAllFormatsDiv = false;
+  ftpPath = 'Inbound/toCoStar/DocumentImport/';
+  ftpWarning =
+    'This is the directory where the compressed file should be loaded via the CoStar sFTP site.';
+  msgInvalidTemplate =
+    'Template is not valid, please verify you are loading the Document Mapping template.';
+  msgErrorMapDocumentToObject =
+    'Error occured when mapping document to object.';
+  msgSuccess = 'Document Import Completed Successfully';
+  msgNoFiles = 'No files found in sFTP site';
 
-  @Output() public onUploadFinished = new EventEmitter();
-  @ViewChild('hdnFileInput') selectFileInput: ElementRef;
   constructor(
     private etlService: ETLService,
-    private mangoFacade: MangoAppFacade,
-    private toastService: CremToastService
-  ) {}
+    private fileUploadService: FileUploadService,
+    private toastService: CremToastService,
+    private router: Router,
+    private dialogService: MangoDialogService
+  ) {
+    this.routerSnapshot = router.routerState.snapshot;
+  }
 
   ngOnInit(): void {
-    this.selectedFileNameDisplay = '';
-    this.allowedExtensions = this.getAllowedExtenstions();
+    this.currentUrl = this.routerSnapshot.url;
+    this.allowedExtensions = this.fileUploadService.getAllowedExtenstions();
     this.subs.push(
       this.etlService.hasDocumentImportRight().subscribe((result) => {
         if (result.success) {
           this.canAccessDocumentImportPage = result.data;
-          this.setFTPPath();
+        }
+      })
+    );
+  }
+
+  ngAfterViewInit(): void {
+    this.subs.push(
+      this.etlService.getDocumentImportStatus().subscribe((result) => {
+        if (result.success) {
+          const data = result.data;
+          const status: ETLDocumentImportStatus =
+            data?.StatusId ?? ETLDocumentImportStatus.NOTSTARTED;
+
+          if (status === ETLDocumentImportStatus.NOTSTARTED) return;
+
+          this.uploadedFileName = data?.UntrustedFileName;
+          this.templateFileName = data?.TemplateName;
+          this.fileToUpload = result;
+
+          switch (status) {
+            case ETLDocumentImportStatus.SFTPFILEUPLOADING:
+              this.stepper.selectedIndex =
+                ETLDocumentImportStep.FILEUPLOADEXTRACT;
+              this.fileSelected = true;
+              this.isFTP = true;
+              this.fileLoading = true;
+              this.waitTillFilesValidated();
+              break;
+            case ETLDocumentImportStatus.FILESUPLOADED:
+            case ETLDocumentImportStatus.FILESEXTRACTED:
+              this.displayFileValidatingMsg();
+              break;
+            case ETLDocumentImportStatus.FILESVALIDATED:
+              this.showFilesValidatinResult();
+              break;
+            case ETLDocumentImportStatus.TemplateFileUploaded:
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEUPLOADEXTRACT
+              ).completed = true;
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEVALIDATION
+              ).completed = true;
+              this.stepper.selectedIndex =
+                ETLDocumentImportStep.TEMPLATEVALIDATION;
+              this.templateValidating = true;
+              this.waitTillTemplateValidated();
+              break;
+            case ETLDocumentImportStatus.TEMPLATEVALIDATED:
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEUPLOADEXTRACT
+              ).completed = true;
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEVALIDATION
+              ).completed = true;
+              this.stepper.selectedIndex =
+                ETLDocumentImportStep.TEMPLATEVALIDATION;
+              this.fileValidationCompleted = true;
+              this.templateValidationCompleted = true;
+              this.isTemplateValid = true;
+              this.hasValidTemplateData = true;
+              this.getTemplateValidationResults();
+              break;
+            case ETLDocumentImportStatus.TEMPLATEREADYTOPROCESS:
+            case ETLDocumentImportStatus.PROCESSING:
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEUPLOADEXTRACT
+              ).completed = true;
+              this.stepper.steps.get(
+                ETLDocumentImportStep.FILEVALIDATION
+              ).completed = true;
+              this.stepper.steps.get(
+                ETLDocumentImportStep.TEMPLATEVALIDATION
+              ).completed = true;
+              this.stepper.selectedIndex = ETLDocumentImportStep.EXECUTE;
+              this.fileValidationCompleted = true;
+              this.templateValidationCompleted = true;
+              this.executing = true;
+              this.waitTillMapToObjectsCompleted();
+              break;
+            default:
+              break;
+          }
         }
       })
     );
@@ -96,242 +203,271 @@ export class EtlDocumentImportComponent {
     this.subs.forEach((s) => s.unsubscribe());
   }
 
-  getAllowedExtenstions(): string {
-    const extns =
-      '.ai,.avi,.bmp,.cdb,.csv,.ctb,.db,.dgn,.doc,.docm,.docx,.dot,.dotx,.dwf,.dwg,.dxf,.eml,.fmp,.g2m,.gif,.ics,.ipx,.jpeg,.jpg,.kmz,.mdb,.mdi,.mht,.mov,.mp4,.mpg,.mpp,.msg,.nsf,.ods,.oft,.pcp,.pdf,.plt,.png,.pps,.ppt,.pptm,.pptx,.psd,.ptm,.pub,.rar,.rtf,.rvt,.shx,.sif,.snag,.snp,.tif,.tiff,.ttf,.txt,.vcf,.vsd,.wav,.wk4,.wmv,.xlk,.xls,.xlsb,.xlsm,.xlsx,.xlt,.xltx,.xml,.xps,.zip,.CAD';
-    return extns;
-  }
-
-  selectFile(event: any): void {
-    this.isFTP = false;
-
-    const file = event.target.files[0];
-    if (file) {
-      this.fileToUpload = file;
-      const extension = this.getFileExtension(this.fileToUpload.name);
-      const allowedExtensions = '.' + this.getAllowedExtenstions();
-      if (!allowedExtensions.includes(extension)) {
-        const invalidFiletypeOrEmpty = `Input file not supported or empty, select only supported file types.`;
-        this.toastService.show(invalidFiletypeOrEmpty, '', ToastState.ERROR, {
-          maxWidth: '500px',
-          duration: 5000,
-          closeOnClick: true,
-        });
-      } else {
-        this.fileSelected = true;
-        this.selectedFileNameDisplay = this.fileToUpload.name;
-      }
-    }
-    //TODO: Replace the following place holder during API integration
-    /* setTimeout(() => {
-      this.fileSelected = true;
-    }, 2000); */
-  }
-
   ftpCheckValueChanged() {
     this.isFTP = !this.isFTP;
     this.fileSelected = this.isFTP;
+    if (this.isFTP) {
+      this.refreshFileUploader();
+    }
   }
 
-  moveToValidateFilesStep(stepper): void {
-    if (this.fileSelected || !this.fileLoadingCompleted) {
-      this.fileLoading = true;
+  handleSelectFileValueChanged(e: DxFileUploaderTypes.ValueChangedEvent) {
+    if (this.isFTP) return;
 
-      if (this.isFTP) {
-        this.subs.push(
-          this.etlService.getFilesFromSftp().subscribe((result) => {
-            if (result.success) {
-              this.fileLoadingCompleted = true;
-              stepper.selected.completed = true;
-              stepper.selectedIndex = 1;
-              this.currentStepIndex = 1;
-              this.validateFiles();
-            }
-          })
-        );
+    const file = e.value[0];
+    if (file) {
+      this.fileToUpload = file;
+      const isFileSizeValid = this.fileUploadService.isFileSizeFourGB(
+        file.size
+      );
+      const extension = this.fileUploadService.getFileExtension(
+        this.fileToUpload.name
+      );
+
+      if (!this.allowedExtensions.includes(extension) || !isFileSizeValid) {
+        const invalidFiletypeOrEmpty = !isFileSizeValid
+          ? `Maximum of 4GB allowed.`
+          : `Input file not supported or empty, select only supported file types.`;
+
+        this.toastService.show(invalidFiletypeOrEmpty, '', ToastState.ERROR, {
+          maxWidth: this.toastMaxWidth,
+          duration: this.toastDuration,
+        });
+        this.refreshFileUploader();
       } else {
-        //TODO: Upload selected file
-        //var nextMoveFlg = (async ()=>{ await this.uploadLoadChunkFileSequentially();});
-        var nextMoveFlg = this.uploadLoadChunkFileSequentially();
-        nextMoveFlg.then((x) => {
-          if (x) {
-            // TODO: GET THE IMPORT STATUS FROM [dbo].[tblETLDocumentStatus] WHERE StatusID=2 and Status=1 and set this.documentsImportStatus = true;
-            // AFTER UPLOADING AND UNZIP COMPLETED MOVE TO NEXT STEP.
-
-            //if(this.documentsImportStatus){
-            this.fileLoadingCompleted = true;
-            stepper.selected.completed = true;
-            stepper.selectedIndex = 1;
-            this.currentStepIndex = 1;
-            this.validateFiles();
-            //} else { this.uploadStatus = "Documents importing is still in progress, Email will be send after importing all documents. Please try later." }
-          }
-        });
+        this.fileSelected = true;
+        this.uploadedFileName = this.fileToUpload.name;
       }
-      return;
     }
   }
 
-  moveToMappingTemplateStep(stepper): void {
-    //TODO: Replace the following place holder during API integration
-    setTimeout(() => {
-      this.fileLoadingCompleted = true;
-      // this.fileValidating = false;
-      stepper.selected.completed = true;
-      stepper.selectedIndex = 2;
-      this.currentStepIndex = 2;
-    }, 8000);
+  setTemplateValid(isValid: boolean) {
+    this.isTemplateValid = isValid;
   }
 
-  downloadValidationResult() {
-    this.etlService.downloadExcel();
+  templateSelected(file: File) {
+    this.templateFile = file;
+    this.templateFileName = file.name;
   }
 
-  cancelProcess() {
-    this.fileLoadingCompleted = true;
+  reValidateTemplate(file: File) {
+    this.templateFile = file;
+    this.templateFileName = file.name;
+    this.templateValidationCompleted = false;
+    this.validateTemplate();
   }
 
-  importMappingTemplate(): void {
-    setTimeout(() => {
-      this.importingMappingTemplateComplete = true;
-    }, 2000);
-  }
-
-  moveToExecuteStep(stepper): void {
-    this.currentStepIndex = 3;
-    stepper.selected.completed = true;
-    stepper.selectedIndex = 3;
-  }
-
-  // selected file - document Upload start
-
-  getFileExtension(filename: string): string {
-    return filename.split('.').pop() || '';
-  }
-  triggerSelectInputFile(): void {
-    this.selectFileInput.nativeElement.click();
-  }
-  async processChunkFileUploadSequentially(currentPromise) {
-    return await currentPromise();
-  }
-
-  async uploadLoadChunkFileSequentially(): Promise<boolean> {
-    const currentPromiseItems = await this.uploadChunkFiles();
-    let canMoveToNextSetp: boolean = true;
-
-    const processCompleted: number[] = [];
-    //this.uploadStatus += 'Merge will start after uploading selected file';
-    for (let i = 0; i < currentPromiseItems.length; i++) {
-      if (!canMoveToNextSetp) break;
-
-      await this.processChunkFileUploadSequentially(currentPromiseItems[i])
-        .then((results) => {
-          // console.log('AfterPromiseR:' + results);
-          processCompleted.push(i);
-        })
-        .catch((err) => {
-          //console.log('uploadLoadChunkFileSequentially' +  err);
-          canMoveToNextSetp = false;
-          //return false;
-        });
-    }
-
-    if (
-      canMoveToNextSetp &&
-      processCompleted.length == currentPromiseItems.length
-    ) {
-      this.uploadStatus += 'Merge started, It will take few mins to complete.';
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  uploadChunkFiles = async () => {
-    const file = this.fileToUpload;
-    const filename = this.fileToUpload.name;
-    const chunkSize: number = 10 * 1024 * 1024;
-    const totalChunks = Math.ceil(file.size / chunkSize);
-    let start = 0;
-    let chunkIndex = 0;
-    this.uploadStatusHtml = '';
-    const arrPromiseFns = [];
-
-    try {
-      while (start < file.size) {
-        const chunk = file.slice(start, start + chunkSize);
-        const formData = new FormData();
-        formData.append('chunkFile', chunk, filename);
-        formData.append('chunkIndex', chunkIndex.toString());
-        formData.append('totalChunks', totalChunks.toString());
-        formData.append('fileName', filename);
-        this.onUploadFinished = new EventEmitter();
-        this.uploadProgress = 0;
-        //this.uploadStatus  = '';
-        const successmsg = `Successfully completed chunk ${chunkIndex.toString()} in array`;
-        const isLastChunk: boolean = chunkIndex == totalChunks - 1;
-        arrPromiseFns.push(
-          () =>
-            new Promise<any>((resolve2) =>
-              setTimeout(async () => {
-                (
-                  await this.etlService.chunkFileUpload(formData, isLastChunk)
-                ).subscribe({
-                  next: (event) => {
-                    if (event) {
-                      if (event.type === HttpEventType.UploadProgress)
-                        this.uploadProgress = Math.round(
-                          (100 * event.loaded) / event.total
-                        );
-                      else if (event.type === HttpEventType.Response) {
-                        //console.log(event.body);
-                        this.uploadStatus = '' + event.body.data;
-                        this.onUploadFinished.emit(event.body);
-                        resolve2(successmsg);
-                      }
-                    }
-                  },
-                  error: (err: HttpErrorResponse) => {
-                    this.uploadStatus = `Error uploading file. Status: ${err.status} ${err.statusText} 
-                          Message: ${err.message}`;
-                  },
-                  complete: () => {},
-                }); // subscribe
-              }, 1000)
-            )
-        );
-
-        (start += chunkSize), chunkIndex++;
-      } // whileloop
-      return arrPromiseFns;
-    } catch (error) {
-      console.log(error);
-    }
-  }; // uploadChunkFiles
-
-  // selected file - document Upload end
-
-  private setFTPPath() {
+  executeTemplate(): void {
     this.subs.push(
-      this.mangoFacade.clientKey$.subscribe((clientKey) => {
-        this.clientKey = clientKey;
-        this.ftpPath = `/Clients/ftp_${this.clientKey}_test/Inbound/toCostar/DocumentImport/`;
+      this.etlService.mapDocumentToObject().subscribe((result) => {
+        if (result.success) {
+          this.executing = true;
+          this.waitTillMapToObjectsCompleted();
+        }
       })
     );
   }
 
-  private validateFiles() {
-    if (!this.fileValidationCompleted) {
-      this.subs.push(
-        this.etlService.validateFiles().subscribe((result) => {
-          if (result.success) {
-            this.fileValidationCompleted = true;
-            this.getValidationResults();
-          }
-        })
-      );
+  moveToValidateFilesStep(): void {
+    if (this.fileSelected || !this.fileValidationCompleted) {
+      this.uploadStatus = '';
+
+      if (this.isFTP) {
+        this.subs.push(
+          this.etlService.getFilesFromSftp().subscribe((result) => {
+            this.fileLoading = true;
+            if (result.success) {
+              this.uploadedFileName = result.data.fileName;
+              this.waitTillFilesValidated();
+            } else if (result.statusCode == 404) {
+              this.toastService.show(this.msgNoFiles, '', ToastState.ERROR, {
+                maxWidth: this.toastMaxWidth,
+                duration: this.toastDuration,
+              });
+              this.refreshPage();
+            }
+          })
+        );
+      } else {
+        this.fileLoading = true;
+        const nextMoveFlg =
+          this.fileUploadService.uploadLoadChunkFileSequentially(
+            this.fileToUpload
+          );
+
+        nextMoveFlg.then(() => {
+          this.waitTillFilesValidated();
+        });
+      }
+    }
+  }
+
+  moveToMappingTemplateStep(stepper): void {
+    stepper.selected.completed = true;
+    stepper.selectedIndex = ETLDocumentImportStep.TEMPLATEVALIDATION;
+  }
+
+  moveToExecuteStep(stepper): void {
+    if (!this.templateValidationCompleted) {
+      this.validateTemplate();
     } else {
-      this.getValidationResults();
+      stepper.selected.completed = true;
+      stepper.selectedIndex = ETLDocumentImportStep.EXECUTE;
+    }
+  }
+
+  downloadFileValidationResults() {
+    this.etlService.downloadFileValidationReslts();
+  }
+
+  downloadMappingTemplateValidationResults() {
+    this.etlService.downloadMappingTemplateValidationResults();
+  }
+
+  downloadComparisonResults() {
+    this.etlService.downloadComparisonResults();
+  }
+
+  cancelProcess() {
+    const dialogCloseEvent = this.dialogService.confirm(
+      'Cancel Document Import Process',
+      `Are you sure you want to cancel this process? If you cancel, all files and templates currently imported will be deleted.\r\n\t<strong>${
+        this.uploadedFileName
+      }\r\n\t${this.templateFileName ?? ''}</strong>`,
+      'Confirm',
+      'Cancel'
+    );
+    dialogCloseEvent.subscribe((res) => {
+      if (res) {
+        this.subs.push(
+          this.etlService.cancelProcess().subscribe((result) => {
+            if (result.success) {
+              this.toastService.show(
+                'Process Successfully Canceled',
+                '',
+                ToastState.SUCCESS,
+                {
+                  maxWidth: this.toastMaxWidth,
+                  duration: this.toastDuration,
+                }
+              );
+              this.refreshPage();
+            }
+          })
+        );
+      }
+    });
+  }
+
+  showAllFormats() {
+    this.showAllFormatsDiv = true;
+  }
+
+  hideAllFormats() {
+    this.showAllFormatsDiv = false;
+  }
+
+  private refreshPage() {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([this.currentUrl]);
+    });
+  }
+
+  private showFilesValidatinResult() {
+    this.stepper.steps.get(ETLDocumentImportStep.FILEUPLOADEXTRACT).completed =
+      true;
+    this.stepper.selectedIndex = ETLDocumentImportStep.FILEVALIDATION;
+    this.fileValidationCompleted = true;
+    this.getValidationResults();
+  }
+
+  private displayFileValidatingMsg() {
+    this.stepper.steps.get(ETLDocumentImportStep.FILEUPLOADEXTRACT).completed =
+      true;
+    this.stepper.selectedIndex = ETLDocumentImportStep.FILEVALIDATION;
+  }
+
+  private waitTillTemplateValidated() {
+    const validateTemplatePoolingResult =
+      this.fileUploadService.handleLongProcessPooling(
+        ETLDocImportLongProcess.VALIDTEMPLATE
+      );
+
+    validateTemplatePoolingResult.then((fileReadyStatus) => {
+      if (
+        this.fileUploadService.longProcessCompleted &&
+        fileReadyStatus == ETLDocumentImportStatus.TEMPLATEVALIDATED
+      ) {
+        this.templateValidating = false;
+        this.isTemplateValid = true;
+        this.templateValidationCompleted = true;
+        this.getTemplateValidationResults();
+      } else if (this.fileUploadService.isDocumentImportFailed) {
+        this.uploadStatus = fileReadyStatus.toString();
+      }
+    });
+  }
+
+  private waitTillFilesValidated() {
+    const uploadExtractFilePoolresults =
+      this.fileUploadService.handleLongProcessPooling(
+        ETLDocImportLongProcess.UPLOADEXTRACTFILES
+      );
+
+    uploadExtractFilePoolresults.then((fileReadyStatus) => {
+      if (
+        this.fileUploadService.longProcessCompleted &&
+        fileReadyStatus == ETLDocumentImportStatus.FILESEXTRACTED
+      ) {
+        this.displayFileValidatingMsg();
+        const validateFilesPoolResults =
+          this.fileUploadService.handleLongProcessPooling(
+            ETLDocImportLongProcess.VALIDATEFILES
+          );
+
+        validateFilesPoolResults.then((fileReadyStatus) => {
+          if (
+            this.fileUploadService.longProcessCompleted &&
+            fileReadyStatus == ETLDocumentImportStatus.FILESVALIDATED
+          ) {
+            this.showFilesValidatinResult();
+          } else if (this.fileUploadService.isDocumentImportFailed) {
+            this.uploadStatus = fileReadyStatus.toString();
+          }
+        });
+      } else if (this.fileUploadService.isDocumentImportFailed) {
+        this.uploadStatus = fileReadyStatus.toString();
+      }
+    });
+  }
+
+  private waitTillMapToObjectsCompleted() {
+    const mapToObjectsPoolingResults =
+      this.fileUploadService.handleLongProcessPooling(
+        ETLDocImportLongProcess.MAPTOOBJECTS
+      );
+
+    mapToObjectsPoolingResults.then((fileReadyStatus) => {
+      if (
+        this.fileUploadService.longProcessCompleted &&
+        fileReadyStatus == ETLDocumentImportStatus.PROCESSCOMPLETED
+      ) {
+        this.executingCompleted = true;
+
+        this.toastService.show(this.msgSuccess, '', ToastState.SUCCESS, {
+          maxWidth: this.toastMaxWidth,
+          duration: this.toastDuration,
+        });
+        this.refreshPage();
+      }
+    });
+  }
+
+  private refreshFileUploader(): void {
+    this.uploadedFileName = '';
+    if (this.dxfileUploaderComponent != null) {
+      this.dxfileUploaderComponent.instance.reset();
+      this.dxfileUploaderComponent.instance.repaint();
     }
   }
 
@@ -339,8 +475,59 @@ export class EtlDocumentImportComponent {
     this.subs.push(
       this.etlService.getValidateResults().subscribe((result) => {
         if (result.success) {
-          this.validationResult = result.data[0];
-          this.fileValidationCompleted = true;
+          this.filesValidationResults = result.data;
+        }
+      })
+    );
+  }
+
+  private validateTemplate() {
+    if (!this.templateValidationCompleted) {
+      const formData = new FormData();
+      formData.append('file', this.templateFile, this.templateFileName);
+      this.subs.push(
+        this.etlService
+          .validateMappingTemplate(formData)
+          .subscribe((result) => {
+            if (result.success) {
+              this.templateValidating = true;
+              this.waitTillTemplateValidated();
+            } else {
+              this.isTemplateValid = false;
+              this.toastService.show(
+                this.msgInvalidTemplate,
+                '',
+                ToastState.ERROR,
+                {
+                  maxWidth: this.toastMaxWidth,
+                  duration: this.toastDuration,
+                }
+              );
+            }
+          })
+      );
+    } else {
+      this.getTemplateValidationResults();
+    }
+  }
+
+  private getTemplateValidationResults(): void {
+    this.subs.push(
+      this.etlService.getDocTemplateValidateResults().subscribe((result) => {
+        if (result) {
+          this.templateValidationResults = result.data[0];
+          this.getComparisonResults();
+        }
+      })
+    );
+  }
+
+  private getComparisonResults(): void {
+    this.subs.push(
+      this.etlService.getComparisonResults().subscribe((result) => {
+        if (result) {
+          this.comparisonResults = result.data;
+          this.hasValidTemplateData = this.comparisonResults.length > 0;
         }
       })
     );

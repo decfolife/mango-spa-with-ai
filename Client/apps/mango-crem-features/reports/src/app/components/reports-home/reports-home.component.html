@@ -134,20 +134,16 @@
       (onCellClick)="onCellClicked($event)"
       (onContentReady)="adaAttr($event); ADAattributes($event)"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-grouping
         [autoExpandAll]="isExpanded"
         [contextMenuEnabled]="true"
       ></dxo-grouping>
-      <dxo-column-chooser
-        [enabled]="true"
-        [allowSearch]="true"
-        width="400"
-        height="500"
-      ></dxo-column-chooser>
+      <dxo-column-chooser [enabled]="true" width="400" height="500">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-column-chooser>
       <dxo-paging [pageSize]="50"></dxo-paging>
       <dxo-pager
         [showPageSizeSelector]="true"

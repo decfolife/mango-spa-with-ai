@@ -80,7 +80,9 @@
       <dxo-load-panel [enabled]="true"></dxo-load-panel>
       <dxo-selection mode="multiple"></dxo-selection>
       <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
-      <dxo-column-chooser [allowSearch]="true"></dxo-column-chooser>
+      <dxo-column-chooser>
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-column-chooser>
       <dxo-scrolling columnRenderingMode="virtual"></dxo-scrolling>
       <dxo-paging [pageSize]="25"></dxo-paging>
       <dxo-pager
@@ -91,10 +93,9 @@
         visible="true"
       ></dxo-pager>
       <dxo-sorting mode="multiple"></dxo-sorting>
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
 
       <dxo-summary>
         <dxi-group-item

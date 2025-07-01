@@ -1,183 +1,114 @@
-
 @use 'styles' as *;
 
 mat-horizontal-stepper {
-    width: 100%;
-    @include costar(padding-top, 4);
+  width: 100%;
+  @include costar(padding-top, 4);
 }
 
 .step-wrapper {
-  width:100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-items: top;  
+  align-items: top;
   text-align: center;
 }
 
-.step-content {
-    width: 60%;
-    display: inline-block;
-    @include costar(padding, 5);
-    @include costar(background-color, info-lightest);
-    text-align: center;
-    margin: 20px;   
-}
-
-.text-align-left {
-    text-align: left !important;
-}
-
-.label-normal {
-    @include costar(font-size, normal);
-    @include costar(color, dark);
-}
-
-.label-small-gray {
-    @include costar(font-size, navigation);
-    @include costar(color, gray03);
-}
-
-.label-small {
-    @include costar(font-size, navigation);
-    @include costar(color, dark);
-}
-
-.drag-drop-zone{
-    @include costar(padding, 4);
-    text-align:center;
-    border-style: dotted;
-    border-width: thin;
-    @include costar(color, gray03);
-}
-
 .btn-container {
-    width:100%;
-    display:flex;
-    justify-content: flex-end;
-    border-style: solid;
-    border-width: thin;
-    @include costar(color, gray05);
-    @include costar(padding-right, 5);
-  }
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  border-style: solid;
+  border-width: thin;
+  @include costar(color, gray05);
+  @include costar(padding-right, 5);
+}
+
+.hover-container {
+  display: flex;
+  justify-content: right;
+  align-items: right;
+  position: relative;
+  cursor: pointer;
+}
+
+.hover-div {
+  position: absolute;
+  top: 120%;
+  @include costar(background-color, info-lightest);
+  @include costar(border, gray01);
+  padding: 10px;
+  z-index: 1;
+}
 
 .btn {
-    @include costar(padding, 3);
-}
-
-.button-label {
-    text-align: left;
-    display: inline-block;
-    @include costar(padding, 2);
-}
-
-.select-file-btn-container {
-    @include costar(padding-bottom, 2);
-    display: inline-block;
-    border-style: dotted;
+  @include costar(padding, 3);
 }
 
 .ftp-container {
-    width: 100%;
-    @include costar(padding, 5);
-    text-align: left;
-    display: block;
+  width: 100%;
+  @include costar(padding, 5);
+  text-align: left;
+  display: block;
 }
 
 .ftp-checkbox {
-    display: inline-block;
-    @include costar(padding-bottom, 4);    
+  display: inline-block;
+  @include costar(padding-bottom, 4);
 }
 
 .ftp-check-label {
-    display: inline-block;
+  display: inline-block;
 }
 
 .ftp-label {
-    display: inline-block;
-    @include costar(color, gray02);
-    @include costar(font-size, navigation);
+  display: inline-block;
+  @include costar(color, gray02);
+  @include costar(font-size, navigation);
 }
 
-.ftp-label-warning {
-    display: inline-block;
-    @include costar(color, danger-light);
-    @include costar(font-size, navigation);
+:host ::ng-deep {
+  .mat-step-header .mat-step-icon-state-done {
+      @include costar(background-color, success);     
+  }
 }
 
-.load-file-header {
-    text-align: center;
-    display: inline-block;
-    @include costar(font-size, h3);
-    @include costar(font-weight, bold);
-    @include costar(padding-bottom, 5);
+.fileuploader-container {
+  display: inline-block;
 }
 
-.validation-result-container {
+::ng-deep #fileuploader-container {
+  border: 1px solid #807f7f;
+  margin: 10px 10px 0 10px;
+  text-align: center;
+
+  .dx-button-content {
+    background-color: var(--costar-color-primary-light, #0559b3);
+    color: var(--costar-color-light, #ffffff);
+    padding: 5px !important;
+    width: 120px;
+    width: max-content;
+    display: table-row;
+  }
+  div.dx-button.dx-button-mode-contained {
+    background-color: var(--costar-color-info-lightest, #dce8f4);
+    display: grid;
+    justify-content: center;
+    border-color: transparent;
+  }
+  .dx-fileuploader-input-wrapper {
+    padding: 7px 0;
+    border: 3px dashed transparent;
+    flex: auto;
+    display: grid;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    @include costar(padding-top, 5);
+    justify-content: center;
+  }
+  .dx-fileuploader-input-container {
+    height: 100%;
+    width: 100% !important;
+    position: relative;
+    overflow: hidden;
+    display: table-row;
+  }
 }
-
-.validation-header {
-    width: 95%;
-    text-align: left;
-    border-bottom: thin solid;
-    @include costar(border-bottom, gray05)
-}
-
-.validation-footer {
-    width: 95%;
-    border-bottom: thin solid;
-    @include costar(border-bottom, gray05);
-}
-
-.validation-grid-container {
-    display: grid;
-    grid-template-columns: 400px 400px;
-    @include costar(gap, 5);
-    @include costar(padding, 4);
-    text-align: left;
-
-    .r1 {
-        text-align: right;
-        @include costar(font-size, normal);
-        @include costar(color, dark);
-    }
-}
-
-.invalid-file-details-container {
-    display: block;
-    align-items: left;
-}
-
-.invalid-file-details-grid-container {
-    display: grid;
-    grid-template-columns: 400px 400px;
-    @include costar(gap, 5);
-    text-align: left;
-    @include costar(font-size, navigation);
-    @include costar(color, gray03);
-
-    .l2 {
-        @include costar(padding-left, 6);
-        @include costar(margin-left, 6);
-    }
-
-    .r2 {
-        text-align: right;
-    }
-}
-
-.padding-left {
-    @include costar(padding-left, 6);
-    @include costar(margin-left, 6);
-}
-
-.no-access-right {
-    padding: 30px;
-}
-
-  

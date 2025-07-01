@@ -19,6 +19,7 @@ export const SUB_LEFT_NEV_PAGES_URLS = [
   'render-form',
   '/crem/portfolio/expenses',
   '/crem/portfolio/revenues',
+  'crem/portfolio/benchmarkingfiles',
   '/crem/accounting/summary',
   '/crem/projects/project-team',
   '/crem/projects/project-tasks',

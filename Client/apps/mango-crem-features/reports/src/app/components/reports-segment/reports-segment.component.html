@@ -34,7 +34,7 @@
         <dx-tooltip
           target="#segmentsFilterToggle"
           [(visible)]="segmentsToggleTooltipVisible"
-          [closeOnOutsideClick]="false"
+          [hideOnOutsideClick]="false"
         >
           <div *dxTemplate="let data = data; of: 'content'">
             {{ segmentToggleTooltipText }}
@@ -104,10 +104,9 @@
       [wordWrapEnabled]="true"
       (onCellPrepared)="onCellPrepared($event)"
     >
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxo-paging [pageSize]="50"></dxo-paging>
       <dxo-pager
         [showPageSizeSelector]="true"
@@ -122,12 +121,9 @@
         [autoExpandAll]="true"
         [contextMenuEnabled]="true"
       ></dxo-grouping>
-      <dxo-column-chooser
-        [enabled]="false"
-        [allowSearch]="true"
-        width="400"
-        height="500"
-      ></dxo-column-chooser>
+      <dxo-column-chooser [enabled]="false" width="400" height="500">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-column-chooser>
       <dxi-column
         *ngFor="let col of columns"
         [dataField]="col.dataField"
@@ -143,7 +139,7 @@
         [cellTemplate]="col.cellTemplate"
       >
         <dxo-format
-          *ngIf="col.dataType == 'number' && col.precision >= 0"
+          *ngIf="col.dataType === 'number' && col.precision >= 0"
           type="fixedPoint"
           [precision]="col.precision"
         ></dxo-format>
@@ -219,7 +215,9 @@
                   *ngIf="data.data.active"
                   [attr.title]="getTitleTooltip(data, 'copy')"
                   [disabled]="
-                    data.data.activeRecordsVisibleToMe || !hasSegmentsAddRight
+                    segmentModuleRights !== 'Add' ||
+                    data.data.activeRecordsVisibleToMe ||
+                    !hasSegmentsAddRight
                   "
                   (click)="hasSegmentsAddRight && copy(data)"
                   [ngClass]="

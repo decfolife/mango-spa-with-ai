@@ -1,0 +1,89 @@
+<div class="document-import-page">
+  <div class="document-import-toolbar">
+    <crem-search
+      [showLabel]="false"
+      [placeholder]="'Search history'"
+      [disabled]="false"
+      [required]="false"
+      [showInfo]="false"
+      [value]=""
+      [debounceTime]="500"
+      [searchOption]="'typing'"
+      (changed)="searchDataGrid($event)"
+    >
+    </crem-search>
+
+    <crem-button type="secondary" (click)="exportGrids()">
+      <crem-icon
+        [icon]="'cremExportToExcel'"
+        [library]="'fontAwesome'"
+        [pack]="'crem'"
+        [color]="'secondary'"
+      ></crem-icon>
+      Export
+    </crem-button>
+  </div>
+
+  <div class="document-import-data-grid-wrapper">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Document Import History</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div id="document-import-history-grid">
+          <dx-data-grid
+            id="documentImportGridContainer"
+            #DataGrid
+            [dataSource]="documentImportHistory"
+            [showBorders]="true"
+            [hoverStateEnabled]="true"
+            [showRowLines]="true"
+            [showColumnLines]="false"
+            (onCellPrepared)="onCellPrepared($event)"
+          >
+            <dxo-header-filter
+              [visible]="true"
+              [allowSearch]="true"
+            ></dxo-header-filter>
+            <dxo-sorting mode="multiple"></dxo-sorting>
+            <dxo-paging [pageSize]="25"></dxo-paging>
+            <dxo-pager
+              [showPageSizeSelector]="true"
+              [allowedPageSizes]="[25, 50, 100, 500]"
+              [showInfo]="true"
+              [showNavigationButtons]="true"
+              [visible]="true"
+            ></dxo-pager>
+            <dxi-column
+              dataField="displayName"
+              caption="Object Type"
+              alignment="left"
+            ></dxi-column>
+            <dxi-column
+              dataField="lastModified"
+              caption="Last Modified"
+              alignment="left"
+              dataType="date"
+              format="MM/dd/yyyy"
+            ></dxi-column>
+            <dxi-column
+              dataField="description"
+              caption="Description"
+              alignment="left"
+            ></dxi-column>
+            <dxi-column
+              dataField="afterChange"
+              caption="Value"
+              alignment="left"
+            ></dxi-column>
+            <dxi-column
+              dataField="contactName"
+              caption="User Id"
+              alignment="left"
+            ></dxi-column>
+          </dx-data-grid>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

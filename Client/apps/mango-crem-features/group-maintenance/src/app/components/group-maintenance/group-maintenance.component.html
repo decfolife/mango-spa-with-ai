@@ -61,10 +61,9 @@
         mode="standard"
         columnRenderingMode="standard"
       ></dxo-scrolling>
-      <dxo-header-filter
-        [visible]="true"
-        [allowSearch]="true"
-      ></dxo-header-filter>
+      <dxo-header-filter [visible]="true">
+        <dxo-search [enabled]="true"> </dxo-search>
+      </dxo-header-filter>
       <dxi-column
         *ngFor="let col of columns"
         [dataField]="col.dataField"
@@ -107,7 +106,7 @@
         <dx-tooltip
           target="{{ '#groupLookUp' + group.data.companyID }}"
           [visible]="groupLooksUpTooltipVisible[group.data.companyID]"
-          [closeOnOutsideClick]="false"
+          [hideOnOutsideClick]="false"
         >
           <dxo-animation>
             <dxo-show type="pop"></dxo-show>
@@ -140,7 +139,7 @@
         <dx-tooltip
           target="{{ '#portfolio' + group.data.companyID }}"
           [visible]="isPortfolioTooltipVisible[group.data.companyID]"
-          [closeOnOutsideClick]="false"
+          [hideOnOutsideClick]="false"
         >
           <dxo-animation>
             <dxo-show type="pop"></dxo-show>
@@ -242,7 +241,7 @@
       [showIndicator]="true"
       [showPane]="true"
       [shading]="true"
-      [closeOnOutsideClick]="false"
+      [hideOnOutsideClick]="false"
     ></dx-load-panel>
   </div>
 </div>

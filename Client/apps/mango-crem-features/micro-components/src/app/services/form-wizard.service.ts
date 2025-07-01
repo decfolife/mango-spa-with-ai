@@ -66,6 +66,13 @@ export class FormWizardService extends EndpointService {
     });
   }
 
+  public getLeaseInfo(OID: number): Observable<any> {
+    let url = `${this.formWizardUrl}FormWizards/GetLeaseInfo`;
+    return this.callHttpGet(url, 'GetLeaseInfo', {
+      ObjectID: OID,
+    });
+  }
+
   public addContact(contactRequest: any): Observable<any> {
     let url = `${this.formWizardUrl}FormWizards/AddContact`;
     let param = contactRequest;

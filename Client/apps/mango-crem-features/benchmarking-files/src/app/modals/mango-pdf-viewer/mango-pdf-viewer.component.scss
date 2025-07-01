@@ -1,0 +1,59 @@
+@use 'styles' as *;
+
+::ng-deep #pdfViewer {
+  height: auto;
+  width: auto;
+  overflow: hidden;
+
+  .modalContent {
+    padding: 0px;
+    overflow: hidden;
+    background-color: darkgray;
+  }
+
+  .navigation-row {
+    width: 100%;
+    margin: auto;
+    @include costar(padding-left, 2);
+    @include costar(padding-right, 4);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    crem-button {
+      display: flex;
+      justify-content: space-between;
+      @include costar(padding, 1);
+    }
+  }
+
+  .magnification-controls {
+    position: absolute;
+    top: 60px;
+    right: 24px;
+  }
+
+  .magnification-row {
+    display: flex;
+    flex-direction: column;
+
+    crem-button {
+      @include costar(padding, 1);
+    }
+  }
+
+  .centeredRow {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    @include costar(padding-right, 2);
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: row;
+    crem-button {
+      @include costar(padding, 1);
+    }
+  }
+}

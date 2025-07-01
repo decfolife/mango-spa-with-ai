@@ -71,12 +71,13 @@
       adaAttrNoDataGrid($event)
     "
   >
-    <dxo-column-chooser [allowSearch]="true" mode="select"></dxo-column-chooser>
+    <dxo-column-chooser mode="select">
+      <dxo-search [enabled]="true"> </dxo-search>
+    </dxo-column-chooser>
     <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
-    <dxo-header-filter
-      [visible]="true"
-      [allowSearch]="true"
-    ></dxo-header-filter>
+    <dxo-header-filter [visible]="true">
+      <dxo-search [enabled]="true"> </dxo-search>
+    </dxo-header-filter>
     <dxo-scrolling mode="virtual"></dxo-scrolling>
     <dxo-sorting mode="multiple"></dxo-sorting>
     <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
@@ -161,11 +162,8 @@
       [autoExpandAll]="true"
       [contextMenuEnabled]="true"
     ></dxo-grouping>
-    <dxo-column-chooser
-      [enabled]="false"
-      [allowSearch]="true"
-      width="400"
-      height="500"
-    ></dxo-column-chooser>
+    <dxo-column-chooser [enabled]="false" width="400" height="500">
+      <dxo-search [enabled]="true"> </dxo-search>
+    </dxo-column-chooser>
   </dx-data-grid>
 </div>
