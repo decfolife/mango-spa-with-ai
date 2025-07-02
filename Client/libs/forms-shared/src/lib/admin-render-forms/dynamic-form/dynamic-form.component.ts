@@ -101,6 +101,7 @@ import { DynamicFormLeaseVerificationComponent } from './dynamic-form-actions/dy
 import { ArchiveLeaseComponent } from './dynamic-form-actions/archive/archive-lease/archive-lease.component';
 import { FilesService } from '../../../../../../apps/mango-crem-features/object-actions/src/app/shared/services/files.service';
 import { MangoNavigationService } from '@mangoSpa/src/app/services/navigation.service';
+import { AssociateToProjectComponent } from './dynamic-form-actions/associate-project/associate-project.component';
 
 @Component({
   selector: 'mango-dynamic-form',
@@ -226,7 +227,7 @@ export class DynamicFormComponent
     private toastService: CremToastService,
     private titleService: Title,
     private fileService: FilesService,
-    private navService: MangoNavigationService
+    private navService: MangoNavigationService,
   ) {}
 
   tryPreventChangeLoss(): Observable<boolean> {
@@ -1348,12 +1349,38 @@ export class DynamicFormComponent
       this.archive();
     } else if (action === 'change status') {
       this.openLeaseVerificationModal();
+    } else if (action === 'attach existing') {
+      this.attachExisting();
     } else if (action === 'assign items') {
-      
+      this.navService.navigateToClassicAspAdminUrl(
+        '/forms/admin/maintFOrmItems.asp',
+        {
+          queryParams: {
+            fFOrmID: this.formId,
+          },
+          newTab: true,
+        }
+      );
     } else if (action === 'assign sections') {
-      
+      this.navService.navigateToClassicAspAdminUrl(
+        '/forms/admin/maintformSections.asp',
+        {
+          queryParams: {
+            fFOrmID: this.formId,
+          },
+          newTab: true,
+        }
+      );
     } else if (action === 'format item details') {
-      
+      this.navService.navigateToClassicAspAdminUrl(
+        '/forms/admin/FormItemSectionDetails.asp',
+        {
+          queryParams: {
+            FormID: this.formId,
+          },
+          newTab: true,
+        }
+      );
     }
   }
 
@@ -1564,6 +1591,20 @@ export class DynamicFormComponent
       this.toastState = ToastState.ERROR;
       this.showToast();
     }
+  }
+
+  attachExisting(): void {
+    this.dialog.open(AssociateToProjectComponent, {
+      height: '500px',
+      width: '800px',
+      panelClass: 'df-attachExistingPopup',
+      data: {
+        OID: this.objectId,
+        OTID: this.objectTypeId,
+        OTTID: this.objectTypeTypeId,
+      },
+      disableClose: true,
+    });
   }
 
   private getFilenameFromResponse(response: any): string | null {

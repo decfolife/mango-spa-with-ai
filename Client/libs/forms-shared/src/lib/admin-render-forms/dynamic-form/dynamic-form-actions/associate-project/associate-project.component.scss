@@ -1,0 +1,58 @@
+@use 'styles' as *;
+
+::ng-deep {
+  div#crem-select-box.dx-overlay-wrapper.ae-attachExisting-projects {
+    height: 36px !important;
+  }
+}
+
+.ae-projects,
+.ae-projects-premises {
+  margin-top: 20px;
+  display: flex;
+  width: 100%;
+
+  .flex30 {
+    flex-basis: 20%;
+  }
+  .flex70 {
+    flex-basis: 80%;
+  }
+}
+
+.ae-loader {
+  margin-top: 40px;
+}
+
+::ng-deep .df-attachExistingPopup {
+  .modalFooter {
+    display: block !important;
+  }
+}
+
+.footerContent {
+  display: flex;
+  justify-content: space-between;
+
+  .footerRightControls {
+    display: flex;
+    align-items: center;
+
+    & > .reason-required-text {
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    & > .ae-btn {
+      margin-left: 8px;
+    }
+
+    .modalFooter {
+      @include costar(border-top, gray05);
+    }
+  }
+
+  .ae-userMsg {
+    color: $color-brand-red;
+  }
+}

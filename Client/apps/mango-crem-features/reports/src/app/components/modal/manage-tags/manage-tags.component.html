@@ -1,0 +1,76 @@
+<crem-modal
+  [modalTitle]="'Manage Tags'"
+  modalId="manage_tags_modal"
+  [closeIconVisible]="true"
+  [customFooter]="true"
+>
+  <div modalContent class="body-content">
+    <div class="mt-tags">
+      <!-- <div class="mt-tag-label flex30">Tag Name:</div> -->
+      
+      <form
+        crem-form
+        id="new-tag-form"
+        [formGroup]="form"
+        layout="horizontal"
+      >
+      <crem-form-item>
+        <crem-form-label [required]="true">Tag Name:</crem-form-label>
+        <crem-form-control>
+          <crem-input
+            #TagName
+            class="flex70"
+            id="tagName"
+            [showHint]="false"
+            [showLabel]="false"
+            [showInfo]="false"
+            [inputType]="'text'"
+            [required]="true"
+            formControlName="tagName"
+            placeholder="Enter new tag"
+          ></crem-input>
+        </crem-form-control>
+      </crem-form-item>
+      </form>
+    </div>
+
+    <div class="mt-report-tags">
+      <mat-chip-listbox aria-label="report tags">
+        <mat-chip-row 
+          *ngFor="let tag of reportTags"
+          [editable]="true"
+          (edited)="edit(tag, $event)">
+          {{tag.reportTag}}
+          <button matChipRemove (click)="removeTag(tag)">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip-row>
+      </mat-chip-listbox>
+    </div>
+
+    <crem-loader class="mt-loader" *ngIf="isLoading"></crem-loader>
+  </div>
+  
+  <div modalFooter class="footerContent">
+    <div footerLeftControls class="footerLeftControls mt-userMsg">
+      {{ userMsg }}
+    </div>
+    <div footerRightControls id="buttonTemplate" class="footerRightControls">
+      <crem-button
+        type="secondary"
+        id="mt-cancelBtnId"
+        class="mt-cancelChanges mt-btn"
+        (click)="closeModal()"
+      >
+        Cancel
+      </crem-button>
+      <crem-button
+        [disabled]="isLoading"
+        type="primary"
+        (click)="addTag()"
+      >
+        Add Tag
+      </crem-button>
+    </div>
+  </div>
+</crem-modal>

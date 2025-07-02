@@ -3,7 +3,7 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
-import { BookmarkGroup } from '@mango/data-models/lib-data-models';
+import { Bookmark, BookmarkGroup, ObjectType } from '@mango/data-models/lib-data-models';
 
 @Component({
   selector: 'crem-bookmarks',
@@ -21,18 +21,21 @@ export class BookmarksComponent {
     this.recentDrawer.toggle();
   }
 
-  private goToBookmarkUrl(objectTypeId: number, bm: any) {
-    if (objectTypeId === 7) {
-      null;
-    } else {
-      this.router.navigate(['v06/Forms/RenderForm.aspx'], {
-        queryParams: {
-          fid: 312,
-          oid: bm.objectID,
-          otid: bm.objectTypeID,
-          ottid: bm.objectTypeTypeID,
-        },
-      });
-    }
+  private goToBookmarkUrl(objectTypeId: number, bm: Bookmark) {
+    this.recentDrawer.close();
+    
+    if (objectTypeId === ObjectType.REPORT) {
+      window.open(bm.path);
+      return;
+    } 
+    
+    this.router.navigate(['v06/Forms/RenderForm.aspx'], {
+      queryParams: {
+        fid: 312,
+        oid: bm.objectID,
+        otid: bm.objectTypeID,
+        ottid: bm.objectTypeTypeID,
+      },
+    });   
   }
 }

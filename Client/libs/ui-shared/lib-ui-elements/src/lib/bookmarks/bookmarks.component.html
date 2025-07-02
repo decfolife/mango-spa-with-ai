@@ -43,10 +43,7 @@
                     tabindex="0"
                     role="button"
                     [attr.aria-labelledby]="'bookmark-heading-' + i"
-                    (click)="
-                      recentDrawer.close();
-                      goToBookmarkUrl(bookmarkGroup.objectTypeId, bm)
-                    "
+                    (click)="goToBookmarkUrl(bookmarkGroup.objectTypeId, bm)"
                   >
                     <div [innerHTML]="bm.name"></div>
                   </a>

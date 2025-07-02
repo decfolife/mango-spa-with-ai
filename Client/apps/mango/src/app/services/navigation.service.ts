@@ -69,7 +69,7 @@ export class MangoNavigationService {
       : `${environment.cremBaseUrl.replace('[CLIENT]', clientKey)}`;
 
     if (!isUrl) {
-      v06Url += path.includes('/v06/') ? `/${path}` : `/v06/${path}`;
+      v06Url += v06Url.includes('/v06/') ? `/${path}` : `/v06/${path}`;
     }
 
     if (queryParams) {
@@ -86,16 +86,40 @@ export class MangoNavigationService {
     this.navigateToClassicAspUrl(v06Url);
   }
 
+  navigateToClassicAspAdminUrl(
+    path: string,
+    options?: { queryParams?: Params; newTab?: boolean }
+  ): void {
+    const isUrl = UtilitiesService.isValidUrl(path);
+    const clientKey = UtilitiesService.getClientKeyFromUrl();
+
+    let v06Url = isUrl
+      ? path
+      : `${environment.cremBaseUrl.replace('[CLIENT]', clientKey)}`;
+
+    if (!isUrl) {
+      v06Url += path;
+    }
+
+    if (options?.queryParams) {
+      const params = new URLSearchParams(options.queryParams).toString();
+      v06Url += `?${params}`;
+    }
+
+    this.navigateToClassicAspUrl(v06Url, options?.newTab || true);
+  }
+
   navigateToExternalUrl(url: string) {
     window.location.href = url;
   }
 
   handleLeftNavNavigation(
-    navLink: SharedLeftNavLink, 
+    navLink: SharedLeftNavLink,
     clientKey: string,
-    redirectorMappings: RedirectorMapping[]): void {
-
-    let isCategory = !navLink.hasOwnProperty('dynamicName') &&
+    redirectorMappings: RedirectorMapping[]
+  ): void {
+    let isCategory =
+      !navLink.hasOwnProperty('dynamicName') &&
       navLink.hasOwnProperty('categoryHasFlyOutMenu') &&
       navLink.categoryHasFlyOutMenu;
 
@@ -107,7 +131,9 @@ export class MangoNavigationService {
 
     // When navLink is the link for a category we need to navigate to the category url
     let redirectionUrl = isCategory ? navLink.categoryLinkUrl : navLink.linkUrl;
-    redirectionUrl = `${redirectionUrl.startsWith('/') ? '' : '/'}${redirectionUrl}`;
+    redirectionUrl = `${
+      redirectionUrl.startsWith('/') ? '' : '/'
+    }${redirectionUrl}`;
 
     // if redirectionUrl contains a slash at the end, trim it!
     if (redirectionUrl.endsWith('/')) {
@@ -115,20 +141,24 @@ export class MangoNavigationService {
     }
 
     let redirectorMap: RedirectorMapping = null;
-    
+
     // Compare just page name (ignore params)
-    let redirectorMaps = redirectorMappings.filter((x) =>
-      x.cremUrl.split('?')[0].toLowerCase() === redirectionUrl.split('?')[0].toLowerCase()
+    let redirectorMaps = redirectorMappings.filter(
+      (x) =>
+        x.cremUrl.split('?')[0].toLowerCase() ===
+        redirectionUrl.split('?')[0].toLowerCase()
     );
-    
+
     if (redirectorMaps.length === 1) {
       redirectorMap = redirectorMaps[0];
     } else if (redirectorMaps.length > 1) {
-      // If there are duplicate pages, 
+      // If there are duplicate pages,
       // Need to compare with the query param since it can be a page like /ListPage.aspx/?ObjectTypeId=4
       // Only the first query param matters
       redirectorMap = redirectorMaps.find(
-        (x) => x.cremUrl.split('&')[0].toLowerCase() === redirectionUrl.split('&')[0].toLowerCase()
+        (x) =>
+          x.cremUrl.split('&')[0].toLowerCase() ===
+          redirectionUrl.split('&')[0].toLowerCase()
       );
     }
 
@@ -138,8 +168,9 @@ export class MangoNavigationService {
       this.navigateTo(redirectorMap.spaUrl, params);
       return;
     }
-   
-    this.navigateToV06(redirectionUrl);   
+
+    let v06BaseUrl = environment.cremBaseUrl.replace('[CLIENT]', clientKey);
+    this.navigateToV06(`${v06BaseUrl}${redirectionUrl}`);
   }
 
   navigateHome(): void {
@@ -214,9 +245,13 @@ export class MangoNavigationService {
   }
 
   // This is used because v06 needs a referer header when opening a classic asp page
-  navigateToClassicAspUrl(url: string) {
+  navigateToClassicAspUrl(url: string, newTab = false) {
     const f = document.createElement('FORM') as HTMLFormElement;
     f.action = url;
+
+    if (newTab) {
+      f.target = '_blank';
+    }
 
     const indexQM = url.indexOf('?');
     if (indexQM >= 0) {

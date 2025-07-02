@@ -9,11 +9,11 @@ import { CriteriaReportComponent } from '../modal/criteria-report/criteria-repor
 import { LargeModal } from '@mangoSpa/src/assets/enum/modal.model';
 import { ShareReportComponent } from './modals/share-report/share-report.component';
 import { Router } from '@angular/router';
+import { ManageTagsComponent } from '../modal/manage-tags/manage-tags.component';
+import { AssignTagsComponent } from '../modal/assign-tags/assign-tags.component';
 
 // Magic to access objects declared outside Angular
-declare var launchManageTags;
 declare var launchUploadFileWizard;
-declare var launchAssignTags;
 
 @Component({
   selector: 'reports-home',
@@ -305,10 +305,6 @@ export class ReportsHomeComponent implements OnInit, OnDestroy {
     this.reportsDataGrid.instance.state(null);
   }
 
-  launchManageTagsModal() {
-    launchManageTags();
-  }
-
   launchUploadOfflineTemplateModal() {
     launchUploadFileWizard();
   }
@@ -405,11 +401,37 @@ export class ReportsHomeComponent implements OnInit, OnDestroy {
     );
   }
 
+  manageReportTags() {
+    this.dialog.open(ManageTagsComponent, {
+      height: '500px',
+      width: '800px',
+      panelClass: 'manage-tags-modal',
+      disableClose: true,
+    });
+  }
+
   assignReportTags(e) {
     let reportId = e.data.id;
     let reportType = e.data.type;
 
-    launchAssignTags(reportId, reportType);
+    let dialogRef = this.dialog.open(AssignTagsComponent, {
+      height: '500px',
+      width: '800px',
+      panelClass: 'assign-tags-modal',
+      disableClose: true,
+      data: {
+        reportId: reportId,
+        reportType: reportType,
+        reportAssignedTags: e.data.tags
+      },
+    });
+
+    dialogRef.afterClosed()
+      .subscribe((result) => {
+        if (result.hasSavedChanges) {
+          this.getReportsGridData();
+        }
+      });
   }
 
   viewReportHistory(e) {

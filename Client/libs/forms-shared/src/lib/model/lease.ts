@@ -1,5 +1,5 @@
 export interface LeaseInfo {
-  leaseAbstractID: number;
-  buildingID: boolean;
-  premiseID: number;
+    leaseAbstractID: number;
+    buildingID: boolean;
+    premiseID: number;
 }

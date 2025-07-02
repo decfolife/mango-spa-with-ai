@@ -1,0 +1,77 @@
+@use 'styles' as *;
+
+::ng-deep {
+  div#crem-select-box.dx-overlay-wrapper.at-attachExisting-projects {
+    height: 36px !important;
+  }
+}
+
+.at-tags {
+  margin-top: 20px;
+  display: flex;
+  width: 100%;
+
+  .at-tag-label {
+    display: flex;
+    align-items: center;
+    flex-basis: 15%;
+  }
+
+  .w100 {
+    width: 100%;
+  }
+
+  .flex70 {
+    flex-basis: 50%;
+  }
+
+  .at-tag-btn {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+  }
+}
+
+.at-report-tags {
+  margin-top: 20px;
+  display: flex;
+  width: 100%;
+}
+
+.at-loader {
+  margin-top: 40px;
+}
+
+::ng-deep .manage-tags-modal {
+  .modalFooter {
+    display: block !important;
+  }
+}
+
+.footerContent {
+  display: flex;
+  justify-content: space-between;
+
+  .footerRightControls {
+    display: flex;
+    align-items: center;
+
+    & > .reason-required-text {
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    & > .at-btn {
+      margin-left: 8px;
+    }
+
+    .modalFooter {
+      @include costar(border-top, gray05);
+    }
+  }
+
+  .at-userMsg {
+    color: $color-brand-red;
+    max-width: 400px;
+  }
+}

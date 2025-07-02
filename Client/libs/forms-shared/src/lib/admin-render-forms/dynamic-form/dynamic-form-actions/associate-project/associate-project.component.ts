@@ -1,10 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Building, CopyLease, Premise } from '@forms/model/copyLease';
 import { LeaseInfo } from '@forms/model/lease';
 import { DynamicFormsService } from '@forms/services/dynamic-forms.service';
-import { faL } from '@fortawesome/free-solid-svg-icons';
 import {
   ObjectType,
   RequestType,
@@ -18,9 +16,8 @@ import {
   ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
-import { DashboardService } from '@project-dashboard/services/dashboard.service';
-import { EMPTY, forkJoin, Subscription } from 'rxjs';
-import { filter, switchMap, take, tap } from 'rxjs/operators';
+import { EMPTY, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 export interface Project {
   transactionID: number;
@@ -58,7 +55,7 @@ export class AssociateToProjectComponent {
     private formWizardService: FormWizardService,
     private toastService: CremToastService,
     public dialogRef: MatDialogRef<AssociateToProjectComponent>,
-    @Inject(MAT_DIALOG_DATA)
+    @Inject(MAT_DIALOG_DATA) 
     public data: {
       OID: number;
       OTID: number;
@@ -138,7 +135,7 @@ export class AssociateToProjectComponent {
       };
       this.associateLeaseToProject(associateRequest);
     } else if (this.data.OTID === ObjectType.BUILDING) {
-      let buildingRequest = {
+       let buildingRequest = {
         buildingID: this.data.OID,
         projectID: this.selectedProject.transactionID,
       };
@@ -153,7 +150,7 @@ export class AssociateToProjectComponent {
         .subscribe(
           (res) => {
             this.loadingIndicator = false;
-
+            
             if (res && res.success) {
               this.toastService.show(null, 'Success', ToastState.SUCCESS);
               this.dialogRef.close();
@@ -209,7 +206,8 @@ export class AssociateToProjectComponent {
   }
 
   isSaveButtonDisabled(): boolean {
-    if (this.loadingIndicator || !this.selectedProject) return true;
+    if (this.loadingIndicator || !this.selectedProject) 
+      return true;
 
     return false;
   }

@@ -1,4 +1,5 @@
 import { SecurityType } from '@mango/data-models/lib-data-models';
+import { ReportTag } from '@reports/models/report-tag';
 
 export interface ReportsList {
   id: number;
@@ -14,7 +15,7 @@ export interface ReportsList {
   runCount: number;
   lastRun: string;
   lastRunBy: string;
-  tags: Tag[];
+  tags: ReportTag[];
   canEdit: boolean;
   canDelete: boolean;
   folderId: number;
@@ -22,11 +23,6 @@ export interface ReportsList {
   reportUrl: string;
   sameWindow: boolean;
   rights: string;
-}
-
-export interface Tag {
-  reportTagID: number;
-  reportTag: string;
 }
 
 export interface ReportUsersGroups {

@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ObjectReactivationService } from './../../services/object-reactivation.service';
 import { Observable, of, Subscription } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import {
   ReactivationListRequest,
   ReactivationObjectType,
@@ -9,7 +9,6 @@ import {
 } from '../../../../../../../libs/data-models/lib-data-models/src/lib/models/object-reactivation/reactivation-object-type';
 import { ReactivationClientPreferences } from '../../../../../../../libs/data-models/lib-data-models/src/lib/models/object-reactivation/reactivation-client-preferences';
 import { DxDataGridComponent, DxDataGridModule } from 'devextreme-angular';
-
 import { CommonModule } from '@angular/common';
 import {
   ButtonModule,
@@ -27,6 +26,7 @@ import {
 import { DxDataGridTypes } from 'devextreme-angular/ui/data-grid';
 import {
   ContactRecord,
+  ObjectType,
   ToastState,
 } from '../../../../../../../libs/data-models/lib-data-models/src';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
@@ -79,8 +79,7 @@ export class ObjectReactivationComponent {
   constructor(
     private objectReactivationService: ObjectReactivationService,
     private toastService: CremToastService,
-    private facade: MangoAppFacade,
-    private router: Router
+    private facade: MangoAppFacade
   ) {}
 
   ngOnInit(): void {
@@ -109,7 +108,6 @@ export class ObjectReactivationComponent {
             if (res.success) {
               let setReportNameCaption = res.data;
               setReportNameCaption = setReportNameCaption.map((val) => {
-                //console.log(val.objectTypeID);
                 if (val.objectTypeID == 7) val.objectType = `Ad Hoc Reports`;
                 return val;
               });
@@ -167,11 +165,11 @@ export class ObjectReactivationComponent {
         )
         .subscribe((cpRes: any) => {
           if (
-            this.objectTypeId == 3 ||
-            this.objectTypeId == 4 ||
-            this.objectTypeId == 5 ||
-            this.objectTypeId == 7 ||
-            this.objectTypeId == 11
+            this.objectTypeId == ObjectType.BUILDING ||
+            this.objectTypeId == ObjectType.LEASE ||
+            this.objectTypeId == ObjectType.CONTACT ||
+            this.objectTypeId == ObjectType.REPORT ||
+            this.objectTypeId == ObjectType.COMPANY
           ) {
             cpRes = this.getReactivationDateFormatedData(cpRes);
           }
@@ -210,11 +208,11 @@ export class ObjectReactivationComponent {
         .getReactivationList(req)
         .subscribe((reactivationdata: any) => {
           if (
-            req.ObjectTypeId == 3 ||
-            req.ObjectTypeId == 4 ||
-            req.ObjectTypeId == 5 ||
-            req.ObjectTypeId == 7 ||
-            req.ObjectTypeId == 11
+            req.ObjectTypeId == ObjectType.BUILDING ||
+            req.ObjectTypeId == ObjectType.LEASE ||
+            req.ObjectTypeId == ObjectType.CONTACT ||
+            req.ObjectTypeId == ObjectType.REPORT ||
+            req.ObjectTypeId == ObjectType.COMPANY
           ) {
             reactivationdata =
               this.getReactivationDateFormatedData(reactivationdata);
@@ -269,21 +267,21 @@ export class ObjectReactivationComponent {
     }
     if (this.selectedFilter) {
       switch (this.selectedFilter?.objectTypeID) {
-        case 2: //"PremiseID"
+        case ObjectType.PREMISE:
           const regexPStr = /Premise/gi;
           this.toolTipData = (this.toolTipData as string).replace(
             regexPStr,
             this.selectedFilter?.objectType
           );
           break;
-        case 3: //BuildingID
+        case ObjectType.BUILDING:
           const regexBStr = /Building/gi;
           this.toolTipData = (this.toolTipData as string).replace(
             regexBStr,
             this.selectedFilter?.objectType
           );
           break;
-        case 4: //LeaseAbstractID
+        case ObjectType.LEASE:
           const regexLStr = /Lease/gi;
           this.toolTipData = (this.toolTipData as string).replace(
             regexLStr,
@@ -316,22 +314,22 @@ export class ObjectReactivationComponent {
     var result: any = [];
     if (this.selectedFilter) {
       switch (this.selectedFilter?.objectTypeID) {
-        case 2: //"PremiseID"
+        case ObjectType.PREMISE:
           result = selectedItems.map((a) => a.PremiseID);
           break;
-        case 3: //BuildingID
+        case ObjectType.BUILDING: 
           result = selectedItems.map((a) => a.BuildingID);
           break;
-        case 4: //LeaseAbstractID
+        case ObjectType.LEASE: 
           result = selectedItems.map((a) => a.LeaseAbstractID);
           break;
-        case 5: //ContactID
+        case ObjectType.CONTACT: 
           result = selectedItems.map((a) => a.ContactID);
           break;
-        case 7: //ReportID
+        case ObjectType.REPORT:
           result = selectedItems.map((a) => a.ReportID);
           break;
-        case 11: //CompanyID
+        case ObjectType.COMPANY: 
           result = selectedItems.map((a) => a.CompanyID);
           break;
       }

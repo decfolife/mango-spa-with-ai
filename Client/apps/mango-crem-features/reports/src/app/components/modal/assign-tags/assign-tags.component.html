@@ -1,0 +1,57 @@
+<crem-modal
+  [modalTitle]="'Assign Tags'"
+  modalId="assign_tags_modal"
+  [closeIconVisible]="true"
+  [customFooter]="true"
+>
+  <div modalContent class="body-content">
+    <div class="at-tags">
+      <crem-input
+        #TagName
+        id="tagName"
+        [showHint]="false"
+        [showLabel]="false"
+        [showInfo]="false"
+        [inputType]="'text'"
+        [formControl]="searchField"
+        placeholder="Search tags"
+      ></crem-input>
+    </div>
+
+    <div class="at-report-tags">
+      <mat-chip-listbox aria-label="report tags" selectable multiple>
+        <mat-chip-option 
+          *ngFor="let tag of reportTagOptions" 
+          (selectionChange)="onSelectionChange($event, tag)"
+          [selected]="tag.assigned">
+          {{tag.reportTag}}
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
+
+    <crem-loader class="at-loader" *ngIf="isLoading"></crem-loader>
+  </div>
+  
+  <div modalFooter class="footerContent">
+    <div footerLeftControls class="footerLeftControls at-userMsg">
+      {{ userMsg }}
+    </div>
+    <div footerRightControls id="buttonTemplate" class="footerRightControls">
+      <crem-button
+        type="secondary"
+        id="at-cancelBtnId"
+        class="at-cancelChanges at-btn"
+        (click)="close()"
+      >
+        Cancel
+      </crem-button>
+      <crem-button
+        [disabled]="isLoading"
+        type="primary"
+        (click)="save()"
+      >
+        Save
+      </crem-button>
+    </div>
+  </div>
+</crem-modal>
