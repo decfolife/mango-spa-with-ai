@@ -37,7 +37,7 @@ export class AmortizationDetailSectionComponent
 
   componentName = 'amortization-grid';
   isGridStateChanged = false;
-  amortizationdetailsGridData;
+  amortizationDetailsGridData;
   amortizationDetailColumns = [];
   summaryFields: any = {};
   gridName = 'Periods';
@@ -58,7 +58,6 @@ export class AmortizationDetailSectionComponent
   retroEventJeStatus = '';
   private subscription = new Subscription();
   private gridPreferencesUpdated = false;
-  private previousClassification = null;
   contentLoaded = false;
   showMaxRow = true;
   showDefaultRow = false;
@@ -108,6 +107,7 @@ export class AmortizationDetailSectionComponent
           this.eventScheduleData.leaseRecognitionScheduleID)
     ) {
       this.isGridStateChanged = false;
+      this.amortizationDetailsGridData = [];
       this.amortizationGridSetup(
         this.eventScheduleData.leaseRecognitionScheduleID
       );
@@ -143,6 +143,7 @@ export class AmortizationDetailSectionComponent
   }
 
   amortizationGridSetup(leaseRecognitionScheduleID: number) {
+    this.accountingSummaryService.isAmortizationDataLoaded$.next(false);
     const amortizationDetails =
       this.accountingSummaryService.getAmortizationDetails(
         leaseRecognitionScheduleID
@@ -150,9 +151,9 @@ export class AmortizationDetailSectionComponent
     this.subscription.add(
       amortizationDetails.subscribe((amortizationDetailsResponse) => {
         if (amortizationDetailsResponse.success) {
-          this.amortizationdetailsGridData = amortizationDetailsResponse.data;
+          this.amortizationDetailsGridData = amortizationDetailsResponse.data;
           this.selectedRowKey = [
-            this.amortizationdetailsGridData[0]?.scheduleIndex,
+            this.amortizationDetailsGridData[0]?.scheduleIndex,
           ];
           this.portfolioSettings =
             this.accountingSummaryService.getSavedPortfolioSettings();
@@ -167,7 +168,7 @@ export class AmortizationDetailSectionComponent
 
           //Get Last Approved or Exported Date for Retro and Emit the data to service
           const filteredAmortizationData =
-            this.amortizationdetailsGridData.filter(
+            this.amortizationDetailsGridData.filter(
               (item) =>
                 item.jeStatus === 'Approved' || item.jeStatus === 'Exported'
             );
@@ -189,7 +190,6 @@ export class AmortizationDetailSectionComponent
               ? new Date(lastApprovedOrExportedDate)
               : null
           );
-
           this.getGridPreferences();
         } else if (!amortizationDetailsResponse.success) {
           this.accountingSummaryService.errorNotify(
@@ -249,8 +249,8 @@ export class AmortizationDetailSectionComponent
   onGridContentReady() {
     if (!this.contentLoaded) {
       if (
-        !!this.amortizationdetailsGridData &&
-        this.amortizationdetailsGridData.length > 0
+        !!this.amortizationDetailsGridData &&
+        this.amortizationDetailsGridData.length > 0
       ) {
         this.amortizationGridHeight =
           this.accountingSummaryService.setGridHeight(
@@ -260,6 +260,7 @@ export class AmortizationDetailSectionComponent
         this.amortizationDataGrid.instance.state(this.initialState);
       }
       this.contentLoaded = true;
+      this.accountingSummaryService.isAmortizationDataLoaded$.next(true);
     }
   }
 

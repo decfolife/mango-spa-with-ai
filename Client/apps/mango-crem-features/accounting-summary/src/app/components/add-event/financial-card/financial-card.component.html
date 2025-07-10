@@ -78,6 +78,7 @@
         [Title]="'Amortization Profile'"
         [SubTitle]="amortizationSubTitle"
         [status]="amortizationCompositeDropdownValidation"
+        (click)="setTouch('amortization')"
       >
         <div class="form-items">
           <div class="labels">
@@ -110,10 +111,11 @@
               valueExpr="profileID"
               placeholder="Select Amortization Profile"
               [showClearButton]="false"
-              [required]="true"
               class="amortization-profile"
               (onValueChanged)="onAmortizationValueChanged($event)"
               formControlName="amortizationProfile"
+              [validationStatus]="amortizationProfileStatus"
+              (onFocusOut)="setTouch('amortizationProfile')"
             >
               <dxo-drop-down-options
                 container="#financials-amortization-profile-dropdown"
@@ -230,6 +232,7 @@
         [SubTitle]="currencySubTitle"
         FooterContent=""
         [status]="currencyCompositeDropdownValidation"
+        (click)="setTouch('currency')"
       >
         <div class="form-items">
           <div class="labels">
@@ -380,6 +383,9 @@
                 [disallowNegative]="false"
                 [required]="false"
                 formControlName="currencyRate"
+                [status]="currencyRateStatus"
+                [statusMessage]="currencyRateValidationMessage"
+                (onBlurChange)="setTouch('currencyRate')"
               >
               </crem-input>
             </div>
@@ -416,6 +422,7 @@
         [SubTitle]="discountRateSubTitle"
         FooterContent=""
         [status]="discountRateCompositeDropdownValidation"
+        (click)="setTouch('discount')"
       >
         <div class="form-items">
           <div class="labels">
@@ -446,13 +453,14 @@
               displayExpr="profileName"
               [dataSource]="discountRateOptions"
               value="profileID"
+              [status]="discountRateProfileStatus"
               valueExpr="profileID"
-              [required]="true"
               [showClearButton]="false"
               [initialSelectedValue]="selectedDiscountRateProfile"
               (selectedItems)="onDiscountRateChange($event)"
               formControlName="discountRateProfile"
               [containerized]="true"
+              (blur)="setTouch('discountProfile')"
             ></crem-dropdown>
           </div>
 
@@ -488,9 +496,12 @@
               [value]="''"
               [placeholder]="''"
               [disallowNegative]="false"
-              [required]="true"
+              [required]="annualRateTouched"
               formControlName="discountRate"
               class="annual-rate-input"
+              [status]="annualRateValidation"
+              statusMessage="Required"
+              (onBlurChange)="setTouch('annualRate')"
             >
             </crem-input>
             <crem-dropdown
@@ -589,6 +600,7 @@
         [SubTitle]="ROUAssetsObtainedSubTitle"
         FooterContent=""
         [status]="ROUCompositeDropdownValidation"
+        (click)="setTouch('rouAssets')"
       >
         <div class="form-items">
           <div class="labels">
@@ -607,7 +619,7 @@
             </crem-input-label>
           </div>
           <div class="controls-container">
-            <crem-dropdown
+            <dx-select-box
               [id]="
                 accountingSummaryService.getId(
                   componentName,
@@ -615,16 +627,18 @@
                   'dropdown'
                 )
               "
-              [placeholder]="'Select Method'"
-              [initialSelectedValue]="rouMethodIDSelected"
+              [(value)]="rouMethodIDSelected"
               [dataSource]="rouAssetMethodsList"
               displayExpr="name"
               valueExpr="id"
-              [required]="true"
+              [placeholder]="'Select Method'"
               [showClearButton]="false"
-              (selectedItems)="onROUMethodValueChanged($event)"
+              (onValueChanged)="onROUMethodValueChanged($event)"
               formControlName="ROUMethod"
-            ></crem-dropdown>
+              [validationStatus]="rouMethodStatus"
+              (onFocusOut)="setTouch('rouMethod')"
+            >
+            </dx-select-box>
           </div>
           <div class="labels">
             <crem-input-label
@@ -653,6 +667,9 @@
               [format]="formatCurrencyInput()"
               [inputAttr]="{ 'aria-label': 'ROU Amount' }"
               formControlName="ROUAmount"
+              [validationStatus]="rouAmountStatus"
+              [invalidValueMessage]="'Required'"
+              (onFocusOut)="setTouch('rouAmount')"
             >
             </dx-number-box>
           </div>
@@ -673,6 +690,7 @@
           </div>
           <div class="controls-container">
             <crem-date-picker
+              #rouActionDatePicker
               [id]="
                 accountingSummaryService.getId(
                   componentName,
@@ -684,9 +702,12 @@
               [dateFormat]="dateFormat"
               [invalidDateMessage]="'Invalid date'"
               [showClearButton]="false"
-              [isRequired]="true"
               (changeEvent)="onROUActionDateChange($event)"
               formControlName="ROUActionDate"
+              [status]="rouDateTouched ? rouDateStatus : 'default'"
+              [statusMessage]="rouDateStatusMessage"
+              [valueChangeEvent]="'change, input, blur, focusout'"
+              (blur)="setTouch('rouDate')"
             >
             </crem-date-picker>
           </div>

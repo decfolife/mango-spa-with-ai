@@ -16,6 +16,7 @@ import { Component, ElementRef, SimpleChanges } from '@angular/core';
 
 import { InputHintComponent } from '../hint';
 import { InputLabelComponent } from '../label';
+import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 
 import {
   ControlValueAccessor,
@@ -29,6 +30,25 @@ import { ErrorTooltipComponent } from '../../error-tooltip';
 import { CremValidatedComponent } from '../../base';
 import { Subject } from 'rxjs';
 import { debounceTime, map, takeUntil, tap } from 'rxjs/operators';
+import { CremFormControlStatusType } from '@mango/data-models/lib-data-models';
+import { InputStateDirective } from './input.directive';
+
+/**
+ * @see https://github.com/JsDaddy/ngx-mask/tree/v16
+ *
+ * @export
+ * @interface InputMask
+ */
+export interface InputMask {
+  mask?: string;
+  showMaskTyped?: boolean;
+  shownMaskExpression?: string;
+  allowNegativeNumbers?: boolean;
+  dropSpecialCharacters?: boolean;
+  thousandSeparator?: string;
+  prefix?: string;
+  suffix?: string;
+}
 
 /**
  * Input: Defined to hold all the common elements, this is the entry point
@@ -46,6 +66,8 @@ import { debounceTime, map, takeUntil, tap } from 'rxjs/operators';
     FormsModule,
     IconModule,
     ErrorTooltipComponent,
+    NgxMaskDirective,
+    InputStateDirective,
   ],
   templateUrl: './input.component.html',
   styleUrls: ['./input.component.scss'],
@@ -59,6 +81,7 @@ import { debounceTime, map, takeUntil, tap } from 'rxjs/operators';
       provide: CremValidatedComponent,
       useExisting: InputComponent,
     },
+    provideNgxMask(),
   ],
 })
 export class InputComponent
@@ -97,6 +120,14 @@ export class InputComponent
   @Input() disallowNegative?: boolean;
   @Input() debounceTime = 0;
   @Input() ariaLabel?: string;
+  @Input() status: CremFormControlStatusType = 'default';
+  @Input() statusMessage = 'One or more required fields are not valid.';
+
+  /**
+   * (Optional) Input Mask
+   * @see https://jsdaddy.github.io/ngx-mask
+   */
+  @Input() mask?: InputMask;
 
   // Hint Component
   @Input() hintText?: string;
@@ -112,7 +143,9 @@ export class InputComponent
 
   @ViewChild('textarea') textarea: ElementRef<HTMLTextAreaElement>;
   @ViewChild('input') input: ElementRef<HTMLInputElement>;
+  @ViewChild('inputMask') inputMask: ElementRef<HTMLInputElement>;
 
+  public emailRegex: RegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
   private inputSubject: Subject<string> = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -165,6 +198,7 @@ export class InputComponent
       this.required = false; // Hide required symbol when editing disabled
     }
     this.getCssClasses();
+    this.validate();
   }
 
   /**
@@ -228,6 +262,9 @@ export class InputComponent
   validate(): boolean {
     if (this.required && (!this.value || this.value == '')) {
       return false;
+    }
+    if (this.inputType == 'email' && !!this.value) {
+      return this.emailRegex.test(this.value);
     }
     if (
       this.maxLengthField &&
@@ -324,6 +361,7 @@ export class InputComponent
       el.focus();
     }
   }
+
   focusTextBox() {
     const input =
       this.el.nativeElement.querySelector('input') ||

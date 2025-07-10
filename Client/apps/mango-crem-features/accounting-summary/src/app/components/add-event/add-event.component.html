@@ -32,7 +32,7 @@
           )
         "
         type="primary"
-        [disabled]="isCalculateValuesDisabled"
+        [disabled]="!isCalculateValuesAllowed"
         [icon]="calculateValuesLoading ? 'faSpinner' : ''"
         [iconPack]="calculateValuesLoading ? 'solid' : ''"
         [iconAnimation]="calculateValuesLoading ? 'spin' : ''"
@@ -48,7 +48,7 @@
           accountingSummaryService.getId(componentName, 'save-close', 'button')
         "
         type="primary"
-        [disabled]="isSaveDisabled"
+        [disabled]="!isSaveAllowed"
         [icon]="isSaveAndCloseClicked ? 'faSpinner' : ''"
         [iconPack]="isSaveAndCloseClicked ? 'solid' : ''"
         [iconAnimation]="isSaveAndCloseClicked ? 'spin' : ''"
@@ -62,7 +62,7 @@
       <crem-button
         [id]="accountingSummaryService.getId(componentName, 'apply', 'button')"
         type="secondary"
-        [disabled]="isApplyDisabled"
+        [disabled]="!isApplyAllowed"
         [icon]="isApplyClicked ? 'faSpinner' : ''"
         [iconPack]="isApplyClicked ? 'solid' : ''"
         [iconAnimation]="isApplyClicked ? 'spin' : ''"

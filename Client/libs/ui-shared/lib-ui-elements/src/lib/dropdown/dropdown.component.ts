@@ -69,6 +69,7 @@ export class DropdownComponent
   @Output() selectedItems = new EventEmitter<any[]>();
   @Output() moreMenuItemClicked = new EventEmitter<any>();
   @Output() gridDropdownValueChanged = new EventEmitter<boolean>();
+  @Output() blur = new EventEmitter<any>();
   @ViewChild('dropdownTemplate', { static: false })
   dropdownTemplate: DxDataGridComponent;
   @ViewChild(DxSelectBoxComponent) selectBox: DxSelectBoxComponent;
@@ -270,6 +271,7 @@ export class DropdownComponent
   displayExprTooltipText = '';
   toolTipTarget = '';
   btnDisabledReason = '';
+  public touched = false;
 
   @ContentChild('customHeaderTemplate') customHeaderTemplate: TemplateRef<any>;
   @ViewChild(DxFormComponent, { static: false }) form: DxFormComponent;
@@ -553,6 +555,10 @@ export class DropdownComponent
     }
   }
 
+  onBlur(event) {
+    this.blur.emit(event);
+  }
+
   setDropdownvalue(value: any) {
     // When auto-selects is true and dataSource is one, automatically select the element
     const autoSelect = this.dataSource?.length === 1 && this.autoSelect;
@@ -632,6 +638,7 @@ export class DropdownComponent
   openDropdown(e) {
     this.setDropDownAttr();
     this.setDropDownHeaderAttr();
+    this.touched = true;
   }
 
   getWithLabelValue(item): string {
@@ -836,12 +843,14 @@ export class DropdownComponent
   }
 
   public validate() {
-    if (this.useSelectBox) {
-      const validation = this.SelectBoxValidator.instance.validate();
-      return validation;
-    } else {
-      const validation = this.DropdownBoxValidator.instance.validate();
-      return validation;
+    if (this.touched) {
+      if (this.useSelectBox) {
+        const validation = this.SelectBoxValidator.instance.validate();
+        return validation;
+      } else {
+        const validation = this.DropdownBoxValidator.instance.validate();
+        return validation;
+      }
     }
   }
 

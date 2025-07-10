@@ -94,6 +94,7 @@
             *ngFor="let module of searchModules"
             [value]="module.objectTypeTypeId"
             (click)="$event.stopPropagation()"
+            [selected]="module.objectTypeTypeId === this.searchObjectId"
           >
             {{ module.objectTypeType }}
           </option>

@@ -58,20 +58,17 @@
     .split-button__container__main-button > button {
       border-top-right-radius: 0px;
       border-bottom-right-radius: 0px;
-      padding-right: 3px;
-      border-right: none !important;
-    }
-    .split-button__container__seperator > button {
-      padding: 0px;
-      border-radius: 0;
-      border-left: none !important;
-      border-right: none !important;
+      padding-right: 8px;
+      border-top-right-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
     }
     .split-button__container__caret-button > button {
       border-top-left-radius: 0px;
       border-bottom-left-radius: 0px;
-      padding-left: 2px !important;
-      border-left: none !important;
+      padding-left: 8px !important;
+      border-top-left-radius: 0px !important;
+      border-bottom-left-radius: 0px !important;
+      border-left: 0px !important;
     }
   }
 }

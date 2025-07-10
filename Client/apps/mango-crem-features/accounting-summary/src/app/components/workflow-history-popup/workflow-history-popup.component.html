@@ -111,27 +111,16 @@
           </div>
           <div class="second-row-div">
             Description:
-            <dx-scroll-view
-              *ngIf="event.description !== null && event.description !== ''"
-              height="85px"
-              width="95%"
-              showScrollbar="always"
-              (onInitialized)="onScrollViewInitialized($event)"
-            >
+
+            <div class="workflow-history-content">
               {{ event.description }}
-            </dx-scroll-view>
+            </div>
           </div>
           <div class="third-row-div">
             Comment:
-            <dx-scroll-view
-              *ngIf="event.comment !== null && event.comment !== ''"
-              height="85px"
-              width="95%"
-              showScrollbar="always"
-              (onInitialized)="onScrollViewInitialized($event)"
-            >
-              <div [innerHTML]="formatComment(event.comment)"></div>
-            </dx-scroll-view>
+            <div class="workflow-history-content">
+              <div [innerHTML]="event.comment"></div>
+            </div>
           </div>
         </ng-template>
         <ng-template pTemplate="opposite" let-event>

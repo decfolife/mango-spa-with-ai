@@ -52,4 +52,5 @@ export interface ContactPreferences {
   contactMeasurements: number;
   contactStartPage: string;
   contactRequireSSO?: boolean;
+  defaultQuickSearchObjectTypeTypeID?: number;
 }

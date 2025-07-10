@@ -273,17 +273,19 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
 
     const totalAmount = Math.round(this.totalAmount * 100) / 100;
 
-    let isValid = true; // Track overall validation status
     if (estimatedResidualValue < 0) {
       this.addEditScheduleService.showToast(
         'Estimated Residual Value',
         `Estimated residual value must be greater than or equal to zero.`
       );
-      isValid = false;
+      this.addEventFormService.isValidForCalculate('residualValue', false);
+      this.addEventFormService.isValidForSave('residualValue', false);
     } else {
       this.addEditScheduleService.clearToastBySummary(
         'Estimated Residual Value'
       );
+      this.addEventFormService.isValidForCalculate('residualValue', true);
+      this.addEventFormService.isValidForSave('residualValue', true);
     }
 
     if (rvGuaranteed < 0) {
@@ -291,9 +293,12 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
         'RV guaranteed',
         `RV guaranteed must be greater than or equal to zero.`
       );
-      isValid = false;
+      this.addEventFormService.isValidForCalculate('residualValue', false);
+      this.addEventFormService.isValidForSave('residualValue', false);
     } else {
       this.addEditScheduleService.clearToastBySummary('RV guaranteed');
+      this.addEventFormService.isValidForCalculate('residualValue', true);
+      this.addEventFormService.isValidForSave('residualValue', true);
     }
 
     if (RVGuaranteedBy3rdParty < 0 || RVGuaranteedBy3rdParty > rvGuaranteed) {
@@ -301,11 +306,14 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
         'RV Guaranteed by 3rd Party',
         `RV guaranteed by 3rd party must be between zero and RV guaranteed.`
       );
-      isValid = false;
+      this.addEventFormService.isValidForCalculate('residualValue', false);
+      this.addEventFormService.isValidForSave('residualValue', false);
     } else {
       this.addEditScheduleService.clearToastBySummary(
         'RV Guaranteed by 3rd Party'
       );
+      this.addEventFormService.isValidForCalculate('residualValue', true);
+      this.addEventFormService.isValidForSave('residualValue', true);
     }
 
     if (
@@ -316,14 +324,15 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
         'Guaranteed Amount Reflected in Payments',
         `Guaranteed amount reflected in payments must be between zero and the total amount.`
       );
-      isValid = false;
+      this.addEventFormService.isValidForCalculate('residualValue', false);
+      this.addEventFormService.isValidForSave('residualValue', false);
     } else {
       this.addEditScheduleService.clearToastBySummary(
         'Guaranteed Amount Reflected in Payments'
       );
+      this.addEventFormService.isValidForCalculate('residualValue', true);
+      this.addEventFormService.isValidForSave('residualValue', true);
     }
-    this.addEventFormService.isCalculateValuesDisabled$.next(!isValid);
-    this.addEventFormService.isSaveDisabled$.next(!isValid);
   }
 
   loadSavedData() {

@@ -20,19 +20,17 @@
 }
 
 .details-section-controls {
-  @include flex-row-direction;
+  display: grid;
   @include costar(padding-bottom, 2);
+  grid-auto-flow: column;
+  grid-row-gap: 12px;
   width: 100%;
-  justify-content: flex-start;
 
   & .controls {
     & .controls-container {
-      @include flex-row-direction;
+      display: grid;
+      grid-auto-flow: column;
       @include costar(margin-right, 3);
-
-      & crem-date-picker {
-        width: 130px;
-      }
     }
   }
 }
@@ -41,9 +39,18 @@
   @include costar(padding-top, 3);
 }
 
-.terms-row {
-  @include flex-row-direction;
-  justify-content: space-between;
+.terms-container {
+  display: grid;
+  grid-column: 3 span;
+
+  .terms-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-row-gap: 12px;
+    .controls-container {
+      grid-template-columns: 1fr 0.7fr;
+    }
+  }
 }
 
 .term-hint {
@@ -90,4 +97,34 @@
 
 .message-title {
   font-weight: 500;
+}
+
+:host::ng-deep #details-section-card {
+  dx-date-box {
+    height: 32px;
+  }
+}
+
+:host::ng-deep #details-termBegin-dropdown {
+  .dx-overlay-content:not(.dx-invalid-message-content) {
+    min-width: 430px !important;
+  }
+}
+
+:host::ng-deep #details-termEnd-dropdown {
+  .dx-overlay-content:not(.dx-invalid-message-content) {
+    min-width: 430px !important;
+  }
+}
+
+@media (max-width: 1280px) {
+  .details-section-controls {
+    grid-auto-flow: row;
+  }
+  .terms-row {
+    grid-auto-flow: row !important;
+  }
+  .terms-container {
+    grid-column: unset;
+  }
 }

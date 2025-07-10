@@ -115,15 +115,6 @@
       >
         {{ exportingReport ? 'Sending to Excel' : 'Send to Excel' }}
       </crem-button>
-      <crem-button
-        *ngIf="userIsAdmin && !newAccountingIsEnabled && isLowerEnvironment"
-        #accountingButtonDashboardEnable3
-        id="accountingButtonDashboardEnable3"
-        type="primary"
-        ariaLabel="Enable accounting 3.0"
-        (click)="showAccounting3Popover = true"
-        >Enable Accounting 3.0</crem-button
-      >
 
       <crem-button
         [id]="'AccountingButtonDashboardSettings'"
@@ -189,60 +180,4 @@
       </div>
     </ng-container>
   </div>
-  <dx-popover
-    id="accountingPopoverContentDashboardEnable3"
-    target="#accountingButtonDashboardEnable3"
-    position="bottom"
-    titleTemplate="accountingPopoverTitleDashboardEnable3"
-    [showTitle]="true"
-    [showCloseButton]="false"
-    [(visible)]="showAccounting3Popover"
-    width="450"
-    height="160"
-  >
-    <div *dxTemplate="let data of 'accountingPopoverTitleDashboardEnable3'">
-      <crem-icon
-        icon="faCircleInfo"
-        pack="solid"
-        color="primary"
-        size="2xl"
-        pull="left"
-      ></crem-icon>
-      <h2>Confirm Enabling Accounting 3.0</h2>
-    </div>
-    <div *dxTemplate="let data = model; of: 'content'">
-      <div class="accounting3Popover">
-        Enabling Accounting 3.0 will turn on the new Accounting page. This is a
-        sitewide action that cannot be undone.
-      </div>
-      <dx-toolbar id="accountingToolbarEnable3">
-        <dxo-position
-          my="bottom"
-          at="bottom"
-          of="#accountingPopoverDashboardEnable3"
-        ></dxo-position>
-        <dxi-item location="center">
-          <crem-button
-            className="accounting3Button"
-            size="medium"
-            aria-label="Cancel"
-            type="secondary"
-            (click)="showAccounting3Popover = false"
-          >
-            Cancel
-          </crem-button>
-        </dxi-item>
-        <dxi-item location="after">
-          <crem-button
-            className="accounting3Button"
-            size="medium"
-            type="primary"
-            aria-label="Enable Sitewide For All Users "
-            (click)="enableAccounting3()"
-            >Enable Sitewide For All Users
-          </crem-button>
-        </dxi-item>
-      </dx-toolbar>
-    </div>
-  </dx-popover>
 </div>

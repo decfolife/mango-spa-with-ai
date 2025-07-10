@@ -92,16 +92,6 @@ export class DashboardService extends DataService {
     return this.getHttpGetApiResponse(route, 'GetUserSecurityLevel');
   }
 
-  public getIsNewAccountingEnabled() {
-    const url = `${this.accountingServiceUrl}accounting/isnewaccountingenabled`;
-    return this.callHttpGet(url, 'GetIsNewAccountingEnabled');
-  }
-
-  public enableNewAccounting(): Observable<ApiResponse> {
-    const route = `${this.accountingServiceUrl}accounting/enablenewaccounting`;
-    return this.getHttpGetApiResponse(route, 'EnableNewAccounting');
-  }
-
   /**
    *
    *

@@ -1,3 +1,4 @@
+import { WorkFlowStatusHistory } from '@accounting-summary/models/interfaces/workflow-status-history.interfaces';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
 import { Component, Input, SimpleChanges, ViewChild } from '@angular/core';
@@ -16,7 +17,7 @@ export class WorkflowHistoryPopupComponent {
   @ViewChild('WorkflowHistoryPopup') mainPopup: DxPopupComponent;
   @ViewChild('PopupMainScrollView') mainScrollView: DxScrollViewComponent;
   @Input() userInfo: UserInfoResponse;
-  @Input() workflowStatusHistory: any;
+  @Input() workflowStatusHistory: WorkFlowStatusHistory[];
 
   componentName = 'workflow-history-component';
   workflowHistoryPopVisible = false;

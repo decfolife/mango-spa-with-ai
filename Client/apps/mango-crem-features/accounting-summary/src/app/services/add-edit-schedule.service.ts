@@ -11,9 +11,7 @@ import { CalculateValues } from '@accounting-summary/models/interfaces/calculate
 import { AccountingEventPayload } from '@accounting-summary/models/interfaces/save-accounting-event.interfaces';
 import { Message, MessageService } from 'primeng/api';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class AddEditScheduleService extends EndpointService {
   private apiUrl: string;
   private leaseAbstractId: any;
@@ -83,7 +81,7 @@ export class AddEditScheduleService extends EndpointService {
 
   getDiscountRateOptions(
     currency: string,
-    termBegin: Date,
+    termBegin: string,
     termInMonths: number
   ) {
     return this.callHttpPost(

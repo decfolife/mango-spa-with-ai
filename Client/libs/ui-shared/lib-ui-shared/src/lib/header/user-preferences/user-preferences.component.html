@@ -153,6 +153,30 @@
       </div>
 
       <div class="layout-container">
+        <crem-form-item>
+          <crem-form-label> Quick Search Default </crem-form-label>
+          <crem-form-control>
+            <crem-dropdown
+              id="userPreferencesDefaultQuickSearch"
+              [dataSource]="quickSearchModules"
+              [initialSelectedValue]="
+                userPreferences.defaultQuickSearchObjectTypeTypeID
+              "
+              [searchMode]="'contains'"
+              [searchExpr]="'objectTypeType'"
+              [allowSearch]="false"
+              [containerized]="false"
+              displayExpr="objectTypeType"
+              valueExpr="objectTypeTypeId"
+              formControlName="quickSearchModule"
+            ></crem-dropdown>
+          </crem-form-control>
+        </crem-form-item>
+
+        <crem-form-item></crem-form-item>
+      </div>
+
+      <div class="layout-container">
         <div class="toggle-section">
           <crem-form-item>
             <p>Consolidate Project Emails</p>

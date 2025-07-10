@@ -6,6 +6,7 @@ import {
   OnDestroy,
   OnInit,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
@@ -13,6 +14,7 @@ import { AddEventFormService } from '@accounting-summary/services/add-event-form
 import {
   ButtonModule,
   CardModule,
+  DatePickerComponent,
   DatePickerModule,
   DropdownModule,
   InputComponent,
@@ -59,6 +61,7 @@ import {
   DxDropDownBoxModule,
   DxNumberBoxModule,
   DxSelectBoxModule,
+  DxValidatorModule,
 } from 'devextreme-angular';
 import { BalanceCardsContainerComponent } from './balance-cards-container/balance-cards-container/balance-cards-container.component';
 
@@ -83,6 +86,7 @@ import { BalanceCardsContainerComponent } from './balance-cards-container/balanc
     DxSelectBoxModule,
     DxDropDownBoxModule,
     DxNumberBoxModule,
+    DxValidatorModule,
     BalanceCardsContainerComponent,
   ],
   templateUrl: './financial-card.component.html',
@@ -98,6 +102,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   @Input() measureEvent: string;
   @Input() currencyList: Currency[];
   @Input() rouAssetMethodsList: ROUAssetMethod[];
+  @ViewChild('rouActionDatePicker') rouDatePicker: DatePickerComponent;
 
   functionalCurrencyRateLookup: FunctionalCurrencyRateLookupResponse;
   discountRateOptions: DiscountRateProfile[];
@@ -154,12 +159,34 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   discountRateProfilePlaceHolder = 'Select Discount Rate Profile';
   isROUAmountDisabled: boolean;
   ROUAssetAmount: number;
-  amortizationCompositeDropdownValidation: string;
-  currencyCompositeDropdownValidation: string;
-  discountRateCompositeDropdownValidation: string;
-  ROUCompositeDropdownValidation: string;
+  amortizationCompositeDropdownTouched: boolean = false;
+  amortizationCompositeDropdownValidation: string = 'default';
+  currencyCompositeDropdownValidation: string = 'default';
+  currencyCompositeDropdownTouched: boolean = false;
+  discountRateCompositeDropdownValidation: string = 'default';
+  discountRateCompositeDropdownTouched: boolean = false;
+  ROUCompositeDropdownValidation: string = 'default';
+  ROUCompositeDropdownTouched: boolean = false;
+  rouAmountStatus = 'valid';
+  annualRateValidation = 'default';
+  currencyRateStatus = 'default';
+  currencyRateValidationMessage: string;
+  amortizationProfileStatus = 'valid';
+  amortizationProfileTouched = false;
+  overrideCheckboxDisable = false;
+  annualRateTouched = false;
+  discountRateProfileStatus = 'default';
+  discountRateProfileTouched = false;
   totalAdjustment: number;
   private nullDateString = new Date(null).toDateString();
+  rouMethodStatus = 'valid';
+  rouDateStatus = 'default';
+  rouDateStatusMessage: string = '';
+  rouDateTouched = false;
+  rouMethodTouched = false;
+  rouAmountTouched = false;
+  currencyRateTouched = false;
+  calculateValuesClicked = false;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -179,6 +206,22 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           this.financialForm.get('ROUMethod').setValue(2);
         }
       })
+    );
+    this.subscription.add(
+      this.addEventFormService.validateCalculateComponents$.subscribe(
+        (clicked) => {
+          this.calculateValuesClicked = clicked;
+          if (clicked) {
+            this.amortizationCompositeDropdownTouched = true;
+            this.amortizationProfileTouched = true;
+            this.ROUCompositeDropdownTouched = true;
+            this.rouDateTouched = true;
+            this.rouMethodTouched = true;
+            this.rouAmountTouched = true;
+            this.financialCardCalculateValidation();
+          }
+        }
+      )
     );
   }
 
@@ -231,6 +274,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           this.financialForm.get('ROUActionDate').setValue(this.termBegin);
         } else {
           this.financialForm.get('ROUActionDate').reset();
+          this.rouDateStatus = 'error';
+          this.rouDateStatusMessage = 'Required';
         }
       }
     }
@@ -284,8 +329,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.handleFormValueChanges();
     this.initializePortfolioSettings();
+    this.handleFormValueChanges();
 
     if (
       this.pageMode === 'Add Event' &&
@@ -359,7 +404,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         Validators.required,
       ]),
       ROUAmount: new FormControl({ value: '', disabled: true }, []),
-      ROUActionDate: new FormControl({ value: '', disabled: false }, [
+      ROUActionDate: new FormControl({ value: null, disabled: false }, [
         Validators.required,
       ]),
       amortizationProfile: new FormControl({ value: null, disabled: false }, [
@@ -527,6 +572,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         if (
           !isSameCurrency &&
           functionalCurrencyRate === 0 &&
+          !functionalCurrencyRate &&
           this.showFunctionalCurrency &&
           (this.classificationId === 2 ||
             this.classificationId === 3 ||
@@ -536,15 +582,16 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
             'Functional Currency Rate is Required',
             'Functional Currency Rate is required and cannot be zero.'
           );
-          this.addEventFormService.isCalculateValuesDisabled$.next(true);
-          this.addEventFormService.isSaveDisabled$.next(true);
+          this.currencyCompositeDropdownValidation = 'error';
+          this.updateFinancialCardValidity(false, false);
           return;
         } else {
           this.addEditScheduleService.clearToastBySummary(
             'Functional Currency Rate is Required'
           );
-          this.addEventFormService.isCalculateValuesDisabled$.next(false);
-          this.addEventFormService.isSaveDisabled$.next(false);
+          this.updateFinancialCardValidity(true, true);
+          this.currencyRateValidationMessage = '';
+          this.currencyCompositeDropdownValidation = 'default';
         }
 
         // Check if currencyRate has more than 10 decimal places
@@ -557,15 +604,13 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
             'Functional Currency Rate',
             'The Functional Currency Rate has greater than 10 decimal places and can cause unexpected failure'
           );
-          this.addEventFormService.isCalculateValuesDisabled$.next(true);
-          this.addEventFormService.isSaveDisabled$.next(true);
+          this.updateFinancialCardValidity(false, false);
           return;
         } else {
           this.addEditScheduleService.clearToastBySummary(
             'Functional Currency Rate'
           );
-          this.addEventFormService.isCalculateValuesDisabled$.next(false);
-          this.addEventFormService.isSaveDisabled$.next(false);
+          this.updateFinancialCardValidity(true, true);
         }
       });
 
@@ -626,12 +671,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           : this.setDiscountRateSubTitle();
         const annualRate = discountRate === '' ? null : Number(discountRate);
         if (annualRate === null) {
-          this.addEventFormService.isCalculateValuesDisabled$.next(true);
-          this.addEventFormService.isSaveDisabled$.next(true);
+          this.updateFinancialCardValidity(false, false);
           return;
         } else {
-          this.addEventFormService.isCalculateValuesDisabled$.next(false);
-          this.addEventFormService.isSaveDisabled$.next(false);
+          this.updateFinancialCardValidity(true, true);
         }
       });
 
@@ -826,10 +869,19 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       : amount;
   }
 
-  financialFormValidation() {
-    let isCalculateValid = true;
-    let isSaveValid = true;
+  private updateFinancialCardValidity(
+    isValidForCalculate: boolean,
+    isValidForSave?: boolean
+  ): void {
+    const section = 'financialCard';
+    this.addEventFormService.isValidForCalculate(section, isValidForCalculate);
 
+    if (isValidForSave !== undefined) {
+      this.addEventFormService.isValidForSave(section, isValidForSave);
+    }
+  }
+
+  financialFormValidation() {
     const amortizationProfile = this.financialForm.get(
       'amortizationProfile'
     ).value;
@@ -874,74 +926,223 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         initCurrency.decimalPrecision
       );
     }
-    if ((!amortizationProfile && amortizationProfile !== 0) || !chargeType) {
-      isSaveValid = false;
+    if (
+      ((!amortizationProfile && amortizationProfile !== 0) || !chargeType) &&
+      this.amortizationCompositeDropdownTouched &&
+      this.amortizationProfileTouched
+    ) {
       this.amortizationCompositeDropdownValidation = 'error';
+      this.amortizationProfileStatus = 'invalid';
+      this.updateFinancialCardValidity(true, false);
+      return;
     } else {
       this.amortizationCompositeDropdownValidation = 'default';
+      this.amortizationProfileStatus = 'valid';
+      this.updateFinancialCardValidity(true, true);
     }
 
-    if (
-      (!currencyRate && currencyRate !== 0) ||
-      !functionalCurrency ||
-      !localCurrency
-    ) {
-      isCalculateValid = false;
-      isSaveValid = false;
-      this.currencyCompositeDropdownValidation = 'error';
+    if (this.discountRateProfileTouched && discountRateProfile === null) {
+      this.discountRateProfileStatus = 'error';
     } else {
-      this.currencyCompositeDropdownValidation = 'default';
+      this.discountRateProfileStatus = 'default';
+    }
+    if (this.annualRateTouched && (annualRate === null || annualRate === '')) {
+      this.annualRateValidation = 'error';
+    } else {
+      this.annualRateValidation = 'default';
     }
 
     if (
-      (!annualRate && annualRate !== 0) ||
-      (!discountRateProfile && discountRateProfile !== 0) ||
-      !annualRateTypeID
+      (this.annualRateValidation === 'error' ||
+        this.discountRateProfileStatus === 'error' ||
+        !annualRateTypeID) &&
+      this.discountRateCompositeDropdownTouched
     ) {
-      isCalculateValid = false;
-      isSaveValid = false;
       this.discountRateCompositeDropdownValidation = 'error';
+      this.updateFinancialCardValidity(false, false);
+      return;
     } else {
+      this.updateFinancialCardValidity(true, true);
       this.discountRateCompositeDropdownValidation = 'default';
     }
 
+    if (!currencyRate && currencyRate !== 0) {
+      this.currencyRateStatus = 'error';
+      this.currencyRateValidationMessage = 'Required';
+      this.updateFinancialCardValidity(false, false);
+      return;
+    } else if (+currencyRate === 0) {
+      this.currencyRateStatus = 'error';
+      this.currencyRateValidationMessage =
+        'Functional Currency Rate is required and cannot be zero.';
+      this.updateFinancialCardValidity(false, false);
+      return;
+    } else {
+      this.currencyRateStatus = 'default';
+      this.currencyRateValidationMessage = '';
+      this.updateFinancialCardValidity(true, true);
+    }
+
+    if (
+      (!functionalCurrency ||
+        !localCurrency ||
+        this.currencyRateStatus === 'error') &&
+      this.currencyCompositeDropdownTouched
+    ) {
+      this.currencyCompositeDropdownValidation = 'error';
+      this.updateFinancialCardValidity(false, false);
+      return;
+    } else {
+      this.updateFinancialCardValidity(true, true);
+      this.currencyCompositeDropdownValidation = 'default';
+    }
+
     if ([2, 3, 4].includes(this.classificationId)) {
+      if (!ROUAmount && ROUAmount !== 0 && this.rouAmountTouched) {
+        this.rouAmountStatus = 'invalid';
+        this.ROUCompositeDropdownValidation = 'error';
+        this.updateFinancialCardValidity(false, false);
+      } else {
+        this.rouAmountStatus = 'valid';
+        this.updateFinancialCardValidity(true, true);
+      }
+
       if (
-        (!ROUMethod && ROUMethod !== 0) ||
-        (!ROUAmount && ROUAmount !== 0) ||
-        !ROUActionDate
+        (this.rouMethodStatus === 'invalid' ||
+          this.rouAmountStatus === 'invalid' ||
+          this.rouDateStatus === 'error') &&
+        this.ROUCompositeDropdownTouched
       ) {
-        isSaveValid = false;
+        this.ROUCompositeDropdownValidation = 'error';
+        this.updateFinancialCardValidity(true, false);
+        return;
+      } else {
+        this.updateFinancialCardValidity(true, true);
+        this.ROUCompositeDropdownValidation = 'default';
+      }
+
+      if (!ROUMethod && ROUMethod !== 0 && this.rouMethodTouched) {
+        this.rouMethodStatus = 'invalid';
+        this.updateFinancialCardValidity(true, false);
+        return;
+      } else {
+        this.rouMethodStatus = 'valid';
+        this.updateFinancialCardValidity(true, true);
+      }
+
+      if (!ROUActionDate && this.rouDateTouched) {
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage = 'Required';
+        this.rouDatePicker?.validate();
+        this.updateFinancialCardValidity(true, false);
+        return;
+      } else {
+        this.rouDateStatus = 'default';
+        this.rouDateStatusMessage = '';
+        this.updateFinancialCardValidity(true, true);
+      }
+    }
+  }
+
+  private financialCardCalculateValidation() {
+    const chargeType = this.financialForm.get('chargeType').value;
+
+    const amortizationProfile = this.financialForm.get(
+      'amortizationProfile'
+    ).value;
+
+    const ROUMethod = Array.isArray(this.financialForm.get('ROUMethod').value)
+      ? this.financialForm.get('ROUMethod').value[0]
+      : this.financialForm.get('ROUMethod').value;
+    const ROUAmount = this.financialForm.get('ROUAmount').value;
+    const ROUActionDate = this.financialForm.get('ROUActionDate').value;
+
+    if (
+      ((!amortizationProfile && amortizationProfile !== 0) || !chargeType) &&
+      this.amortizationCompositeDropdownTouched &&
+      this.amortizationProfileTouched
+    ) {
+      this.amortizationCompositeDropdownValidation = 'error';
+      this.amortizationProfileStatus = 'invalid';
+    } else {
+      this.amortizationCompositeDropdownValidation = 'default';
+      this.amortizationProfileStatus = 'valid';
+    }
+
+    if ([2, 3, 4].includes(this.classificationId)) {
+      if (!ROUMethod && ROUMethod !== 0 && this.rouMethodTouched) {
+        this.rouMethodStatus = 'invalid';
+      } else {
+        this.rouMethodStatus = 'valid';
+      }
+
+      if (
+        !ROUAmount &&
+        ROUAmount !== 0 &&
+        ROUMethod === 1 &&
+        this.rouAmountTouched
+      ) {
+        this.rouAmountStatus = 'invalid';
+      } else {
+        this.rouAmountStatus = 'valid';
+      }
+
+      if (ROUActionDate == null && this.rouDateTouched) {
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage = 'Required';
+        this.rouDatePicker.validate();
+      } else {
+        this.rouDateStatus = 'default';
+        this.rouDateStatusMessage = '';
+      }
+      if (ROUActionDate == null && this.rouDateTouched) {
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage = 'Required';
+        this.rouDatePicker.validate();
+      } else {
+        this.rouDateStatus = 'default';
+        this.rouDateStatusMessage = '';
+        this.rouDatePicker.validate();
+      }
+
+      if (
+        (this.rouMethodStatus === 'invalid' ||
+          this.rouAmountStatus === 'invalid' ||
+          this.rouDateStatus === 'error') &&
+        this.ROUCompositeDropdownTouched
+      ) {
         this.ROUCompositeDropdownValidation = 'error';
       } else {
         this.ROUCompositeDropdownValidation = 'default';
       }
-      this.addEventFormService.isCalculateValuesDisabled$.next(
-        !isCalculateValid
-      );
-      this.addEventFormService.isSaveDisabled$.next(!isSaveValid);
     }
+
+    this.addEventFormService.validateCalculateComponents$.next(false);
   }
 
   private validateROUActionDate() {
-    let isSaveValid = true;
     const rouActionDate = this.financialForm.get('ROUActionDate').value;
+    if (!rouActionDate) {
+      this.rouDateStatus = 'error';
+      this.rouDateStatusMessage = 'Required';
+      this.ROUCompositeDropdownValidation = 'error';
+      this.rouDatePicker?.validate();
+      return;
+    }
     if (
       this.termEnd &&
       this.termBegin &&
       [2, 3, 4].includes(this.classificationId)
     ) {
-      if (!rouActionDate) {
-        return;
-      } else if (
-        this.measureEvent === 'Initial' &&
-        rouActionDate > this.termEnd
-      ) {
+      if (this.measureEvent === 'Initial' && rouActionDate > this.termEnd) {
         this.addEditScheduleService.showToast(
           'ROU Asset Obtained Action Date',
           'The action date has to come before the accounting term end date.'
         );
-        isSaveValid = false;
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage =
+          'The action date has to come before the accounting term end date.';
+        this.updateFinancialCardValidity(true, false);
       } else if (
         this.measureEvent !== 'Initial' &&
         (rouActionDate < this.termBegin || rouActionDate > this.termEnd)
@@ -950,14 +1151,18 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           'ROU Asset Obtained Action Date',
           'The action date has to be between the accounting term begin and end dates.'
         );
-        isSaveValid = false;
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage =
+          'The action date has to be between the accounting term begin and end dates.';
+        this.updateFinancialCardValidity(true, false);
       } else {
         this.addEditScheduleService.clearToastBySummary(
           'ROU Asset Obtained Action Date'
         );
+        this.rouDateStatus = 'default';
+        this.updateFinancialCardValidity(true, true);
       }
     }
-    this.addEventFormService.isSaveDisabled$.next(!isSaveValid);
   }
 
   getLocalCurrencyDetails(currency: number) {
@@ -1238,6 +1443,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   getDiscountRateOptions() {
+    const termBeginShortDate = this.addEditScheduleService.toShortDateString(
+      this.termBegin
+    );
     const modificationImpactScope = this.financialForm.get(
       'modificationImpactScope'
     ).value;
@@ -1324,7 +1532,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.addEditScheduleService
         .getDiscountRateOptions(
           this.localCurrency,
-          this.termBegin,
+          termBeginShortDate,
           this.termInMonths
         )
         .subscribe((response: any) => {
@@ -1489,9 +1697,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     this.addEditScheduleService.clearToastBySummary(
       'Amortization Profile and Classification'
     );
-    this.addEditScheduleService.clearToastBySummary(
-      'Amortization Profile Is Required'
-    );
+    this.addEditScheduleService.clearToastBySummary('Amortization Profile');
     const profile = event.value;
     if (!profile) {
       return;
@@ -1504,9 +1710,12 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onROUMethodValueChanged(event: any) {
-    this.rouMethodIDSelected = event[0].id;
-    const rouMethodName = event[0].name;
+    this.rouMethodIDSelected = event.value;
+    const rouMethodName = this.rouAssetMethodsList.find(
+      (x) => x.id == event?.value
+    )?.name;
     this.setROUAmountForROUMethod(rouMethodName);
+    this.financialFormValidation();
   }
 
   private setROUAmountForROUMethod(rouMethodName: string) {
@@ -1625,5 +1834,123 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         false
       );
     }
+  }
+
+  setTouch(name: string) {
+    switch (name) {
+      case 'discountProfile': {
+        this.discountRateProfileTouched = true;
+        const discountRateProfile = this.financialForm.get(
+          'discountRateProfile'
+        ).value;
+        if (
+          discountRateProfile === null ||
+          this.financialForm.get('discountRateProfile').value.length == 0
+        ) {
+          this.discountRateProfileStatus = 'error';
+          this.discountRateCompositeDropdownValidation = 'error';
+        } else {
+          this.discountRateProfileStatus = 'default';
+          this.financialFormValidation();
+        }
+        break;
+      }
+      case 'amortization': {
+        this.amortizationCompositeDropdownTouched = true;
+        break;
+      }
+      case 'currency': {
+        this.currencyCompositeDropdownTouched = true;
+        break;
+      }
+      case 'discount': {
+        this.discountRateCompositeDropdownTouched = true;
+        break;
+      }
+      case 'rouAssets': {
+        this.ROUCompositeDropdownTouched = true;
+        break;
+      }
+      case 'amortizationProfile': {
+        this.amortizationProfileTouched = true;
+        const amortizationProfile = this.financialForm.get(
+          'amortizationProfile'
+        ).value;
+        if (!amortizationProfile && amortizationProfile !== 0) {
+          this.amortizationProfileStatus = 'invalid';
+          this.financialForm.get('overrideAmortizationProfile').disable();
+        } else {
+          this.amortizationProfileStatus = 'valid';
+          this.financialForm.get('overrideAmortizationProfile').enable();
+        }
+        break;
+      }
+      case 'annualRate': {
+        this.annualRateTouched = true;
+        const annualRate = this.financialForm.get('discountRate').value;
+        if (annualRate === null || annualRate === '') {
+          this.annualRateValidation = 'error';
+          this.discountRateCompositeDropdownValidation = 'error';
+        } else {
+          this.annualRateValidation = 'default';
+          this.discountRateCompositeDropdownValidation = 'default';
+        }
+        break;
+      }
+      case 'rouMethod': {
+        this.rouMethodTouched = true;
+        const ROUMethod = this.financialForm.get('ROUMethod').value;
+        if ((!ROUMethod && ROUMethod !== 0) || ROUMethod.length == 0) {
+          this.rouMethodStatus = 'invalid';
+        } else {
+          this.rouMethodStatus = 'valid';
+        }
+        break;
+      }
+      case 'rouDate': {
+        this.rouDateTouched = true;
+        const ROUActionDate = this.financialForm.get('ROUActionDate').value;
+        if (ROUActionDate == null) {
+          this.rouDateStatus = 'error';
+          this.rouDateStatusMessage = 'Required';
+          this.rouDatePicker?.validate();
+        } else {
+          this.rouDateStatus = 'default';
+          this.rouDateStatusMessage = '';
+        }
+        break;
+      }
+      case 'rouAmount': {
+        this.rouAmountTouched = true;
+        const ROUAmount = this.financialForm.get('ROUAmount').value;
+        if (!ROUAmount && ROUAmount !== 0 && this.rouAmountTouched) {
+          this.rouAmountStatus = 'invalid';
+        } else {
+          this.rouAmountStatus = 'valid';
+        }
+        break;
+      }
+      case 'currencyRate': {
+        this.currencyRateTouched = true;
+        const currencyRate = this.financialForm.get('currencyRate').value;
+        if (!currencyRate && currencyRate !== 0) {
+          this.currencyRateStatus = 'error';
+          this.currencyRateValidationMessage = 'Required';
+        } else if (+currencyRate === 0) {
+          this.currencyRateStatus = 'error';
+          this.currencyRateValidationMessage =
+            'Functional Currency Rate is required and cannot be zero.';
+        } else {
+          this.currencyRateStatus = 'default';
+          this.currencyRateValidationMessage = '';
+        }
+        break;
+      }
+    }
+    this.rouAmountStatus === 'error' ||
+    this.rouDateStatus === 'error' ||
+    this.rouMethodStatus === 'error'
+      ? (this.ROUCompositeDropdownValidation = 'error')
+      : (this.ROUCompositeDropdownValidation = 'default');
   }
 }

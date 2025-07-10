@@ -40,6 +40,8 @@
             (selectedItems)="onClassificationValueChanged($event)"
             formControlName="classificationId"
             [containerized]="true"
+            (blur)="classificationBlur = true"
+            [customRequireValidation]="!classificationBlur"
           >
           </crem-dropdown>
         </div>
@@ -63,6 +65,7 @@
         </div>
         <div class="controls-container">
           <crem-dropdown
+            #jeProfileDD
             [id]="
               accountingSummaryService.getId(
                 componentName,
@@ -83,7 +86,15 @@
             (selectedItems)="onJournalEntryProfileValueChanged($event)"
             formControlName="journalEntryProfile"
             [containerized]="true"
-          ></crem-dropdown>
+            [status]="jeProfileStatus"
+            [statusMessage]="jeProfileStatusMessage"
+            (blur)="
+              jeProfileBlur = journalEntryProfileList.length > 0 ? true : false
+            "
+            [customRequireValidation]="!jeProfileBlur"
+          >
+            ></crem-dropdown
+          >
         </div>
       </div>
 
@@ -127,6 +138,9 @@
                 [initialSelectedValue]="selectedBeginDateID"
                 formControlName="accountingEventBeginDateDropdown"
                 [containerized]="true"
+                (blur)="termBeginBlur = true"
+                [status]="termBeginStatus"
+                [statusMessage]="termBeginStatusMessage"
               ></crem-dropdown>
               <crem-date-picker
                 [id]="
@@ -144,6 +158,7 @@
                 [isRequired]="true"
                 (changeEvent)="onTermBeginDateChange($event)"
                 formControlName="accountingEventBeginDate"
+                (blur)="termBeginBlur = true"
               >
               </crem-date-picker>
             </div>
@@ -185,6 +200,10 @@
                 [initialSelectedValue]="selectedEndDateID"
                 formControlName="accountingEventEndDateDropdown"
                 [containerized]="true"
+                (blur)="termEndBlur = true"
+                [customRequireValidation]="!termEndBlur"
+                [status]="termEndStatus"
+                [statusMessage]="termEndStatusMessage"
               ></crem-dropdown>
 
               <crem-date-picker
@@ -203,6 +222,7 @@
                 [isRequired]="true"
                 formControlName="accountingEventEndDate"
                 (changeEvent)="onTermEndDateChange($event)"
+                (blur)="termEndBlur = true"
               >
               </crem-date-picker>
             </div>

@@ -76,6 +76,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.setObservables();
+    this.getDefaultSearchObjectId();
     this.getSearchModules();
 
     // Set's the default value if search query string exists
@@ -121,8 +122,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isEmulatedUser$ = this.facade.isEmulatedUser$;
     this.facade.clientKey$.subscribe((clientKey) => {
       this.currentProfile =
-        CookieService.getSharedInfoCookie()?.ProfileName ??
-        this.currentProfile;
+        CookieService.getSharedInfoCookie()?.ProfileName ?? this.currentProfile;
     });
 
     this.showEmulateUserOption$ = combineLatest([
@@ -165,6 +165,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   goToHomePage() {
     this.router.navigate(['/']);
+  }
+
+  getDefaultSearchObjectId() {
+    this.contactRecord$.subscribe((u) => {
+      const preferences = u.preferences;
+      this.searchObjectId =
+        preferences?.defaultQuickSearchObjectTypeTypeID ?? 99;
+    });
   }
 
   getSearchModules() {

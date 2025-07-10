@@ -29,6 +29,8 @@ import { filter } from 'rxjs/operators';
 import { DeleteHistoricScheduleComponent } from './deleteHistoricSchedule/delete-historic-schedule.component';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { AccountingEventSelector } from '@accounting-summary/models/interfaces/accounting-events-selector.interfaces';
+import { formatDate } from '@angular/common';
 @Component({
   selector: 'mango-events-detail-section',
   templateUrl: './events-detail-section.component.html',
@@ -38,6 +40,7 @@ export class EventsDetailSectionComponent
   implements OnChanges, OnDestroy, OnInit
 {
   @ViewChild('EventsDataGrid') eventsDataGrid: DxDataGridComponent;
+  @ViewChild('EventsSelectDataGrid') eventsSelectDataGrid: DxDataGridComponent;
   @ViewChild('EventSelectorDropdown', { static: false })
   EventSelectorDropdown: DxDropDownBoxComponent;
   @Input() leaseIsLocked: boolean;
@@ -73,12 +76,13 @@ export class EventsDetailSectionComponent
   private setInitialSelectedRow = false;
   private gridPreferencesUpdated = false;
   private previousClassification = null;
+  private allExpanded = false;
   userHasEditLeaseRights = true;
   wfStatusHasEditRights = true;
   userHasLeftNavEditRights = true;
   userHasDeleteAccountingSchedulesModuleRight = true;
   isGridBoxOpened = false;
-  gridDataSource: any;
+  gridDataSource: AccountingEventSelector[];
   gridBoxValue: number[] = [];
   pagingEnabled = false;
   leaseRecognitionScheduleID: number;
@@ -88,6 +92,8 @@ export class EventsDetailSectionComponent
   showMaxRow = true;
   showDefaultRow = false;
   showMinRow = false;
+  expandedRowCount = 0;
+  totalRowCount = 0;
   eventsGridData = [];
   rouAssetPriorAmount: number;
   priorEventBeginDate: Date;
@@ -96,6 +102,9 @@ export class EventsDetailSectionComponent
     'This will delete any saved preferences, taking you back the CoStar default columns';
   clearBtnHoverText = 'This will clear all pending changes in the grid';
   queryParamObj = {};
+  eventsCount: number;
+  isPrevNextButtonDisabled = false;
+  showPrevNextButton = true;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -116,7 +125,7 @@ export class EventsDetailSectionComponent
   ngOnInit(): void {
     this.getEventsDropDownData();
     this.getQueryParams();
-
+    this.getAmortizationGridLoadingStatus();
     this.subscription.add(
       this.accountingSummaryService.newCreatedSchedule.subscribe(
         (selectAccountingEvent) => {
@@ -142,6 +151,7 @@ export class EventsDetailSectionComponent
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    this.getUserPreferences();
     //MasterScheduleID and userInfo has to be populated in order to call eventsGridSetup
     if (
       changes.masterScheduleID !== undefined &&
@@ -191,6 +201,13 @@ export class EventsDetailSectionComponent
     this.subscription.unsubscribe();
   }
 
+  getUserPreferences() {
+    this.isEuroDateFormat = this.userInfo?.useDateEU;
+    if (this.isEuroDateFormat) {
+      this.dateFormat = 'dd.MM.yyyy';
+    }
+  }
+
   getQueryParams() {
     const queryString = window.location.search;
     if (queryString !== '') {
@@ -222,7 +239,6 @@ export class EventsDetailSectionComponent
           this.detailsGridData = eventDetailsResponse.data.sort(
             (a, b) => a.scheduleIndex - b.scheduleIndex
           );
-
           this.addPriorROUAssetObtainedToDetailsGridData();
 
           this.portfolioSettings =
@@ -247,6 +263,7 @@ export class EventsDetailSectionComponent
           // Adding fields to datasource based on classificationId && manipulating fields to display correct text
           if (this.classificationId === 0 || this.classificationId === 5) {
             this.detailsGridData.forEach((element) => {
+              element.discountRateDisplay = this.discountRateDisplay(element);
               element.currencyDisplay = this.currencyDisplay(element);
             });
           } else {
@@ -257,10 +274,6 @@ export class EventsDetailSectionComponent
             });
           }
 
-          this.isEuroDateFormat = this.userInfo?.useDateEU;
-          if (this.isEuroDateFormat) {
-            this.dateFormat = 'dd.MM.yyyy';
-          }
           this.detailColumns = this.columnService.getDetailsColumns(
             this.classificationId,
             this.detailsGridData[0],
@@ -288,10 +301,14 @@ export class EventsDetailSectionComponent
       if (this.setInitialSelectedRow || this.selectedRowKeys.length === 0) {
         this.selectedRowKeys = [this.publishedEvent.leaseRecognitionScheduleID];
         this.setInitialSelectedRow = false;
-        this.eventGridHeight =
-          this.accountingSummaryService.setDefaultGridHeight(
-            this.eventsDataGrid
-          );
+        if (this.allExpanded) {
+          this.showMaxRows();
+        } else {
+          this.eventGridHeight =
+            this.accountingSummaryService.setDefaultGridHeight(
+              this.eventsDataGrid
+            );
+        }
       }
       const selectedRowIndex = grid.component.getRowIndexByKey(
         this.selectedRowKeys[0]
@@ -314,6 +331,7 @@ export class EventsDetailSectionComponent
         }, 100);
       }
     }
+    this.setExpandedRowCount();
   }
 
   getGridPreferences() {
@@ -469,7 +487,12 @@ export class EventsDetailSectionComponent
   }
 
   currencyDisplay(gridDataRow) {
-    if (this.portfolioSettings.functionalCurrencyEnabled) {
+    if (
+      this.portfolioSettings.functionalCurrencyEnabled &&
+      gridDataRow.classificationID !== 0 &&
+      gridDataRow.classificationID !== 1 &&
+      gridDataRow.classificationID !== 5
+    ) {
       return gridDataRow.functionalCurrency == gridDataRow.localCurrency
         ? gridDataRow.localCurrency
         : gridDataRow.localCurrency +
@@ -492,6 +515,18 @@ export class EventsDetailSectionComponent
       '% ' +
       (gridDataRow.annualRateTypeID == 1 ? 'APR' : 'APY')
     );
+  }
+
+  implicitRateDisplay(gridDataRow) {
+    return (
+      (!gridDataRow.implicitRate
+        ? '0.0000'
+        : (gridDataRow.implicitRate * 100).toFixed(4)) + '%'
+    );
+  }
+
+  fairMarketValueDisplay(fmv, precision) {
+    return this.formatService.localFormat(fmv, precision);
   }
 
   formatCells(gridDataRow) {
@@ -610,6 +645,28 @@ export class EventsDetailSectionComponent
           }
         })
     );
+  }
+
+  expandAll() {
+    this.allExpanded = true;
+    this.showMaxRows();
+    this.eventsDataGrid.instance.expandAll(-1);
+    this.setExpandedRowCount();
+  }
+
+  collapseAll() {
+    this.allExpanded = false;
+    this.eventsDataGrid.instance.collapseAll(-1);
+    this.setExpandedRowCount();
+  }
+
+  setExpandedRowCount() {
+    this.totalRowCount = this.eventsDataGrid.instance
+      .getVisibleRows()
+      ?.filter((x) => x.rowType == 'data').length;
+    this.expandedRowCount = this.eventsDataGrid.instance
+      .getVisibleRows()
+      .filter((x) => x.isExpanded).length;
   }
 
   onContextMenuPreparing(e) {
@@ -928,11 +985,12 @@ export class EventsDetailSectionComponent
     const selectedEvent = this.gridDataSource.find(
       (x) => x.masterScheduleID === this.masterScheduleID && x.isPublished
     );
-    this.classificationID = selectedEvent.classificationID;
-    this.leaseRecognitionScheduleID = selectedEvent.leaseRecognitionScheduleID;
-    this.amortizationProfileName = selectedEvent.amortizationProfileName;
-    this.classificationType = selectedEvent.classificationType;
+    this.classificationID = selectedEvent?.classificationID;
+    this.leaseRecognitionScheduleID = selectedEvent?.leaseRecognitionScheduleID;
+    this.amortizationProfileName = selectedEvent?.amortizationProfileName;
+    this.classificationType = selectedEvent?.classificationType;
     if (newSchedule) {
+      this.detailsGridData = [];
       this.eventsGridSetup(this.masterScheduleID);
       this.emitDataChanged();
       this.setLeaseSessionStore();
@@ -981,10 +1039,16 @@ export class EventsDetailSectionComponent
             const leaseAbstractID: string = localStorage.getItem(
               'accSumLeaseAbstractId'
             );
-            this.gridDataSource = response.data.filter(
-              (eventItem) => eventItem.isPublished
-            );
 
+            this.gridDataSource = response.data
+              .filter((eventItem) => eventItem.isPublished)
+              .map((item) => ({
+                ...item,
+                endDate: formatDate(item.endDate, this.dateFormat, 'en-US'),
+              }));
+
+            this.eventsCount = this.gridDataSource?.length;
+            this.eventsCount <= 1 ? (this.showPrevNextButton = false) : true;
             // Check if masterScheduleID exists in session storage. If it does, load the session data; otherwise, load data from accountingEventsDropdown.
             const doesMasterScheduleExistInSession = this.gridDataSource.some(
               (item) => item.masterScheduleID === sessionLease?.gridBoxValue
@@ -1022,7 +1086,7 @@ export class EventsDetailSectionComponent
               this.classificationType =
                 this.gridDataSource[0].classificationType;
             }
-            this.pagingEnabled = this.gridDataSource.length > 5;
+            this.pagingEnabled = this.gridDataSource.length > 10;
             this.isAccountingEventEmpty = false;
             this.eventsGridSetup(this.masterScheduleID);
             this.emitDataChanged();
@@ -1040,6 +1104,137 @@ export class EventsDetailSectionComponent
           }
         })
     );
+  }
+
+  getAmortizationGridLoadingStatus() {
+    this.subscription.add(
+      this.accountingSummaryService.isAmortizationDataLoaded$.subscribe(
+        (value) => {
+          this.isPrevNextButtonDisabled = !value;
+        }
+      )
+    );
+  }
+
+  saveVisitedEventsToSession(key: any) {
+    const leaseAbstractID = +this.queryParamObj['oid'];
+    const eventsInSession = sessionStorage.getItem('visitedEvents');
+    const visited = eventsInSession ? JSON.parse(eventsInSession) : [];
+
+    const exists = visited.some(
+      (item) => item.key === key && item.leaseAbstractID === leaseAbstractID
+    );
+    if (!exists) {
+      visited.push({ key, leaseAbstractID });
+      sessionStorage.setItem('visitedEvents', JSON.stringify(visited));
+    }
+  }
+
+  onEventSelectorContentReady(event) {
+    const selectedKey = event?.component.getSelectedRowKeys()[0];
+    this.saveVisitedEventsToSession(selectedKey);
+    const gridInstance = this.eventsSelectDataGrid?.instance;
+    const rows = gridInstance?.getVisibleRows();
+
+    rows.length <= 1
+      ? (this.isPrevNextButtonDisabled = true)
+      : (this.isPrevNextButtonDisabled = false);
+  }
+
+  onEventSelectorRowClick(e: any) {
+    const key = e.key;
+    this.eventsSelectDataGrid.instance.repaint();
+    this.saveVisitedEventsToSession(key);
+  }
+
+  onEventSelectorCellPrepared(e: any) {
+    if (e.rowType === 'data') {
+      const rowKey = String(e.key);
+      const leaseAbstractID = +this.queryParamObj['oid'];
+
+      const visitedEvents = sessionStorage.getItem('visitedEvents');
+      let visitedKeys = new Set<string>();
+
+      if (visitedEvents) {
+        const parsed = JSON.parse(visitedEvents);
+
+        // Filter items by leaseAbstractID and extract keys as strings
+        const keys = parsed
+          .filter(
+            (item) =>
+              item.key !== undefined && item.leaseAbstractID === leaseAbstractID
+          )
+          .map((item) => String(item.key));
+        visitedKeys = new Set(keys);
+      }
+
+      if (visitedKeys.has(rowKey)) {
+        e.cellElement.style.color = '#800080';
+      }
+    }
+  }
+
+  selectNextRow() {
+    const gridInstance = this.eventsSelectDataGrid?.instance;
+    const allVisibleRows = gridInstance?.getVisibleRows();
+
+    if (!allVisibleRows || allVisibleRows.length === 0) return;
+
+    const groupByRows = allVisibleRows.filter((row) => row.rowType === 'data');
+    if (groupByRows.length === 0) return;
+
+    const selectedKey = gridInstance.getSelectedRowKeys()[0];
+    const currentIndex = groupByRows.findIndex(
+      (row) => row.key === selectedKey
+    );
+
+    this.saveVisitedEventsToSession(selectedKey);
+
+    if (currentIndex === -1 || currentIndex === groupByRows.length - 1) {
+      this.selectRowByIndex(groupByRows[0].rowIndex);
+    } else {
+      this.selectRowByIndex(groupByRows[currentIndex + 1].rowIndex);
+    }
+
+    gridInstance?.repaint();
+  }
+
+  selectPreviousRow() {
+    const gridInstance = this.eventsSelectDataGrid?.instance;
+    const allRows = gridInstance?.getVisibleRows();
+
+    if (!allRows || allRows.length === 0) return;
+
+    const dataRows = allRows.filter((row) => row.rowType === 'data');
+
+    if (dataRows.length === 0) return;
+
+    const selectedKey = gridInstance?.getSelectedRowKeys()[0];
+    const currentIndex = dataRows.findIndex((row) => row.key === selectedKey);
+
+    this.saveVisitedEventsToSession(selectedKey);
+
+    if (currentIndex === -1) {
+      this.selectRowByIndex(dataRows[dataRows.length - 1].rowIndex);
+    } else {
+      const prevIndex =
+        currentIndex === 0 ? dataRows.length - 1 : currentIndex - 1;
+      this.selectRowByIndex(dataRows[prevIndex].rowIndex);
+    }
+
+    gridInstance?.repaint();
+  }
+
+  selectRowByIndex(index: number) {
+    const gridInstance = this.eventsSelectDataGrid?.instance;
+    const rows = gridInstance?.getVisibleRows();
+
+    if (index >= 0 && index < rows.length) {
+      const rowKey = rows[index].key;
+      gridInstance.selectRows([rowKey], false);
+
+      gridInstance.option('focusedRowIndex', index);
+    }
   }
 
   gridBox_displayExpr(item) {
@@ -1099,6 +1294,10 @@ export class EventsDetailSectionComponent
       isAccountingEventEmpty: this.isAccountingEventEmpty,
       classificationID: this.classificationID,
     });
+  }
+
+  searchDataGrid(data: string) {
+    this.eventsSelectDataGrid?.instance?.searchByText(data);
   }
 
   // Add keyboard accessibility for Events Selector

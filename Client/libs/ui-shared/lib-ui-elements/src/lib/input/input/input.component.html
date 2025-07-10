@@ -14,9 +14,10 @@
       [message]="statusMessage"
     ></crem-error-tooltip>
   </div>
+
   <input
     #input
-    *ngIf="inputType === 'text'"
+    *ngIf="inputType === 'text' && !mask"
     type="text"
     [ariaLabel]="ariaLabel"
     [ngClass]="getCssClasses()"
@@ -33,6 +34,7 @@
     (input)="onInputChange($event)"
     (blur)="onBlur($event)"
     (keydown.enter)="onEnter($event)"
+    inputStateClass
   />
 
   <input
@@ -53,6 +55,26 @@
     (input)="onInputChange($event)"
     (blur)="onBlur($event)"
     (keydown.enter)="onEnter($event)"
+    inputStateClass
+  />
+
+  <input
+    *ngIf="inputType === 'email'"
+    type="email"
+    [ariaLabel]="ariaLabel"
+    [ngClass]="getCssClasses()"
+    [class]="className"
+    [id]="id"
+    [(ngModel)]="value"
+    [name]="name"
+    [placeholder]="placeholder"
+    [required]="required"
+    [disabled]="disabled"
+    [readonly]="readOnly"
+    (input)="onInputChange($event)"
+    (blur)="onBlur($event)"
+    (keydown.enter)="onEnter($event)"
+    [inputStateClass]="'email'"
   />
 
   <input
@@ -71,6 +93,7 @@
     (input)="onInputChange($event)"
     (blur)="onBlur($event)"
     (keydown.enter)="onEnter($event)"
+    inputStateClass
   />
 
   <textarea
@@ -91,7 +114,36 @@
     [attr.maxlength]="maxLengthField"
     [rows]="rows"
     [cols]="cols"
+    inputStateClass
   ></textarea>
+
+  <input
+    #inputMask
+    *ngIf="mask"
+    type="text"
+    [ariaLabel]="ariaLabel"
+    [ngClass]="getCssClasses()"
+    [class]="className"
+    [id]="id"
+    [(ngModel)]="value"
+    [name]="name"
+    [placeholder]="placeholder"
+    [required]="required"
+    [disabled]="disabled"
+    [readonly]="readOnly"
+    (input)="onInputChange($event)"
+    (blur)="onBlur($event)"
+    (keydown.enter)="onEnter($event)"
+    [mask]="mask.mask"
+    [thousandSeparator]="mask.thousandSeparator"
+    [prefix]="mask.prefix ?? ''"
+    [suffix]="mask.suffix ?? ''"
+    [showMaskTyped]="mask.showMaskTyped"
+    [allowNegativeNumbers]="mask.allowNegativeNumbers"
+    [dropSpecialCharacters]="mask.dropSpecialCharacters"
+    [shownMaskExpression]="mask.shownMaskExpression"
+    inputStateClass
+  />
 
   <crem-input-hint
     *ngIf="showHint"

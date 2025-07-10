@@ -8,6 +8,7 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DxDateBoxComponent, DxValidatorComponent } from 'devextreme-angular';
 import { CremValidatedComponent } from '../base';
+import { CremFormControlStatusType } from '@mango/data-models/lib-data-models';
 
 /**
  * Date Picker Input Field: Primarily to be used as part of the DynamicForms component
@@ -49,7 +50,12 @@ export class DatePickerComponent
   @Input() placeholderText = '';
   @Input() showDefaultValidationTooltip?: boolean = true;
   @Input() dataKey: string;
+  @Input() status: CremFormControlStatusType = 'default';
+  @Input() formControlName!: string;
+  @Input() valueChangeEvent = 'change';
   @Output() changeEvent = new EventEmitter();
+  @Output() initialized = new EventEmitter();
+  @Output() blur = new EventEmitter();
 
   @ViewChild('DateBoxValidator', { static: false })
   dateBoxValidator: DxValidatorComponent;
@@ -66,15 +72,19 @@ export class DatePickerComponent
   }
 
   onKeyDown(e: any) {
-    if (this.isCalendarOpen) {
-      if (e.event.key === 'Enter') {
-        e.component.close(); //** Clicking on Escape closed the Calander by Default */
-      }
-    } else {
-      if (e.event.key === 'ArrowDown' || e.event.key === 'Enter') {
-        e.component.open();
-      }
+    const key = e.event?.key;
+    if (!this.isCalendarOpen && key === ' ') {
+      e.event.preventDefault();
+      e.component.open();
+    } else if (this.isCalendarOpen && key === 'Escape') {
+      e.event.preventDefault();
+      e.component.close();
     }
+  }
+
+  onBlur(e) {
+    this.blur.emit(e);
+    this.onTouch();
   }
 
   onCalendarOpened() {

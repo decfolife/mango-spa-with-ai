@@ -38,12 +38,14 @@ import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
   selector: 'mango-add-event',
   templateUrl: './add-event.component.html',
   styleUrls: ['./add-event.component.scss'],
+  providers: [AddEditScheduleService],
 })
 export class AddEventComponent implements OnDestroy, OnInit {
   classificationId: any;
   componentName = 'add-edit';
-  isSaveDisabled = true;
-  isCalculateValuesDisabled = true;
+  isSaveAllowed = false;
+  isCalculateValuesAllowed = false;
+  isApplyAllowed = false;
   pageMode = '';
   eventsGridData: any;
   measureEvent: string;
@@ -80,7 +82,6 @@ export class AddEventComponent implements OnDestroy, OnInit {
   isSaveAndCloseClicked: boolean;
   calculateValuesLoading: boolean;
   isApplyClicked: boolean;
-  isApplyDisabled = true;
   debounceTime = 300;
   private subscription$ = new Subscription();
   isCalculateClicked: boolean;
@@ -258,8 +259,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
         this.addEventFormService.paymentGridData$,
         this.addEventFormService.accountingTerms$,
         this.addEventFormService.paymentTiming$,
-        this.addEventFormService.isCalculateValuesDisabled$,
-        this.addEventFormService.isSaveDisabled$,
+        this.addEventFormService.isCalculateValuesAllowed$,
+        this.addEventFormService.isSaveAllowed$,
         this.addEventFormService.effectiveRate$,
       ])
         .pipe(debounceTime(this.debounceTime))
@@ -273,7 +274,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
             paymentsData,
             termValues,
             paymentTiming,
-            isCalculateValuesDisabled,
+            isCalculateValuesAllowed,
             SaveInvalid,
             effectiveRate,
           ]) => {
@@ -290,15 +291,18 @@ export class AddEventComponent implements OnDestroy, OnInit {
               this.addEventFormService.ignoreButtonReset.value &&
               this.addEventFormService.calculateValuesClicked.value
             ) {
-              this.isCalculateValuesDisabled = true;
+              this.isCalculateValuesAllowed = false;
               this.isCalculateClicked = true;
-              this.isSaveDisabled = false;
+              this.isSaveAllowed =
+                this.addEventFormService.isSaveAllowed$.value;
+              this.isApplyAllowed =
+                this.addEventFormService.isSaveAllowed$.value;
               this.addEventFormService.ignoreButtonReset.next(false);
               this.addEventFormService.calculateValuesClicked.next(false);
             } else {
-              this.isCalculateValuesDisabled = isCalculateValuesDisabled;
-              this.isSaveDisabled = true;
-              this.isApplyDisabled = true;
+              this.isCalculateValuesAllowed = isCalculateValuesAllowed;
+              this.isSaveAllowed = false;
+              this.isApplyAllowed = false;
               this.isCalculateClicked = SaveInvalid;
               this.addEventFormService.calculateValuesClicked.next(false);
             }
@@ -341,6 +345,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   calculateValues() {
+    this.addEventFormService.validateCalculateComponents$.next(true);
     if (!this.calculateValidations() && !this.calculateWithFunctionalRate1) {
       return;
     } else {
@@ -359,32 +364,32 @@ export class AddEventComponent implements OnDestroy, OnInit {
                 'error',
                 false
               );
-              this.isCalculateValuesDisabled = true;
+              this.isCalculateValuesAllowed = false;
               this.calculateValuesLoading = false;
             } else if (response.success) {
               this.addEventFormService.setCalculateValueResponse(response.data);
               this.addEventFormService.presentValueEnabled$.next(true);
-              this.isCalculateValuesDisabled = true;
+              this.isCalculateValuesAllowed = false;
               this.calculateValuesLoading = false;
               if (
                 this.addEventFormService.isOperatingRetrospectiveAdjustment$
                   .value
               ) {
-                this.isSaveDisabled = true;
-                this.isCalculateValuesDisabled = false;
+                this.isSaveAllowed = false;
+                this.isCalculateValuesAllowed = true;
               } else {
                 if (this.isCalculateClicked) {
-                  this.isSaveDisabled = true;
-                  this.isApplyDisabled = true;
+                  this.isSaveAllowed = true;
+                  this.isApplyAllowed = true;
                 } else if (!this.isCalculateClicked) {
-                  this.isSaveDisabled = false;
-                  this.isApplyDisabled = false;
+                  this.isSaveAllowed = false;
+                  this.isApplyAllowed = false;
                 }
               }
             } else {
               this.apiValidationErrorMessage = response.clientErrorMessage;
               this.showApiValidationErrorMessage();
-              this.isCalculateValuesDisabled = false;
+              this.isCalculateValuesAllowed = true;
               this.calculateValuesLoading = false;
             }
           })
@@ -527,8 +532,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
       return false;
     } else {
       this.isSaveAndCloseClicked = true;
-      this.isSaveDisabled = true;
-      this.isApplyDisabled = true;
+      this.isSaveAllowed = false;
+      this.isApplyAllowed = false;
 
       this.saveSchedule().subscribe((response) => {
         if (response === null) {
@@ -539,8 +544,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             false
           );
           this.isSaveAndCloseClicked = false;
-          this.isSaveDisabled = false;
-          this.isApplyDisabled = false;
+          this.isSaveAllowed = true;
+          this.isApplyAllowed = true;
         } else if (response.success) {
           this.createdScheduleID = response.data;
           if (this.pageMode === 'Add Event') {
@@ -549,8 +554,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             );
           }
           this.isSaveAndCloseClicked = false;
-          this.isSaveDisabled = false;
-          this.isApplyDisabled = false;
+          this.isSaveAllowed = true;
+          this.isApplyAllowed = true;
           this.navigateToAccountingSummaryPage();
         } else {
           if (
@@ -572,8 +577,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             );
           }
           this.isSaveAndCloseClicked = false;
-          this.isSaveDisabled = false;
-          this.isApplyDisabled = false;
+          this.isSaveAllowed = true;
+          this.isApplyAllowed = true;
         }
       });
     }
@@ -584,8 +589,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
       return;
     } else {
       this.isApplyClicked = true;
-      this.isSaveDisabled = false;
-      this.isApplyDisabled = false;
+      this.isSaveAllowed = true;
+      this.isApplyAllowed = true;
       this.saveSchedule().subscribe((response) => {
         if (response === null) {
           this.addEditScheduleService.showToast(
@@ -595,8 +600,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             false
           );
           this.isApplyClicked = false;
-          this.isSaveDisabled = true;
-          this.isApplyDisabled = true;
+          this.isSaveAllowed = false;
+          this.isApplyAllowed = false;
         } else if (response.success) {
           this.createdScheduleID = response.data;
           if (this.createdScheduleID && this.pageMode !== 'Edit Event') {
@@ -619,8 +624,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
               false
             );
             this.isApplyClicked = false;
-            this.isSaveDisabled = false;
-            this.isApplyDisabled = false;
+            this.isSaveAllowed = true;
+            this.isApplyAllowed = true;
           }
         } else {
           this.addEditScheduleService.showToast(
@@ -630,8 +635,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             false
           );
           this.isApplyClicked = false;
-          this.isSaveDisabled = true;
-          this.isApplyDisabled = true;
+          this.isSaveAllowed = false;
+          this.isApplyAllowed = false;
         }
       });
     }
@@ -674,7 +679,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
     if (!amortizationProfileID && amortizationProfileID !== 0) {
       this.addEditScheduleService.showToast(
         'Amortization Profile',
-        'Amortization Profile Profile is required'
+        'Amortization Profile is required'
       );
       return false;
     } else {
@@ -894,22 +899,20 @@ export class AddEventComponent implements OnDestroy, OnInit {
         localCurrencyID: this.scheduleCurrency.exchangeRateID,
         localCurrency: this.scheduleCurrency.targetCurrency,
         localCurrencyDecimalPrecision: this.scheduleCurrency.decimalPrecision,
-        functionalCurrencyID: this.functionalCurrency.exchangeRateID,
-        functionalCurrency: this.functionalCurrency.targetCurrency,
-        functionalCurrencyDecimalPrecision:
-          this.functionalCurrency.decimalPrecision,
-        functionalCurrencyRate: financialData?.currencyRate,
-
-        //   functionalCurrencyID: this.portfolioSettings?.functionalCurrencyEnabled
-        //   ? this.functionalCurrency.exchangeRateID
-        //   : -1,
-        // functionalCurrency: this.portfolioSettings?.functionalCurrencyEnabled
-        //   ? this.functionalCurrency.targetCurrency
-        //   : 'BlankCurrency',
-        // functionalCurrencyDecimalPrecision: this.portfolioSettings
-        //   ?.functionalCurrencyEnabled
-        //   ? this.functionalCurrency.decimalPrecision
-        //   : 0,
+        functionalCurrencyID: this.portfolioSettings?.functionalCurrencyEnabled
+          ? this.functionalCurrency.exchangeRateID
+          : this.scheduleCurrency.exchangeRateID,
+        functionalCurrency: this.portfolioSettings?.functionalCurrencyEnabled
+          ? this.functionalCurrency.targetCurrency
+          : this.scheduleCurrency.targetCurrency,
+        functionalCurrencyDecimalPrecision: this.portfolioSettings
+          ?.functionalCurrencyEnabled
+          ? this.functionalCurrency.decimalPrecision
+          : this.scheduleCurrency.decimalPrecision,
+        functionalCurrencyRate: this.portfolioSettings
+          ?.functionalCurrencyEnabled
+          ? financialData?.currencyRate
+          : 1,
         rouAssetMethodID: Array.isArray(financialData?.ROUMethod)
           ? financialData?.ROUMethod[0]
           : financialData?.ROUMethod,

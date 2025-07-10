@@ -70,3 +70,10 @@
     overflow: unset !important;
   }
 }
+
+:host::ng-deep #add-edit-alerts-button {
+  dx-button {
+    height: 32px;
+    border-radius: 2px;
+  }
+}

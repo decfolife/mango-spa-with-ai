@@ -5,6 +5,10 @@ import { LeaseInfoResponse } from '../../models/lease-info-response.modal';
 import { Subscription, combineLatest } from 'rxjs';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
+import { AccountingEventSelector } from '@accounting-summary/models/interfaces/accounting-events-selector.interfaces';
+import { WorkFlowStatusHistory } from '@accounting-summary/models/interfaces/workflow-status-history.interfaces';
+import { WorkflowStatusInformation } from '@accounting-summary/models/interfaces/workflow-status-information.interface';
+import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 
 @Component({
   selector: 'mango-accounts-summary',
@@ -18,13 +22,14 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
   eventSchedule: any;
   gridState: any;
   leaseInfoResponse: LeaseInfoResponse;
+  portfolioSettings: PortfolioSettingsResponse;
   isLocked = false;
   isArchived = false;
   rightsInfo: any;
   wfStatusRights: any;
   userInfo: UserInfoResponse;
-  workflowStatusInfo: any;
-  workflowStatusHistory: any;
+  workflowStatusInfo: WorkflowStatusInformation;
+  workflowStatusHistory: WorkFlowStatusHistory;
   noUserAddRights = false;
   disableBtnReason =
     'Accounting Event cannot be added when user or lease information is not loaded.';
@@ -36,12 +41,15 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
   classificationID: number;
   modifiedByID: number;
   modifiedByName: string;
-  modifiedDate: any;
+  modifiedDate: Date;
+  modifiedDescription = '';
+  modifiedComment = '';
   amortizationProfileName: string;
   classificationType: string;
   isAccountingEventEmpty: boolean;
   sendToExcelClicked = false;
-  accountingEventSelector: any;
+  accountingEventSelector: AccountingEventSelector;
+  leaseRecognitionScheduleIDArray: number[];
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -129,8 +137,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     }
   }
 
-  sendToExcel(event: any): void {
-    event.preventDefault();
+  sendToExcel(leaseRecognitionScheduleID): void {
     this.sendToExcelClicked = true;
     const fileName = this.accountingSummaryService.getFileName(
       'AccountingEventSummary'
@@ -138,7 +145,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.accountingSummaryService
         .exportAccountingEventSummaryReport(
-          this.leaseRecognitionScheduleID,
+          leaseRecognitionScheduleID,
           fileName
         )
         .subscribe((response) => {
@@ -154,6 +161,51 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
             );
           }
         })
+    );
+  }
+
+  sendToExcelMain() {
+    this.sendToExcel([this.leaseRecognitionScheduleID]);
+  }
+
+  selectedOption(event) {
+    const selectedOption = event.trim();
+
+    selectedOption === 'Send All to Excel'
+      ? this.sendToExcel(this.leaseRecognitionScheduleIDArray)
+      : this.openConsolidatedReport();
+  }
+
+  openConsolidatedReport(): void {
+    const leaseAbstractID = this.accountingSummaryService.getLeaseAbstractId();
+    const leaseStatus = this.leaseInfoResponse.isActive ? 1 : 0;
+    const portfolioID = this.portfolioSettings.masterGroupID;
+    const v06URL = `${window?.location?.protocol}//${(() => {
+      const parts = window?.location?.hostname.split('.') || [];
+      if (parts.length > 2) parts.splice(1, 1);
+      return parts.join('.');
+    })()}`;
+
+    const baseReportPath =
+      '/Vp%20Reports/Client/Generic/Costar_AmortizationDetailConsolidated';
+
+    const reportParam =
+      baseReportPath +
+      '%26rs:ClearSession=True' +
+      `%26SystemStatus=${leaseStatus}` +
+      `%26ObjectID=${leaseAbstractID}` +
+      `%26Portfolio=${portfolioID}` +
+      '%26DataSource=@DataSource' +
+      '%26rs:DisplayName=CoStar%20Amortization%20Detail' +
+      '%26UserID=@UserID';
+
+    const reportURL =
+      v06URL +
+      `/v06/Reporting/ReportLaunchpad.aspx?reportobject=SQLRS05&report=${reportParam}`;
+    window.open(
+      reportURL,
+      '_blank',
+      'status=no,toolbar=no,menubar=no,location=no,resizable=1'
     );
   }
 
@@ -190,12 +242,23 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
           if (response === null) {
             this.accountingSummaryService.displayContactSystemAdminMessage();
           } else if (response.success) {
-            this.workflowStatusHistory = response.data;
+            this.workflowStatusHistory = response.data.map((item) => ({
+              ...item,
+              comment:
+                typeof item.comment === 'string'
+                  ? item.comment.replace(/\n\n/g, '<br>')
+                  : item.comment,
+            }));
             if (response.data.length > 0) {
               this.modifiedByID = this.workflowStatusHistory[0].modifiedBy;
               this.modifiedByName =
-                this.workflowStatusHistory[0].modifiedByName;
-              this.modifiedDate = this.workflowStatusHistory[0].modifiedDate;
+                this.workflowStatusHistory[0].modifiedByName ?? '';
+              this.modifiedDate =
+                this.workflowStatusHistory[0].modifiedDate ?? '';
+              this.modifiedDescription =
+                this.workflowStatusHistory[0]?.description ?? '';
+              this.modifiedComment =
+                this.workflowStatusHistory[0]?.comment ?? '';
             }
           } else if (!response.success) {
             this.accountingSummaryService.errorNotify(
@@ -213,6 +276,9 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
       accountingEventSelector: any
     ]
   ) {
+    this.leaseRecognitionScheduleIDArray = emittedEvent[2]?.map(
+      (item) => item.leaseRecognitionScheduleID
+    );
     this.gridState = emittedEvent[1];
     this.eventSchedule = emittedEvent[0];
     this.accountingEventSelector = emittedEvent[2];
@@ -365,6 +431,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
               'portfolioSettings',
               JSON.stringify(response.data)
             );
+            this.portfolioSettings = response.data;
           } else {
             this.accountingSummaryService.errorNotify(
               response.clientErrorMessage

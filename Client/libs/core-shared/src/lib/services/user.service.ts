@@ -18,6 +18,8 @@ export class UserService {
     Api.userMaintenance
   );
 
+  quickSearchUrl: string = UtilitiesService.getBaseApiUrl(Api.quickSearch);
+
   projects: string = UtilitiesService.getBaseApiUrl(Api.projects);
   currencyMappingTable$: Observable<CurrencyMapping[]>;
 
@@ -113,5 +115,11 @@ export class UserService {
       objectId,
       securityType,
     });
+  }
+
+  getUserQuickSearchModules() {
+    return this.http.get<any>(
+      `${this.quickSearchUrl}quicksearch/getmodulevalues`
+    );
   }
 }

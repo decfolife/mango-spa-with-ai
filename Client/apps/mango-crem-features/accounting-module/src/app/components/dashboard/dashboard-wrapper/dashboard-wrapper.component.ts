@@ -24,7 +24,6 @@ import { ReportsService } from '@reports/services/reports.service';
 import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { UserService } from '@mango/core-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
-import { DashboardService } from '../../../services/dashboard.service';
 import { environment } from '@mangoSpa/src/environments/environment.local';
 
 export interface DropdownSelection {
@@ -61,9 +60,6 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
   public isSegmentEdited = false as boolean;
   public editingSegment: number;
   public selectedCurrency: string;
-  public newAccountingIsEnabled = true as boolean;
-  public showAccounting3Popover: boolean = false;
-  private userIsAdmin: boolean = false;
   private isLowerEnvironment = false;
 
   /**
@@ -94,8 +90,7 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private facade: MangoAppFacade,
     public dialog: MatDialog,
-    private toastService: CremToastService,
-    private dashboardsService: DashboardService
+    private toastService: CremToastService
   ) {
     this.itemMenuInnerOptions = [
       // todo: This needs to be moved to a conf file
@@ -287,7 +282,6 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
     this._subs$.push(
       this.facade.contactRecord$.subscribe((record) => {
         const selectedCurrencyID = record.preferences?.contactCurrency;
-        this.userIsAdmin = [0, 1, 2].includes(record.userRole);
         this.userService.currencyMappingTable$.subscribe(
           (currencyMappingTable) => {
             this.selectedCurrency = currencyMappingTable.filter(
@@ -295,12 +289,6 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
             )[0].currencyISO;
           }
         );
-      })
-    );
-
-    this._subs$.push(
-      this.dashboardsService.getIsNewAccountingEnabled().subscribe((result) => {
-        this.newAccountingIsEnabled = result.data;
       })
     );
   }
@@ -627,35 +615,6 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
         } else if (data) {
           this.redirectDialog(config);
         }
-      }
-    });
-  }
-
-  public enableAccounting3() {
-    this.dashboardsService.enableNewAccounting().subscribe((r) => {
-      if (r.success) {
-        this.toastService.show(
-          'Accounting 3.0 has been enabled successfully.',
-          undefined,
-          ToastState.SUCCESS,
-          {
-            maxWidth: '360px',
-            duration: 3000,
-          }
-        );
-        this.newAccountingIsEnabled = true;
-        this.showAccounting3Popover = false;
-      } else {
-        this.toastService.show(
-          'An error occured enabling Accounting 3.0, please contact your adminstrator.',
-          undefined,
-          ToastState.ERROR,
-          {
-            maxWidth: '360px',
-            duration: 3000,
-          }
-        );
-        this.showAccounting3Popover = false;
       }
     });
   }

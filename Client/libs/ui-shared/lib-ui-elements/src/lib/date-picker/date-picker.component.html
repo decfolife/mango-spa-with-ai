@@ -12,12 +12,14 @@
   (onKeyDown)="onKeyDown($event)"
   (onOpened)="onCalendarOpened()"
   (onClosed)="onCalendarClosed()"
+  (onBlur)="onBlur($event)"
   [showClearButton]="showClearButton"
   [useMaskBehavior]="useMaskBehavior"
   [placeholder]="placeholderText"
   [min]="min"
   [max]="max"
   [disabled]="disabled"
+  [valueChangeEvent]="valueChangeEvent"
 >
   <dxo-drop-down-options
     [wrapperAttr]="{ id: 'dateBoxPopupWrapper', class: inputWrapperClass }"

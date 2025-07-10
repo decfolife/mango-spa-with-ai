@@ -178,6 +178,8 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     } else {
       this.frequencyTypeId = this.frequencyTypesList[0].id;
     }
+    this.frequencyTypeIsCustomPeriod =
+      this.determineFrequencyTypeIsCustomPeriod(this.frequencyTypeId);
   }
 
   close(e) {
@@ -382,6 +384,10 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   private getProrationTypes() {
     if (this.commonDropdownsData && this.commonDropdownsData.prorationTypes) {
       this.originalProrationTypesList = this.commonDropdownsData.prorationTypes;
+      this.frequencyTypeIsCustomPeriod =
+        this.determineFrequencyTypeIsCustomPeriod(
+          this.data?.otherCharge?.frequency
+        );
       this.filterProrationTypesForFrequency();
       this.defaultProrationTypeId = this.prorationTypesList[0].id;
       this.prorationTypeId = this.defaultProrationTypeId;
@@ -394,8 +400,8 @@ export class AddEditOtherChargeModalComponent implements OnInit {
         (x: any) =>
           x.id === 1 || // Actual Days In Period
           x.id === 3 || // 365 Day Year
-          x.id === 5
-      ); // Manual
+          x.id === 5 // Manual
+      );
 
       const foundIndex = this.prorationTypesList.findIndex(
         (pt) => pt.id === this.prorationTypeId

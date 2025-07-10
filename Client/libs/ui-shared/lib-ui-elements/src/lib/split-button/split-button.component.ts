@@ -23,6 +23,7 @@ export class SplitButtonComponent {
   @Input() dropdownPosition: 'left' | 'right' = 'right';
   @Input() color: 'primary' | 'secondary' | 'warning' | 'danger' = 'primary';
   @Input() btnStyle: 'flat' | 'basic' | 'stroked' = 'flat';
+  @Input() iconAnimation?: string;
 
   @Output() mainButtonClick = new EventEmitter<boolean>();
   @Output() selectedOption = new EventEmitter<string>();

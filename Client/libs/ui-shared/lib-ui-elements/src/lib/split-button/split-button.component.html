@@ -11,14 +11,6 @@
       (click)="onMainButtonClick()"
     ></crem-button>
     <crem-button
-      class="split-button__container__seperator"
-      [text]="'|'"
-      [color]="color"
-      [btnStyle]="btnStyle"
-      [size]="'medium'"
-      [disabled]="disabled"
-    ></crem-button>
-    <crem-button
       class="split-button__container__caret-button"
       [id]="'caret-split-button'"
       [icon]="icon"
@@ -27,6 +19,7 @@
       [size]="'medium'"
       [disabled]="disabled"
       ariaLabel="Show Options"
+      [iconAnimation]="iconAnimation"
       (click)="toggleDropdown($event)"
     ></crem-button>
   </div>

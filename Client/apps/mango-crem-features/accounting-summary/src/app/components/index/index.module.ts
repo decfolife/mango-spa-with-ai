@@ -18,6 +18,7 @@ import {
   CremTabsComponent,
   CremTabItemComponent,
   CremPopoverComponent,
+  SearchComponent,
 } from '@mango/ui-shared/lib-ui-elements';
 import { HttpClientModule } from '@angular/common/http';
 import {
@@ -65,6 +66,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
 import { AccountingAdaDirective } from '@accounting-summary/shared/directives/accounting-ada.directive';
+import { SplitButtonComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/split-button/split-button.component';
 
 @NgModule({
   declarations: [
@@ -128,6 +130,8 @@ import { AccountingAdaDirective } from '@accounting-summary/shared/directives/ac
     CremTabItemComponent,
     CremPopoverComponent,
     AccountingAdaDirective,
+    SearchComponent,
+    SplitButtonComponent,
   ],
 
   providers: [

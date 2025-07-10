@@ -30,7 +30,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
 
   componentName = 'payments-grid';
   isGridStateChanged = false;
-  paymentsGridData: HistoricalPayment;
+  paymentsGridData: HistoricalPayment[];
   paymentsGridColumns = [];
   paymentsGridHeight: string;
   gridName = 'Payments';
@@ -44,7 +44,6 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
   initialState = {};
   private subscription = new Subscription();
   private gridPreferencesUpdated = false;
-  private previousClassification = null;
   contentLoaded = false;
   showMaxRow = true;
   showDefaultRow = false;
@@ -77,6 +76,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
           this.eventScheduleData.leaseRecognitionScheduleID)
     ) {
       this.isGridStateChanged = false;
+      this.paymentsGridData = [];
       this.paymentsGridSetup(this.eventScheduleData.leaseRecognitionScheduleID);
       this.overrideAmortizationProfile = this.eventScheduleData.overrideProfile
         ? ' | Amortization Profile Overridden'

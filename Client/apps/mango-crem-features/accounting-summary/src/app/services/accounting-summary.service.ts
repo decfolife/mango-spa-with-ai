@@ -23,6 +23,7 @@ export class AccountingSummaryService extends EndpointService {
   public jeActionTaken$ = new BehaviorSubject<boolean>(false);
   public newCreatedSchedule = new BehaviorSubject<number>(0);
   public lastApprovedOrExportedDate$ = new BehaviorSubject<Date | null>(null);
+  public isAmortizationDataLoaded$ = new BehaviorSubject<boolean>(false);
   preferenceSavePendingMessage = ' - You have unsaved preference changes.';
   isLocked: boolean;
   isArchived: boolean;
@@ -398,7 +399,7 @@ export class AccountingSummaryService extends EndpointService {
     return this.callHttpPostWithBlobResponse(
       `${this.apiUrl}AccountingSummary/ExportAccountingEventSummaryReport`,
       'exportAccountingEventSummaryReport',
-      JSON.stringify({ scheduleList: [scheduleId], FileName: fileName })
+      JSON.stringify({ scheduleList: scheduleId, FileName: fileName })
     );
   }
 

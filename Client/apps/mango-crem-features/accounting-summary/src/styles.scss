@@ -180,10 +180,6 @@
     }
   }
 
-  #openLeaseAlertsPopupButton {
-    border-radius: 2px;
-  }
-
   .adjust-text {
     color: #595959;
   }
@@ -392,7 +388,8 @@
   }
 
   #openLeaseAlertsPopupButton {
-    height: 36px;
+    height: 32px;
+    border-radius: 2px;
   }
 
   .dx-datagrid {

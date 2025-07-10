@@ -64,6 +64,7 @@ export class UserPreferencesComponent implements OnInit {
   public currencyMappings;
   public possibleStartPages;
   public userPreferences;
+  public quickSearchModules;
   public isPasswordEnabled = false;
   //temporary workaround since shared component display not working
   public dateStyleValue;
@@ -97,6 +98,24 @@ export class UserPreferencesComponent implements OnInit {
         a.measureUnitType.localeCompare(b.measureUnitType)
       );
     });
+    this.userService.getUserQuickSearchModules().subscribe((modules) => {
+      this.quickSearchModules = modules.data.sort((a, b) =>
+        a.objectTypeType.localeCompare(b.objectTypeType)
+      );
+
+      const existModule = modules.data.find(
+        (x: { objectTypeTypeId: any }) =>
+          x.objectTypeTypeId ===
+          this.userPreferences.defaultQuickSearchObjectTypeTypeID
+      );
+      if (
+        !this.userPreferences.defaultQuickSearchObjectTypeTypeID ||
+        !existModule
+      ) {
+        this.userPreferences.defaultQuickSearchObjectTypeTypeID = 99;
+      }
+    });
+
     this.facade.clientKey$.subscribe((k) => (this.clientKey = k));
     this.createForm();
   }
@@ -187,6 +206,8 @@ export class UserPreferencesComponent implements OnInit {
           : this.userPreferencesForm.value.measurement,
         contactStartPage: String(startPageModule) + '|' + startPageValue,
         contactRequireSSO: !this.isPasswordEnabled, // Same as 'c.requireSSO', which is why it is reverted to the opposite value of contactExcludedSSO.
+        defaultQuickSearchObjectTypeTypeID:
+          this.userPreferencesForm.value.quickSearchModule[0],
       })
       .subscribe(() => {
         if (!showingError) {
@@ -225,6 +246,8 @@ export class UserPreferencesComponent implements OnInit {
       consolidateProjectEmails: [
         this.userPreferences.contactConsolidatedEmails,
       ],
+      quickSearchModule:
+        this.userPreferences.defaultQuickSearchObjectTypeTypeID,
     });
   }
 

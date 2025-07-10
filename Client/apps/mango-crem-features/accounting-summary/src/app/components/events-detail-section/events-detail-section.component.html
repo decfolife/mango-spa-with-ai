@@ -10,10 +10,25 @@
           class="card-title"
           [id]="accountingSummaryService.getId(componentName, 'card', 'title')"
         >
-          Accounting Events
-          <!-- {{isGridStateChanged ? preferenceSavePendingMessage : ''}} Removing this text for now as per discussion witn PO's-->
+          Accounting Events {{ eventsCount ? '(' + eventsCount + ')' : '' }}
+          <!-- {{isGridStateChanged ? preferenceSavePendingMessage : ''}} Removing this text for now as per discussion with PO's-->
         </div>
         <div class="event-selector">
+          <crem-button
+            *ngIf="!isAccountingEventEmpty && showPrevNextButton"
+            [id]="
+              accountingSummaryService.getId(
+                componentName,
+                'previous',
+                'button'
+              )
+            "
+            color="secondary"
+            text="Prev"
+            [disabled]="isPrevNextButtonDisabled"
+            (buttonClick)="selectPreviousRow()"
+          >
+          </crem-button>
           <input
             [id]="
               accountingSummaryService.getId(componentName, 'empty', 'dropdown')
@@ -47,49 +62,97 @@
               (keydown)="handleDropdownActivationKeys($event)"
               (onOptionChanged)="onGridBoxOptionChanged($event)"
               (onValueChanged)="onValueChanged($event)"
+              [dropDownOptions]="{ width: 700 }"
             >
               <div *dxTemplate="let data of 'content'">
-                <dx-data-grid
-                  [id]="
-                    accountingSummaryService.getId(
-                      componentName,
-                      'events',
-                      'grid',
-                      'dropdown'
-                    )
-                  "
-                  [dataSource]="gridDataSource"
-                  keyExpr="masterScheduleID"
-                  [hoverStateEnabled]="true"
-                  [(selectedRowKeys)]="gridBoxValue"
-                >
-                  <dxi-column
-                    dataField="classificationType"
-                    caption="Classification"
-                  ></dxi-column>
-                  <dxi-column
-                    dataField="amortizationProfileName"
-                    caption="Amortization Profile"
-                  ></dxi-column>
-                  <dxo-selection mode="single"></dxo-selection>
-                  <dxo-filter-row [visible]="true"></dxo-filter-row>
-                  <dxo-paging
-                    [enabled]="pagingEnabled"
-                    [pageSize]="5"
-                  ></dxo-paging>
-                  <dxo-pager
-                    [visible]="pagingEnabled"
-                    [allowedPageSizes]="allowedPageSizes"
-                    [displayMode]="full"
-                    [showPageSizeSelector]="false"
-                    [showInfo]="true"
-                    [showNavigationButtons]="true"
+                <div>
+                  <div class="event-select-toolbar">
+                    <crem-search
+                      [id]="
+                        accountingSummaryService.getId(
+                          componentName,
+                          'search',
+                          'input'
+                        )
+                      "
+                      [placeholder]="'Search...'"
+                      [debounceTime]="500"
+                      [searchOption]="'typing'"
+                      (changed)="searchDataGrid($event)"
+                    >
+                    </crem-search>
+                  </div>
+                  <dx-data-grid
+                    #EventsSelectDataGrid
+                    [id]="
+                      accountingSummaryService.getId(
+                        componentName,
+                        'events',
+                        'grid',
+                        'dropdown'
+                      )
+                    "
+                    [dataSource]="gridDataSource"
+                    keyExpr="masterScheduleID"
+                    [hoverStateEnabled]="true"
+                    [(selectedRowKeys)]="gridBoxValue"
+                    (onRowClick)="onEventSelectorRowClick($event)"
+                    (onCellPrepared)="onEventSelectorCellPrepared($event)"
+                    (onContentReady)="onEventSelectorContentReady($event)"
                   >
-                  </dxo-pager>
-                </dx-data-grid>
+                    >
+                    <dxo-selection mode="single"></dxo-selection>
+                    <dxo-paging
+                      [enabled]="pagingEnabled"
+                      [pageSize]="10"
+                    ></dxo-paging>
+                    <dxo-pager
+                      [visible]="pagingEnabled"
+                      [allowedPageSizes]="allowedPageSizes"
+                      [displayMode]="full"
+                      [showPageSizeSelector]="false"
+                      [showInfo]="true"
+                      [showNavigationButtons]="true"
+                    >
+                    </dxo-pager>
+                    <dxo-grouping
+                      [autoExpandAll]="false"
+                      [contextMenuEnabled]="true"
+                    ></dxo-grouping>
+                    <dxo-sorting mode="multiple"></dxo-sorting>
+
+                    <dxi-column
+                      dataField="classificationType"
+                      caption="Classification"
+                    ></dxi-column>
+                    <dxi-column
+                      dataField="amortizationProfileName"
+                      caption="Amortization Profile"
+                    ></dxi-column>
+                    <dxi-column
+                      dataField="jeStatus"
+                      caption="Status"
+                    ></dxi-column>
+                    <dxi-column
+                      dataField="endDate"
+                      caption="End Date"
+                    ></dxi-column>
+                  </dx-data-grid>
+                </div>
               </div>
             </dx-drop-down-box>
           </div>
+          <crem-button
+            *ngIf="!isAccountingEventEmpty && showPrevNextButton"
+            [id]="
+              accountingSummaryService.getId(componentName, 'next', 'button')
+            "
+            color="secondary"
+            text="Next"
+            [disabled]="isPrevNextButtonDisabled"
+            (buttonClick)="selectNextRow()"
+          >
+          </crem-button>
         </div>
       </div>
       <div class="more-menu">
@@ -148,6 +211,24 @@
               "
             >
               {{ isGridStateChanged ? 'Clear Changes' : 'Reset Preferences' }}
+            </button>
+            <button
+              mat-menu-item
+              *ngIf="
+                eventsDataGrid &&
+                eventsDataGrid.instance &&
+                expandedRowCount < totalRowCount
+              "
+              (click)="expandAll()"
+            >
+              Expand All
+            </button>
+            <button
+              mat-menu-item
+              *ngIf="expandedRowCount > 0"
+              (click)="collapseAll()"
+            >
+              Collapse All
             </button>
             <button
               [id]="
@@ -235,6 +316,9 @@
         (onOptionChanged)="onGridOptionChanged($event)"
         (onCellClick)="onCellClick($event)"
         (onRowClick)="onRowClick($event)"
+        (onRowExpanding)="showMaxRows()"
+        (onRowExpanded)="setExpandedRowCount()"
+        (onRowCollapsed)="setExpandedRowCount()"
         (onContextMenuPreparing)="onContextMenuPreparing($event)"
         (onContentReady)="onGridContentReady($event)"
       >
@@ -273,6 +357,10 @@
           <dxo-selection allowSelectAll="true" [recursive]="true">
           </dxo-selection>
         </dxo-column-chooser>
+        <dxo-master-detail
+          [enabled]="true"
+          [template]="'eventMasterDetail'"
+        ></dxo-master-detail>
         <div *dxTemplate="let info of 'accountingEventHeader'">
           <p title="{{ info.column.caption }}" class="header-column-caption">
             {{ info.column.caption }}
@@ -336,6 +424,136 @@
             >
             </crem-icon>
           </div>
+        </div>
+        <div *dxTemplate="let detail of 'eventMasterDetail'">
+          <crem-tabs>
+            <crem-tab-item title="Comments">
+              <div class="master-detail-card">
+                <div>
+                  <p>{{ detail.data.comments }}</p>
+                </div>
+              </div>
+            </crem-tab-item>
+            <crem-tab-item
+              title="Classification Test"
+              *ngIf="
+                detail.data &&
+                detail.data.classificationID !== 4 &&
+                detail.data.classificationID !== 5 &&
+                detail.data.classificationTestResult != 'Tests Incomplete' &&
+                detail.data.classificationTestResultReason !=
+                  'Incomplete Test 1, 2, 3, 4, 5'
+              "
+            >
+              <div class="master-detail-card">
+                <div>
+                  <p>
+                    <span class="bold">Result:</span>
+                    <span>{{ detail.data.classificationTestResult }}</span>
+                    <span class="bold">Reason:</span>
+                    <span>{{
+                      detail.data.classificationTestResultReason
+                    }}</span>
+                  </p>
+                  <p>
+                    <span class="bold">Transfer of Ownership:</span>
+                    <span
+                      >{{
+                        detail.data.test1 === null
+                          ? 'Incomplete'
+                          : detail.data.test1
+                          ? 'Yes'
+                          : 'No'
+                      }}
+                      |
+                    </span>
+                    <span class="bold">Purchase Option:</span>
+                    <span
+                      >{{
+                        detail.data.test2 === null
+                          ? 'Incomplete'
+                          : detail.data.test2
+                          ? 'Yes'
+                          : 'No'
+                      }}
+                      |
+                    </span>
+                    <span class="bold">Lease Term:</span>
+                    <span
+                      >{{
+                        detail.data.test3
+                          ? detail.data.test3.toFixed(2) + '%'
+                          : 'Incomplete'
+                      }}
+                      |
+                    </span>
+                    <span class="bold">Present Value:</span>
+                    <span
+                      >{{
+                        detail.data.test4
+                          ? detail.data.test4.toFixed(2) + '%'
+                          : 'Incomplete'
+                      }}
+                      <p
+                        class="inline"
+                        *ngIf="
+                          detail.data.classificationID !== 0 &&
+                          detail.data.classificationID !== 1
+                        "
+                      >
+                        |
+                      </p>
+                    </span>
+                    <span
+                      class="bold"
+                      *ngIf="
+                        detail.data.classificationID !== 0 &&
+                        detail.data.classificationID !== 1
+                      "
+                      >Alternative Use:</span
+                    >
+                    <span
+                      *ngIf="
+                        detail.data.classificationID !== 0 &&
+                        detail.data.classificationID !== 1
+                      "
+                      >{{
+                        detail.data.test5 === null
+                          ? 'Incomplete'
+                          : detail.data.test5
+                          ? 'Yes'
+                          : 'No'
+                      }}</span
+                    >
+                  </p>
+                  <p>
+                    <span *ngIf="detail.data.fmv"
+                      ><span class="bold">Fair Market Value:</span>
+                      <span
+                        >{{
+                          fairMarketValueDisplay(
+                            detail.data.fmv,
+                            detail.data.localCurrencyDecimalPrecision
+                          )
+                        }}
+                        |
+                      </span></span
+                    >
+                    <span *ngIf="detail.data.implicitRate"
+                      ><span class="bold">Implicit Rate:</span>
+                      <span>{{ implicitRateDisplay(detail.data) }} | </span>
+                    </span>
+                    <span *ngIf="detail.data.economicLifeYears"
+                      ><span class="bold">Remaining Economic Life:</span>
+                      <span>{{
+                        detail.data.economicLifeYears.toFixed(2)
+                      }}</span></span
+                    >
+                  </p>
+                </div>
+              </div>
+            </crem-tab-item>
+          </crem-tabs>
         </div>
       </dx-data-grid>
     </div>

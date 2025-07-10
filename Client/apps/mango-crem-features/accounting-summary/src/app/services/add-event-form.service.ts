@@ -12,6 +12,40 @@ export class AddEventFormService {
     localStorage.getItem('portfolioSettings') || '{}'
   );
 
+  private validationStatesForCalculate = {
+    scheduleDetails: true,
+    residualValue: true,
+    financialCard: true,
+  };
+
+  private validationStatesForSave = {
+    scheduleDetails: true,
+    residualValue: true,
+    financialCard: true,
+  };
+
+  isValidForCalculate(
+    key: keyof typeof this.validationStatesForCalculate,
+    isValid: boolean
+  ) {
+    this.validationStatesForCalculate[key] = isValid;
+    const allValid = Object.values(this.validationStatesForCalculate).every(
+      (state) => state === true
+    );
+    this.isCalculateValuesAllowed$.next(allValid);
+  }
+
+  isValidForSave(
+    key: keyof typeof this.validationStatesForSave,
+    isValid: boolean
+  ) {
+    this.validationStatesForSave[key] = isValid;
+    const allValid = Object.values(this.validationStatesForSave).every(
+      (state) => state === true
+    );
+    this.isSaveAllowed$.next(allValid);
+  }
+
   private scheduleDetailsForm$ = new Subject<any>();
   private financialForm$ = new Subject<any>();
   private classificationForm$ = new BehaviorSubject<any>({});
@@ -48,10 +82,11 @@ export class AddEventFormService {
     this.portfolioSettings.defaultPaymentTimingType
   );
 
-  public isCalculateValuesDisabled$ = new BehaviorSubject<boolean>(false);
-  public isSaveDisabled$ = new BehaviorSubject<boolean>(false);
+  public isCalculateValuesAllowed$ = new BehaviorSubject<boolean>(false);
+  public isSaveAllowed$ = new BehaviorSubject<boolean>(false);
   public ignoreButtonReset = new BehaviorSubject<boolean>(false);
   public calculateValuesClicked = new BehaviorSubject<boolean>(false);
+  public validateCalculateComponents$ = new BehaviorSubject<boolean>(false);
   public operatingClassifications: number[] = [0, 5];
 
   financialFormData$ = this.financialForm$;

@@ -18,6 +18,7 @@
     (onOpened)="onSelectBoxOpened($event)"
     (onContentReady)="onContentReady($event)"
     (onClosed)="onSelectBoxClosed($event)"
+    (onBlur)="onBlur($event)"
     [grouped]="grouped"
     [groupTemplate]="
       useCustomGroupTemplate ? 'selectBoxCustomGroupTemplate' : 'group'
@@ -57,13 +58,13 @@
       ></ng-container>
       <ng-template #DefaultValidationTooltip>
         <dxi-validation-rule
-          *ngIf="required && !customRequireValidation"
+          *ngIf="required && touched && !customRequireValidation"
           type="required"
         ></dxi-validation-rule>
       </ng-template>
       <ng-template #NoDefaultValidationTooltip>
         <dxi-validation-rule
-          *ngIf="required && !customRequireValidation"
+          *ngIf="required && touched && !customRequireValidation"
           type="required"
           [message]="''"
         ></dxi-validation-rule>
@@ -247,6 +248,7 @@
       'aria-controls': id + 'dropdownContainer',
       'aria-label': placeholder
     }"
+    (onBlur)="onBlur($event)"
   >
     <!-- Validators -->
     <dx-validator #DropdownBoxValidator>
@@ -259,13 +261,13 @@
       ></ng-container>
       <ng-template #DefaultValidationTooltip>
         <dxi-validation-rule
-          *ngIf="required && !customRequireValidation"
+          *ngIf="required && touched && !customRequireValidation"
           type="required"
         ></dxi-validation-rule>
       </ng-template>
       <ng-template #NoDefaultValidationTooltip>
         <dxi-validation-rule
-          *ngIf="required && !customRequireValidation"
+          *ngIf="required && touched && !customRequireValidation"
           type="required"
           [message]="''"
         ></dxi-validation-rule>

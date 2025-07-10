@@ -40,23 +40,26 @@
             )
           "
         >
-          Modified by
           <span
-            *ngIf="modifiedByName.length > 20; else elseBlock"
             (mouseenter)="onChangeByTooltipMouseOver()"
             (mouseleave)="onChangeByTooltipMouseLeave()"
-            >{{ modifiedByName | slice: 0:20 }}...</span
           >
-          <ng-template #elseBlock>{{ modifiedByName }} </ng-template>
-          on
-          {{
-            modifiedDate
-              | date
-                : (userInfo?.useDateEU !== undefined && userInfo?.useDateEU
-                    ? 'dd.MM.yyyy'
-                    : 'MM/dd/yyyy')
-          }}
+            Modified by
+            {{
+              modifiedByName.length > 20
+                ? (modifiedByName | slice: 0:20) + '...'
+                : modifiedByName
+            }}
 
+            on
+            {{
+              modifiedDate
+                | date
+                  : (userInfo?.useDateEU !== undefined && userInfo?.useDateEU
+                      ? 'dd.MM.yyyy'
+                      : 'MM/dd/yyyy')
+            }}
+          </span>
           <dx-tooltip
             [id]="
               accountingSummaryService.getId(componentName, 'add', 'tooltip')
@@ -64,19 +67,43 @@
             target="#accounting-summary-modifiedBy-details"
             [visible]="isChangeByTooltipVisible"
           >
-            <div *dxTemplate="let data of 'content'">
-              Modified by
-              {{
-                modifiedByName +
-                  ' ' +
-                  'on ' +
-                  (modifiedDate
-                    | date
-                      : (userInfo?.useDateEU !== undefined &&
-                        userInfo?.useDateEU
-                          ? 'dd.MM.yyyy'
-                          : 'MM/dd/yyyy'))
-              }}
+            <div
+              *dxTemplate="let data of 'content'"
+              class="modified-history-tooltip"
+            >
+              <div class="modified-history-row">
+                <div class="modified-history-label">Modified by:</div>
+                <div class="modified-history-value">{{ modifiedByName }}</div>
+              </div>
+
+              <div class="modified-history-row">
+                <div class="modified-history-label">Modified date:</div>
+                <div class="modified-history-value">
+                  {{
+                    modifiedDate
+                      | date
+                        : (userInfo?.useDateEU !== undefined &&
+                          userInfo?.useDateEU
+                            ? 'dd.MM.yyyy'
+                            : 'MM/dd/yyyy')
+                  }}
+                </div>
+              </div>
+
+              <div class="modified-history-row">
+                <div class="modified-history-label">Description:</div>
+                <div class="modified-history-value">
+                  {{ modifiedDescription }}
+                </div>
+              </div>
+
+              <div class="modified-history-row">
+                <div class="modified-history-label">Comment:</div>
+                <div
+                  class="modified-history-value"
+                  [innerHTML]="modifiedComment"
+                ></div>
+              </div>
             </div>
           </dx-tooltip>
         </div>
@@ -90,27 +117,25 @@
       </div>
 
       <div class="send-to-excel-button">
-        <crem-button
+        <crem-split-button
           [id]="
             accountingSummaryService.getId(
               componentName,
               'sendToExcel',
-              'button'
+              'split-button'
             )
           "
-          type="secondary"
-          (click)="sendToExcel($event)"
-          [disabled]="sendToExcelClicked || isAccountingEventEmpty"
-          [icon]="sendToExcelClicked ? 'faSpinner' : ''"
-          [iconPack]="sendToExcelClicked ? 'solid' : ''"
+          [text]="'Send to Excel'"
+          [icon]="sendToExcelClicked ? 'faSpinner' : 'faCaretDown'"
           [iconAnimation]="sendToExcelClicked ? 'spin' : ''"
-        >
-          <div>
-            <span>
-              {{ sendToExcelClicked ? 'Sending to Excel' : 'Send to Excel' }}
-            </span>
-          </div>
-        </crem-button>
+          [color]="'secondary'"
+          [btnStyle]="'flat'"
+          [dropdownPosition]="'right'"
+          (mainButtonClick)="sendToExcelMain()"
+          (selectedOption)="selectedOption($event)"
+          [disabled]="sendToExcelClicked || isAccountingEventEmpty"
+          [options]="['Send All to Excel', 'Consolidate']"
+        ></crem-split-button>
       </div>
 
       <div class="add-button">
