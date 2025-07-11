@@ -286,7 +286,9 @@ export class DropdownComponent
   }
 
   onChange = (value: string) => {};
-  onTouched = () => {};
+  onTouched = () => {
+    this.touched = true;
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     const { previousValue, currentValue } = changes.dataSource || {};

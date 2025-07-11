@@ -975,6 +975,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.currencyRateStatus = 'error';
       this.currencyRateValidationMessage =
         'Functional Currency Rate is required and cannot be zero.';
+      this.currencyCompositeDropdownValidation = 'error';
       this.updateFinancialCardValidity(false, false);
       return;
     } else {
@@ -1001,7 +1002,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       if (!ROUAmount && ROUAmount !== 0 && this.rouAmountTouched) {
         this.rouAmountStatus = 'invalid';
         this.ROUCompositeDropdownValidation = 'error';
-        this.updateFinancialCardValidity(false, false);
+        this.updateFinancialCardValidity(true, false);
+        return;
       } else {
         this.rouAmountStatus = 'valid';
         this.updateFinancialCardValidity(true, true);
@@ -1128,6 +1130,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.ROUCompositeDropdownValidation = 'error';
       this.rouDatePicker?.validate();
       return;
+    } else {
+      this.ROUCompositeDropdownValidation = 'default';
     }
     if (
       this.termEnd &&
@@ -1940,6 +1944,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           this.currencyRateStatus = 'error';
           this.currencyRateValidationMessage =
             'Functional Currency Rate is required and cannot be zero.';
+          this.currencyCompositeDropdownValidation = 'error';
         } else {
           this.currencyRateStatus = 'default';
           this.currencyRateValidationMessage = '';
