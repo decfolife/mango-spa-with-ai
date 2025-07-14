@@ -999,6 +999,20 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     if ([2, 3, 4].includes(this.classificationId)) {
+      //start with default state, let any single validation
+      //below flip it to error since each one returns
+      this.ROUCompositeDropdownValidation = 'default';
+
+      if (!ROUMethod && ROUMethod !== 0 && this.rouMethodTouched) {
+        this.rouMethodStatus = 'invalid';
+        this.ROUCompositeDropdownValidation = 'error';
+        this.updateFinancialCardValidity(true, false);
+        return;
+      } else {
+        this.rouMethodStatus = 'valid';
+        this.updateFinancialCardValidity(true, true);
+      }
+
       if (!ROUAmount && ROUAmount !== 0 && this.rouAmountTouched) {
         this.rouAmountStatus = 'invalid';
         this.ROUCompositeDropdownValidation = 'error';
@@ -1009,31 +1023,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.updateFinancialCardValidity(true, true);
       }
 
-      if (
-        (this.rouMethodStatus === 'invalid' ||
-          this.rouAmountStatus === 'invalid' ||
-          this.rouDateStatus === 'error') &&
-        this.ROUCompositeDropdownTouched
-      ) {
-        this.ROUCompositeDropdownValidation = 'error';
-        this.updateFinancialCardValidity(true, false);
-        return;
-      } else {
-        this.updateFinancialCardValidity(true, true);
-        this.ROUCompositeDropdownValidation = 'default';
-      }
-
-      if (!ROUMethod && ROUMethod !== 0 && this.rouMethodTouched) {
-        this.rouMethodStatus = 'invalid';
-        this.updateFinancialCardValidity(true, false);
-        return;
-      } else {
-        this.rouMethodStatus = 'valid';
-        this.updateFinancialCardValidity(true, true);
-      }
-
       if (!ROUActionDate && this.rouDateTouched) {
         this.rouDateStatus = 'error';
+        this.ROUCompositeDropdownValidation = 'error';
         this.rouDateStatusMessage = 'Required';
         this.rouDatePicker?.validate();
         this.updateFinancialCardValidity(true, false);
@@ -1131,8 +1123,15 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.rouDatePicker?.validate();
       return;
     } else {
-      this.ROUCompositeDropdownValidation = 'default';
+      if (
+        this.rouMethodStatus === 'valid' ||
+        this.rouAmountStatus === 'valid' ||
+        this.rouDateStatus === 'default'
+      ) {
+        this.ROUCompositeDropdownValidation = 'default';
+      }
     }
+
     if (
       this.termEnd &&
       this.termBegin &&
@@ -1714,12 +1713,12 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onROUMethodValueChanged(event: any) {
+    this.rouAmountTouched = true;
     this.rouMethodIDSelected = event.value;
     const rouMethodName = this.rouAssetMethodsList.find(
       (x) => x.id == event?.value
     )?.name;
     this.setROUAmountForROUMethod(rouMethodName);
-    this.financialFormValidation();
   }
 
   private setROUAmountForROUMethod(rouMethodName: string) {
@@ -1952,9 +1951,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         break;
       }
     }
-    this.rouAmountStatus === 'error' ||
+    this.rouAmountStatus === 'invalid' ||
     this.rouDateStatus === 'error' ||
-    this.rouMethodStatus === 'error'
+    this.rouMethodStatus === 'invalid'
       ? (this.ROUCompositeDropdownValidation = 'error')
       : (this.ROUCompositeDropdownValidation = 'default');
   }

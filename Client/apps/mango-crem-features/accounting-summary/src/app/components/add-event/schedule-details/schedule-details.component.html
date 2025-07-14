@@ -137,6 +137,7 @@
                 (selectedItems)="setTermBeginDate($event)"
                 [initialSelectedValue]="selectedBeginDateID"
                 formControlName="accountingEventBeginDateDropdown"
+                [customRequireValidation]="!termBeginBlur"
                 [containerized]="true"
                 (blur)="termBeginBlur = true"
                 [status]="termBeginStatus"
