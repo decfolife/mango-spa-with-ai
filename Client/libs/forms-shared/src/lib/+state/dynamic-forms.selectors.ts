@@ -4,7 +4,7 @@ import {
   DynamicFormsState,
   dynamicFormsAdapter,
 } from './dynamic-forms.reducer';
-import { ApiResponse } from '@forms/model/api-response';
+import { ApiResponse } from '@mango/data-models/lib-data-models';
 
 export const selectDynamicFormsState =
   createFeatureSelector<DynamicFormsState>(APP_FEATURE_KEY);
@@ -22,6 +22,11 @@ export const selectLoading = createSelector(
 export const selectError = createSelector(
   selectDynamicFormsState,
   (state) => state.error
+);
+
+export const selectRenderFormError = createSelector(
+  selectDynamicFormsState,
+  (state) => state.renderFormError
 );
 
 export const selectDynamicForm = createSelector(

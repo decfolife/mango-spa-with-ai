@@ -22,6 +22,7 @@
           <ng-container *ngIf="linkObj.category == null">
             <li
               class="listItem"
+              [class.parent-link-padding]="link.objectTypeName != null"
               *ngFor="let link of linkObj.children"
               [ngClass]="
                 activeLink === link.name ? link.name + ' active' : link.name
@@ -38,13 +39,27 @@
                 (click)="onNavLinkClick(link)"
                 [tabindex]="0"
               >
-                <span>{{ link.dynamicName }}</span>
+                <span *ngIf="link.objectTypeName == null">{{
+                  link.dynamicName
+                }}</span>
+                <span *ngIf="link.objectTypeName != null"
+                  ><span class="bold-object-type-name">{{
+                    link.objectTypeName.trim() + ': '
+                  }}</span
+                  >{{ link.dynamicName }}</span
+                >
               </a>
             </li>
           </ng-container>
 
           <ng-container *ngIf="linkObj.category !== null">
-            <li>
+            <li
+              [ngClass]="
+                activeLink === linkObj.category
+                  ? linkObj.category + ' active'
+                  : linkObj.category
+              "
+            >
               <ng-container
                 *ngIf="!linkObj.categoryHasFlyOutMenu; else flyoutMenuTemplate"
               >
@@ -98,13 +113,22 @@
             >
               <button
                 class="flyout_anchor"
-                [ngClass]="linkObj.categoryLinkUrl === null
-                  ? 'default-cursor-nav-link' 
-                  : '' "
-                (click)="$event.preventDefault(); onCategoryNavLinkClick($event, linkObj)"
+                [ngClass]="
+                  linkObj.categoryLinkUrl === null
+                    ? 'default-cursor-nav-link'
+                    : ''
+                "
+                (click)="
+                  $event.preventDefault();
+                  onCategoryNavLinkClick($event, linkObj)
+                "
                 mat-menu-item
               >
-                <div>{{ linkObj.category }}</div>
+                <div
+                  [ngClass]="activeLink === linkObj.category ? 'selected' : ''"
+                >
+                  {{ linkObj.category }}
+                </div>
                 <div class="div-arrow-right-icon">
                   <mat-icon>keyboard_arrow_right</mat-icon>
                 </div>
@@ -124,11 +148,7 @@
                 <span *ngFor="let link of linkObj.children">
                   <li
                     class="listItem"
-                    [ngClass]="
-                      activeLink === link.name
-                        ? link.name + ' active'
-                        : link.name
-                    "
+                    [ngClass]="link.isCurrentlyActiveLink ? 'childActive' : ''"
                   >
                     <a
                       mat-menu-item
@@ -138,7 +158,9 @@
                         '-' +
                         link?.dynamicName?.toLowerCase()?.replace(' ', '-')
                       "
-                      [ngClass]="activeLink === link.name ? 'selected' : ''"
+                      [ngClass]="
+                        link.isCurrentlyActiveLink ? 'childSelected' : ''
+                      "
                       (click)="onNavLinkClick(link)"
                       class="flyout-navitem"
                       [tabindex]="0"
@@ -166,9 +188,7 @@
               <li
                 class="listItem"
                 [ngClass]="
-                  activeLink === subChildLink.name
-                    ? subChildLink.name + ' active'
-                    : subChildLink.name
+                  subChildLink.isCurrentlyActiveLink ? 'subChildActive' : ''
                 "
               >
                 <a
@@ -179,7 +199,9 @@
                     '-' +
                     subChildLink?.dynamicName?.toLowerCase()?.replace(' ', '-')
                   "
-                  [ngClass]="activeLink === subChildLink.name ? 'selected' : ''"
+                  [ngClass]="
+                    subChildLink.isCurrentlyActiveLink ? 'subChildSelected' : ''
+                  "
                   [ngStyle]="{
                     color: subChildLink.subChildLevel > 0 ? '#162f5a' : '#000',
                     'font-size':

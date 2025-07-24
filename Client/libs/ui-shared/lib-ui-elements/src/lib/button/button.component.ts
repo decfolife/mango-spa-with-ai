@@ -9,6 +9,7 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
+import { PendoDataId } from '../../../../../core-shared/src/lib/directives/data-id';
 
 /**
  * Simple button, check Storybook for additional options
@@ -20,7 +21,7 @@ import {
   templateUrl: './button.component.html',
   styleUrls: ['./button.component.scss'],
 })
-export class ButtonComponent implements OnChanges {
+export class ButtonComponent extends PendoDataId implements OnChanges {
   /**
    * The button id
    * @param {string} [id]

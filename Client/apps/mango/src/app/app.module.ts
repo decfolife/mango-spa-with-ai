@@ -11,6 +11,7 @@ import {
 } from '@angular/router';
 import {
   AuthService,
+  DataIdBreadcrumbProviderService,
   HeaderService,
   LibCoreSharedModule,
   NotificationService,
@@ -18,6 +19,7 @@ import {
   UserService,
   UtilitiesService,
 } from '@mango/core-shared';
+import { CremDataIdDirective } from '../../../../libs/core-shared/src/lib/directives/data-id.directive';
 import {
   CREM_FORCE_RELOGIN_URLS,
   Environment,
@@ -57,12 +59,16 @@ import { contactRecord } from './+state/app/app.selectors';
 import { EmulateUserEffects } from './+state/app/effects/emulate-user.effects';
 import { IdleEffects } from './+state/app/effects/idle.effects';
 import { IdleTimeoutPopupComponent } from './components/idle-timeout-popup/idle-timeout-popup.component';
-import { RedirectorMapping, RedirectorObjectData } from 'libs/data-models/lib-data-models/src/lib/models/redirector-links.interface';
+import {
+  RedirectorMapping,
+  RedirectorObjectData,
+} from 'libs/data-models/lib-data-models/src/lib/models/redirector-links.interface';
 import { CremPopupComponent } from '@mango/ui-shared/lib-ui-elements';
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { CurrentProjectIdMonitorService } from './services/current-project-monitor.service';
 import { ErrorNotificationComponent } from './components/error-notification/error-notification.component';
 import { TemplatePageTitleStrategy } from './services/title-strategy.service';
+import { DataIdService } from './services/data-id.service';
 
 const DEV_MODULES = [];
 
@@ -87,6 +93,7 @@ if (!environment.production) {
     ErrorNotificationComponent,
   ],
   imports: [
+    CremDataIdDirective,
     BrowserModule,
     BrowserAnimationsModule,
     StoreModule.forRoot(
@@ -148,6 +155,7 @@ if (!environment.production) {
     CurrentProjectIdMonitorService,
     Title,
     { provide: TitleStrategy, useClass: TemplatePageTitleStrategy },
+    { provide: DataIdBreadcrumbProviderService, useClass: DataIdService },
   ],
   bootstrap: [AppComponent],
 })
@@ -172,7 +180,10 @@ export class AppModule {
             this.facade.redirectorMappings$,
           ])
         ),
-        filter(([url, clientKey, contactRecord, _, redirectorMappings]) => !!url && !!clientKey && !!contactRecord && !!redirectorMappings),
+        filter(
+          ([url, clientKey, contactRecord, _, redirectorMappings]) =>
+            !!url && !!clientKey && !!contactRecord && !!redirectorMappings
+        ),
         map(([url, clientKey, _, redirectorLinks, redirectorMappings]) => {
           const forceRelogin = CREM_FORCE_RELOGIN_URLS.some((subUrl) =>
             url.includes(subUrl)
@@ -187,10 +198,12 @@ export class AppModule {
             redirectorLinks &&
             (url.includes('RenderForm') || url.includes('View.asp'))
           ) {
-            const objectData: RedirectorObjectData = this.getObjectDataFromUrl(url);
+            const objectData: RedirectorObjectData =
+              this.getObjectDataFromUrl(url);
             let objectParamsQueryString = `oid=${objectData.objectId}&otid=${objectData.objectTypeId}&ottid=${objectData.objectTypeTypeId}`;
 
-            let found = redirectorLinks.find((x) =>
+            let found = redirectorLinks.find(
+              (x) =>
                 x.objectTypeId === objectData.objectTypeId &&
                 x.objectTypeTypeId === objectData.objectTypeTypeId
             );
@@ -212,47 +225,66 @@ export class AppModule {
                 : `${redirectorLink}?${objectParamsQueryString}`;
             }
 
-            v06RedirectorUrl = this.validateGantChartUrl(v06RedirectorUrl, objectData);
+            v06RedirectorUrl = this.validateGantChartUrl(
+              v06RedirectorUrl,
+              objectData
+            );
 
             if (forceRelogin) {
-              const caUrl = `${environment.CAUrl}?${OAUTH_REDIRECT_QUERY_PARAM}=${v06Url}/v06/login.aspx?ReturnUrl=${
-                encodeURIComponent(v06RedirectorUrl)}`;
+              const caUrl = `${
+                environment.CAUrl
+              }?${OAUTH_REDIRECT_QUERY_PARAM}=${v06Url}/v06/login.aspx?ReturnUrl=${encodeURIComponent(
+                v06RedirectorUrl
+              )}`;
               this.navigationService.navigateToExternalUrl(caUrl);
               return;
             }
 
             let redirectorMap: RedirectorMapping = null;
-            
+
             // Compare just page name (ignore params)
-            let redirectorMaps = redirectorMappings.filter((x) =>
-              x.cremUrl.split('?')[0].toLowerCase() === v06RedirectorUrl.split('?')[0].toLowerCase()
+            let redirectorMaps = redirectorMappings.filter(
+              (x) =>
+                x.cremUrl.split('?')[0].toLowerCase() ===
+                v06RedirectorUrl.split('?')[0].toLowerCase()
             );
 
             if (redirectorMaps.length === 1) {
               redirectorMap = redirectorMaps[0];
             } else if (redirectorMaps.length > 1) {
-              // If there are duplicate pages, 
+              // If there are duplicate pages,
               // Need to compare with the query param since it can be a page like /ListPage.aspx/?ObjectTypeId=4
               // Only the first query param matters
-              redirectorMap = redirectorMaps.find((x) =>
-                x.cremUrl.split('&')[0].toLowerCase() === v06RedirectorUrl.split('&')[0].toLowerCase()
+              redirectorMap = redirectorMaps.find(
+                (x) =>
+                  x.cremUrl.split('&')[0].toLowerCase() ===
+                  v06RedirectorUrl.split('&')[0].toLowerCase()
               );
             }
 
-            if (redirectorMap && redirectorMap.spaUrl && redirectorMap.isActive) {
+            if (
+              redirectorMap &&
+              redirectorMap.spaUrl &&
+              redirectorMap.isActive
+            ) {
               let queryString = `?${v06RedirectorUrl?.split('?')[1] ?? ''}`;
               let params = UtilitiesService.queryStringToParams(queryString);
               this.navigationService.navigateTo(redirectorMap.spaUrl, params);
               return;
             }
 
-            this.navigationService.navigateToV06(`${v06Url}${v06RedirectorUrl}`);
+            this.navigationService.navigateToV06(
+              `${v06Url}${v06RedirectorUrl}`
+            );
             return;
-          } 
+          }
 
-          if (forceRelogin) {           
-            const caUrl = `${environment.CAUrl}?${OAUTH_REDIRECT_QUERY_PARAM}=${v06Url}/v06/login.aspx?ReturnUrl=${
-              encodeURIComponent(url)}`
+          if (forceRelogin) {
+            const caUrl = `${
+              environment.CAUrl
+            }?${OAUTH_REDIRECT_QUERY_PARAM}=${v06Url}/v06/login.aspx?ReturnUrl=${encodeURIComponent(
+              url
+            )}`;
             this.navigationService.navigateToExternalUrl(caUrl);
             return;
           }
@@ -260,18 +292,22 @@ export class AppModule {
           let redirectorMap: RedirectorMapping = null;
 
           // Compare just page name (ignore params)
-          let redirectorMaps = redirectorMappings.filter((x) =>
-            x.cremUrl.split('?')[0].toLowerCase() === url.split('?')[0].toLowerCase()
+          let redirectorMaps = redirectorMappings.filter(
+            (x) =>
+              x.cremUrl.split('?')[0].toLowerCase() ===
+              url.split('?')[0].toLowerCase()
           );
 
           if (redirectorMaps.length === 1) {
             redirectorMap = redirectorMaps[0];
           } else if (redirectorMaps.length > 1) {
-            // If there are duplicate pages, 
+            // If there are duplicate pages,
             // Need to compare with the query param since it can be a page like /ListPage.aspx/?ObjectTypeId=4
             // Only the first query param matters
-            redirectorMap = redirectorMaps.find((x) =>
-              x.cremUrl.split('&')[0].toLowerCase() === url.split('&')[0].toLowerCase()
+            redirectorMap = redirectorMaps.find(
+              (x) =>
+                x.cremUrl.split('&')[0].toLowerCase() ===
+                url.split('&')[0].toLowerCase()
             );
           }
 
@@ -289,15 +325,14 @@ export class AppModule {
   }
 
   // Validates and correct the gant chart url
-  validateGantChartUrl(v06RedirectorUrl: string, objectData: RedirectorObjectData): string {
+  validateGantChartUrl(
+    v06RedirectorUrl: string,
+    objectData: RedirectorObjectData
+  ): string {
     //If both are true the url is not correct for the gantt chart
     if (
-      v06RedirectorUrl.includes(
-        'WebReportWithNav.aspx/project-gantt-chart'
-      ) &&
-      !v06RedirectorUrl.includes(
-        'WebReportWithNav.aspx/project-gantt-chart/'
-      )
+      v06RedirectorUrl.includes('WebReportWithNav.aspx/project-gantt-chart') &&
+      !v06RedirectorUrl.includes('WebReportWithNav.aspx/project-gantt-chart/')
     ) {
       v06RedirectorUrl = v06RedirectorUrl.replace(
         'WebReportWithNav.aspx/project-gantt-chart',
@@ -331,7 +366,7 @@ export class AppModule {
         }
       });
     }
-    
+
     return objectData;
   }
 }

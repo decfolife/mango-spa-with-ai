@@ -46,6 +46,7 @@
           (buttonClick)="onSaveTasksClick()"
           btnStyle="flat"
           color="secondary"
+          [title]="quickApprovalApplyBtnTitle"
           [text]="saveButtonText"
           [hidden]="!saveButtonText"
           [id]="'save-button'"
@@ -56,6 +57,11 @@
           (buttonClick)="onApproveTasksClick()"
           btnStyle="flat"
           color="primary"
+          [title]="
+            (isApproveButtonDisabled$ | async)
+              ? ''
+              : quickApprovalApproveBtnTitle
+          "
           [text]="approveButtonText"
           [id]="'approve-button'"
         ></crem-button>
@@ -120,15 +126,6 @@
           id="pt-searchInput"
           class="searchProjectTasks-input"
         ></cs-search>
-      </div>
-      <div>
-        <a
-          target="_blank"
-          rel="opener"
-          [href]="externalCremLink"
-          class="pt-legacyLink"
-          >for legacy page, click me</a
-        >
       </div>
     </div>
     <div class="controls-right">

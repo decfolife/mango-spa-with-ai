@@ -4,7 +4,11 @@ import { Observable } from 'rxjs';
 import { EndpointService, UtilitiesService } from '@mango/core-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { Api } from '@mango/data-models/lib-data-models';
-import { DeleteReportUsersGroups, ReportUsersGroups, ReportTag } from '@reports/models';
+import {
+  DeleteReportUsersGroups,
+  ReportUsersGroups,
+  ReportTag,
+} from '@reports/models';
 
 @Injectable()
 export class ReportsService extends EndpointService {
@@ -36,10 +40,11 @@ export class ReportsService extends EndpointService {
     return this.callHttpPost(url, 'getUserModuleRights', { objectTypeIds });
   }
 
-    getUserMaxModuleRights(moduleID: Array<number>): Observable<any> {
-        const url = `${this.reportsUrl}reports/getusermaxmodulerights/${moduleID}`;
-        return this.callHttpGet(url, 'getUserMaxModuleRights');
-    }
+  getUserMaxModuleRights(moduleID: Array<number>): Observable<any> {
+    const url = `${this.reportsUrl}reports/getusermaxmodulerights/${moduleID}`;
+    return this.callHttpGet(url, 'getUserMaxModuleRights');
+  }
+
   getAllReportTags(): Observable<ReportTag[]> {
     const url = `${this.reportsUrl}ReportsPage/GetAllReportTags`;
     return this.callHttpGet(url, 'getAllReportTags');
@@ -56,34 +61,31 @@ export class ReportsService extends EndpointService {
   }
 
   assignReportTags(
-    reportId: number, 
+    reportId: number,
     reportType: string,
-    tags: ReportTag[]): Observable<any> {
+    tags: ReportTag[]
+  ): Observable<any> {
     const url = `${this.reportsUrl}ReportsPage/AssignReportTags`;
-    return this.callHttpPost(url, 'assignReportTags', 
-    { 
+    return this.callHttpPost(url, 'assignReportTags', {
       reportId: reportId,
       reportType: reportType,
-      reportTags: tags
+      reportTags: tags,
     });
   }
 
-  unAssignReportTags(
-    reportId: number, 
-    tagIds: number[]): Observable<any> {
+  unAssignReportTags(reportId: number, tagIds: number[]): Observable<any> {
     const url = `${this.reportsUrl}ReportsPage/UnAssignReportTags/${reportId}`;
-    return this.callHttpDeleteWithBody(url, 'unAssignReportTags', 
-    { 
+    return this.callHttpDeleteWithBody(url, 'unAssignReportTags', {
       reportId: reportId,
-      reportTagIDs: tagIds
+      reportTagIDs: tagIds,
     });
   }
 
   editReportTag(reportTagId: number, reportTag: string): Observable<any> {
     const url = `${this.reportsUrl}ReportsPage/EditReportTag`;
-    return this.callHttpPut(url, 'editReportTag', { 
+    return this.callHttpPut(url, 'editReportTag', {
       reportTagID: reportTagId,
-      tagName: reportTag
+      tagName: reportTag,
     });
   }
 
@@ -91,7 +93,7 @@ export class ReportsService extends EndpointService {
     const url = `${this.reportsUrl}ReportsPage/RemoveReportTag/${reportTagId}`;
     return this.callHttpDelete(url, 'removeReportTag');
   }
-  
+
   getUpdateRunCount(reportType: string, reportId: number): Observable<any> {
     const url = `${this.reportsUrl}ReportsPage/GetUpdateRunCount`;
     return this.callHttpPost(url, 'GetUpdateRunCount', {

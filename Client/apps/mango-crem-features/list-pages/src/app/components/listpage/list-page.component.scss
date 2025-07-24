@@ -723,3 +723,13 @@
     }
   }
 }
+
+::ng-deep {
+  #df-leaseGLEventAlertsBtn #openLeaseAlertsPopupButton {
+    height: 32px;
+    &:focus {
+      box-shadow: 0 0 0 0.3rem #c8c8c8;
+      outline: -webkit-focus-ring-color auto 1px;
+    }
+  }
+}

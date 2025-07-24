@@ -7,6 +7,7 @@ import {
 } from '../icon/definitions/fontAwesome';
 import { CommonModule } from '@angular/common';
 import { IconModule } from '../icon';
+import { CremDataIdDirective } from '../../../../../core-shared/src/lib/directives/data-id.directive';
 
 interface ButtonComponentStory extends ButtonComponent {
   text: string;
@@ -17,10 +18,16 @@ export default {
   component: ButtonComponent,
   decorators: [
     moduleMetadata({
+      providers: [CremDataIdDirective],
       imports: [CommonModule, IconModule],
     }),
   ],
   argTypes: {
+    dataId: {
+      dataId: 'export_excel',
+      suffix: 'suffix',
+      prefix: 'prefix',
+    },
     btnStyle: { control: 'radio', options: ['flat', 'basic', 'stroked'] },
     color: {
       control: 'radio',

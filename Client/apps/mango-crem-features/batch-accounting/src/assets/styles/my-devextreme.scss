@@ -163,10 +163,6 @@
   }
 }
 
-.dx-overlay-shader {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
 dx-data-grid {
   height: 100%;
 
@@ -352,9 +348,9 @@ div.dx-button {
     }
   }
 
-  div.dx-button-content {
-    padding: 0px;
-  }
+  // div.dx-button-content { // This is leaking to other devExtreme components
+  //   padding: 0px;
+  // }
 
   &.dx-closebutton {
     padding: 0px !important;

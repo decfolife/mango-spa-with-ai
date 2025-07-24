@@ -7,8 +7,9 @@
   [class]="className"
   [id]="modalId"
   role="dialog"
-  [attr.aria-labelledby]="modalTitleId"
+  [attr.aria-labelledby]="modalTitleId ?? ''"
   [attr.aria-modal]="true"
+  [cremDataId]="dataId"
 >
   <!-- Header -->
   <div
@@ -27,6 +28,11 @@
         class="btn-close btn-none modalCloseButton"
         color="secondary"
         aria-label="Close"
+        [cremDataId]="{
+          prefix: 'modal',
+          dataId: 'close',
+          generateId: false
+        }"
       >
         <mat-icon class="closeIcon">close</mat-icon>
       </button>
@@ -34,14 +40,38 @@
 
     <ng-container *ngIf="!loading?.show">
       <!-- Custom Header -->
-      <ng-content *ngIf="customHeader" select="'[modalHeader]'"></ng-content>
+      <ng-content
+        *ngIf="customHeader"
+        select="'[modalHeader]'"
+        [cremDataId]="{
+          prefix: 'modal',
+          dataId: 'drag_drop',
+          generateId: false
+        }"
+      ></ng-content>
 
       <!-- Default Header -->
       <ng-container *ngIf="!customHeader">
-        <h2 [id]="modalTitleId" class="modal-title">{{ modalTitle }}</h2>
+        <h2
+          [id]="modalTitleId ?? ''"
+          class="modal-title"
+          [cremDataId]="{
+            prefix: 'modal',
+            dataId: 'drag_drop',
+            generateId: !!modalTitleId,
+          }"
+        >
+          {{ modalTitle }}
+        </h2>
+
         <crem-tooltip
           *ngIf="showTooltip"
           [helpTextData]="tooltipText"
+          [cremDataId]="{
+            prefix: 'modal',
+            dataId: 'info',
+            generateId: false,
+          }"
         ></crem-tooltip>
         <button
           *ngIf="closeIconVisible"
@@ -49,6 +79,9 @@
           class="btn-close btn-none modalCloseButton"
           color="secondary"
           aria-label="Close"
+          [cremDataId]="{
+            prefix: 'modal',
+          }"
         >
           <mat-icon class="closeIcon">close</mat-icon>
         </button>
@@ -122,17 +155,24 @@
         type="secondary"
         id="close-btn"
         (click)="closeDialog()"
+        [dataId]="{
+          prefix: 'modal',
+          dataId: 'cancel',
+        }"
         >{{ closeOrCancelButtonText }}</crem-button
       >
+
       <crem-button
         *ngIf="primaryFooterButtonText"
         id="footer-primary-btn"
         [disabled]="primaryFooterButtonEnabledDisabled"
         type="primary"
         (click)="primaryEvent($event)"
+        [dataId]="{
+          prefix: 'modal',
+        }"
+        >{{ primaryFooterButtonText }}</crem-button
       >
-        {{ primaryFooterButtonText }}
-      </crem-button>
     </div>
   </div>
 </div>

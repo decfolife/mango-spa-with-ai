@@ -1,0 +1,38 @@
+<crem-popup
+  [title]="this.data.hasCharges ? 'Delete Vendor/Customer' : 'Confirm Delete'"
+  [visible]="true"
+  [height]="'auto'"
+  [width]="'500px'"
+  [resizable]="false"
+  [customFooter]="true"
+  [showCloseButton]="true"
+  (close)="close()"
+>
+  <div body *ngIf="!hasCharges">Are you sure you want to delete?</div>
+  <div body *ngIf="hasCharges">
+    <p>To proceed with deleting:</p>
+    <ul>
+      <li>Scheduled charges must be reassigned to a new vendor or deleted</li>
+      <li>
+        In-process charges must be stopped or recreated under a different vendor
+      </li>
+    </ul>
+    <p>
+      Would you like to navigate to the
+      <strong>Associated Charges/Archive</strong> page to manage them now?
+    </p>
+  </div>
+  <div footer>
+    <crem-button [type]="hasCharges ? 'secondary' : 'primary'" (click)="close()"
+      >No</crem-button
+    >
+
+    <crem-button
+      [type]="hasCharges ? 'primary' : 'secondary'"
+      (click)="confirm()"
+      >{{
+        this.data.hasCharges ? 'Manage Charges' : 'Yes, Delete'
+      }}</crem-button
+    >
+  </div>
+</crem-popup>

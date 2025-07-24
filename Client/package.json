@@ -129,7 +129,6 @@
     "sass": "^1.32.12",
     "sass-loader": "^11.1.0",
     "sql-formatter": "^4.0.2",
-    "subsink": "^1.0.2",
     "tslib": "^2.0.0",
     "webpack": "^5.75.0",
     "zod": "^3.23.8",

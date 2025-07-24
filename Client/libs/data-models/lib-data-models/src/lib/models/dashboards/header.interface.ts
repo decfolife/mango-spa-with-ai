@@ -7,6 +7,7 @@ export interface Module {
 export interface NavLinksByCategory {
   category: string;
   categoryHasFlyOutMenu: boolean;
+  categoryIsCurrentlyActiveLink: boolean;
   categoryLinkUrl: string;
   categorySpaUrl: string;
   categorySpaQueryParameters?: string;

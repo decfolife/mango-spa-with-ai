@@ -1,6 +1,11 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { DataService } from '@mango/core-shared';
-import { Metric, Sidekick } from '@mango/data-models/lib-data-models';
+import {
+  Metric,
+  Sidekick,
+  ToastState,
+} from '@mango/data-models/lib-data-models';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { Observable, of } from 'rxjs';
 
 @Component({
@@ -9,13 +14,18 @@ import { Observable, of } from 'rxjs';
   styleUrls: ['./hero-metrics-container.component.scss'],
 })
 export class HeroMetricsContainerComponent implements OnChanges {
+  private errorOccurred = false;
+
   @Input() schemaMetrics: any[];
   @Input() filterString: string;
   @Input() unitOfMeasureId?: number;
   @Input() exchangeRateId?: number;
   @Input() moduleId: number;
 
-  constructor(private dataService: DataService) {}
+  constructor(
+    private dataService: DataService,
+    private toastService: CremToastService
+  ) {}
 
   ngOnChanges(): void {
     this.schemaMetrics.forEach((metric) => {
@@ -35,6 +45,8 @@ export class HeroMetricsContainerComponent implements OnChanges {
   }
 
   getAllMetricDetailsCombined() {
+    this.errorOccurred = false;
+
     if (this.moduleId == 1)
       return this.dataService
         .fetchAllPortfolioMetrics(
@@ -45,26 +57,38 @@ export class HeroMetricsContainerComponent implements OnChanges {
         )
         .subscribe(
           (res: any) => {
-            const metricDataList = res !== null ? res.data.data : null;
-
-            this.schemaMetrics.forEach((schemaMetric) => {
-              const metricData = metricDataList.find(
-                (md) =>
-                  md.elementTypeName ===
-                  schemaMetric.elementType.elementTypeName
+            if (!res.success) {
+              this.toastService.show(
+                "We're currently unable to retrieve data. Please try again shortly.",
+                'Error',
+                ToastState.ERROR
               );
-              if (
-                metricData !== undefined &&
-                metricData !== null &&
-                metricData !== ''
-              ) {
-                schemaMetric.metricDetail = this.createMetricDetail(
-                  schemaMetric,
-                  metricData.data
+
+              this.errorOccurred = true;
+
+              return null;
+            } else {
+              const metricDataList = res !== null ? res.data.data : null;
+
+              this.schemaMetrics.forEach((schemaMetric) => {
+                const metricData = metricDataList.find(
+                  (md) =>
+                    md.elementTypeName ===
+                    schemaMetric.elementType.elementTypeName
                 );
-                schemaMetric.dispMetric = true;
-              }
-            });
+                if (
+                  metricData !== undefined &&
+                  metricData !== null &&
+                  metricData !== ''
+                ) {
+                  schemaMetric.metricDetail = this.createMetricDetail(
+                    schemaMetric,
+                    metricData.data
+                  );
+                  schemaMetric.dispMetric = true;
+                }
+              });
+            }
           },
           (error: any) =>
             console.log(
@@ -85,26 +109,38 @@ export class HeroMetricsContainerComponent implements OnChanges {
         .fetchAllProjectMetrics(this.schemaMetrics, this.filterString)
         .subscribe(
           (res: any) => {
-            const metricDataList = res !== null ? res.data.data : null;
-
-            this.schemaMetrics.forEach((schemaMetric) => {
-              const metricData = metricDataList.find(
-                (md) =>
-                  md.elementTypeName ===
-                  schemaMetric.elementType.elementTypeName
+            if (!res.success) {
+              this.toastService.show(
+                "We're currently unable to retrieve data. Please try again shortly.",
+                'Error',
+                ToastState.ERROR
               );
-              if (
-                metricData !== undefined &&
-                metricData !== null &&
-                metricData !== ''
-              ) {
-                schemaMetric.metricDetail = this.createMetricDetail(
-                  schemaMetric,
-                  metricData.data
+
+              this.errorOccurred = true;
+
+              return null;
+            } else {
+              const metricDataList = res !== null ? res.data.data : null;
+
+              this.schemaMetrics.forEach((schemaMetric) => {
+                const metricData = metricDataList.find(
+                  (md) =>
+                    md.elementTypeName ===
+                    schemaMetric.elementType.elementTypeName
                 );
-                schemaMetric.dispMetric = true;
-              }
-            });
+                if (
+                  metricData !== undefined &&
+                  metricData !== null &&
+                  metricData !== ''
+                ) {
+                  schemaMetric.metricDetail = this.createMetricDetail(
+                    schemaMetric,
+                    metricData.data
+                  );
+                  schemaMetric.dispMetric = true;
+                }
+              });
+            }
           },
           (error: any) =>
             console.log(

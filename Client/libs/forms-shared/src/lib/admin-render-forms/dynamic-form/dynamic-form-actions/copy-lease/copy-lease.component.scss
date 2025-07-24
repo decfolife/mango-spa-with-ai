@@ -1,0 +1,62 @@
+@use 'styles' as *;
+
+::ng-deep {
+  div#crem-select-box.dx-overlay-wrapper.df-copyLease-buildings {
+    height: 36px !important;
+  }
+}
+
+.cl-buildings,
+.cl-building-premises {
+  margin-top: 20px;
+  display: flex;
+  width: 100%;
+
+  .flex30 {
+    flex-basis: 10%;
+  }
+  .flex70 {
+    flex-basis: 90%;
+  }
+}
+
+.cl-hidePremise {
+  display: none;
+}
+
+.cl-loader {
+  margin-top: 40px;
+}
+
+::ng-deep .df-addLeasePopup {
+  .modalFooter {
+    display: block !important;
+  }
+}
+
+.footerContent {
+  display: flex;
+  justify-content: space-between;
+
+  .footerRightControls {
+    display: flex;
+    align-items: center;
+
+    & > .reason-required-text {
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    & > .cl-btn {
+      margin-left: 8px;
+    }
+
+    .modalFooter {
+      @include costar(border-top, gray05);
+    }
+  }
+
+  .cl-userMsg {
+    color: $color-brand-red;
+  }
+}

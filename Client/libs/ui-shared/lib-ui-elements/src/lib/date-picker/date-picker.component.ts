@@ -65,10 +65,24 @@ export class DatePickerComponent
   onChange = (value: string) => {};
   onTouch = () => {};
 
+  onContentReady(e) {
+    const input = e.element.querySelector('.dx-texteditor-input');
+    if (input) {
+      input.addEventListener('input', (event: Event) => {
+        const value = (event.target as HTMLInputElement).value;
+        this.onChange(value);
+      });
+    }
+  }
+
   public onValueChanged(event: any) {
     this.onChange(event.value);
     this.onTouch();
     this.changeEvent?.emit(event);
+  }
+
+  public onInitialized(event) {
+    this.initialized?.emit(event);
   }
 
   onKeyDown(e: any) {

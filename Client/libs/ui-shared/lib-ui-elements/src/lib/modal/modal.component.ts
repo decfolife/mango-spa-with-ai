@@ -15,6 +15,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { PendoDataId } from '../../../../../core-shared/src/lib/directives/data-id';
 
 interface LoadingIndicator {
   show: boolean;
@@ -43,6 +44,7 @@ interface LoadingIndicator {
   encapsulation: ViewEncapsulation.Emulated,
 })
 export class ModalComponent
+  extends PendoDataId
   implements AfterViewInit, AfterContentInit, OnDestroy, OnInit
 {
   @Input() modalTitle: string;
@@ -92,7 +94,9 @@ export class ModalComponent
     @Optional() public dialogRef: MatDialogRef<ModalComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: any,
     private elementRef: ElementRef
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loading.type = this.loading.type ?? 'spinner'; // Default loading indicator

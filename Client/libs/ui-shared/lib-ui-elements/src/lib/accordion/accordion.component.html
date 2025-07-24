@@ -1,21 +1,25 @@
 <div class="crem-accordion">
-
-  <div class="accordion-header" tabindex="0"
-    (click)="isOpen = !isOpen" 
-    (keydown.space)="isOpen = !isOpen" 
-    (keydown.enter)="isOpen = !isOpen">
-    <h2 class="accordion-title">{{ title }} <span class="accordion-subtitle"> {{ subTitle }}</span> </h2>
-    <div class="accordion-icon">
+  <div
+    class="accordion-header"
+    tabindex="0"
+    (click)="isOpen = !isOpen"
+    (keydown.space)="isOpen = !isOpen"
+    (keydown.enter)="isOpen = !isOpen"
+  >
+    <h2 class="accordion-title">
+      {{ title }} <span class="accordion-subtitle"> {{ subTitle }}</span>
+    </h2>
+    <div class="accordion-icon" [cremDataId]="dataId ?? (title | slugify)">
       <crem-icon icon="faAngleDown" color="dark" *ngIf="isOpen"></crem-icon>
       <crem-icon icon="faAngleUp" color="dark" *ngIf="!isOpen"></crem-icon>
     </div>
   </div>
-  <div class="accordion-body" 
-      [class.accordion-body-expanded]="isOpen" 
-      [class.accordion-body-collapsed]="!isOpen" 
-      [class.accordion-body-padding]="contentPadding">
-    <ng-content>
-      
-    </ng-content>
+  <div
+    class="accordion-body"
+    [class.accordion-body-expanded]="isOpen"
+    [class.accordion-body-collapsed]="!isOpen"
+    [class.accordion-body-padding]="contentPadding"
+  >
+    <ng-content> </ng-content>
   </div>
 </div>

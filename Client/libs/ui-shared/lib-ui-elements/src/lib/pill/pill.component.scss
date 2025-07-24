@@ -57,3 +57,30 @@
   @include costar(background-color, light);
   @include costar(border-color, gray04);
 }
+
+.locked-message {
+  @include costar(background-color, light);
+  border-radius: 4px;
+  @include costar(box-shadow, gray07);
+  @include costar(color, gray01);
+  display: block;
+  padding: 12px;
+  position: absolute;
+  text-align: left;
+  white-space: normal;
+  width: 350px;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.locked-message:before {
+  @include costar(background-color, light);
+  content: ' ';
+  display: block;
+  height: 1rem;
+  left: 15px;
+  position: absolute;
+  top: calc(-1rem + 8px);
+  transform: rotate(45deg);
+  width: 1rem;
+}

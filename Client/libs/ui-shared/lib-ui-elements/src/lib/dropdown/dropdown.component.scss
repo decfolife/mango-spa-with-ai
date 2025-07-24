@@ -1,24 +1,9 @@
 @use 'styles' as *;
 
 :host ::ng-deep {
-  .dx-editor-outlined {
-    border: none !important;
-  }
-
   dx-select-box,
   dx-drop-down-box {
     width: 100%;
-    .dx-texteditor-container {
-      @include costar(border, gray04);
-      @include costar(border-radius, small);
-      .dx-placeholder {
-        line-height: 0px;
-      }
-    }
-
-    &.dx-state-focused {
-      outline: 2px solid black;
-    }
 
     &.dx-dropdowneditor-active {
       .dx-texteditor-container {
@@ -26,9 +11,6 @@
       }
       // Field Template: With Label
       &:has(.custom-with-label) {
-        .dx-selectbox-container {
-          @include costar(border, primary-light);
-        }
         .search {
           // Shows/Hides search icon when dropdown active
           width: 16px !important;
@@ -85,10 +67,6 @@
       }
     }
     &:has(.custom-with-label) {
-      .dx-selectbox-container {
-        @include costar(border, gray04);
-        @include costar(border-radius, small);
-      }
       .dx-texteditor-container {
         border: unset;
       }

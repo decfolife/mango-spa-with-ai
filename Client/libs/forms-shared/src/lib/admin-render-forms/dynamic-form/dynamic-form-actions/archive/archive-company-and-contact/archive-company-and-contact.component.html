@@ -15,14 +15,11 @@
   </div>
   <div modalFooter class="footer-content">
     <div id="'buttonTemplate'" class="footerRightControls">
-      <crem-button
-        id="close-btn"
-        type="secondary"
-        (click)="close()"
-      >
+      <crem-button [id]="'df-closeArchive'" type="secondary" (click)="close()">
         Cancel
       </crem-button>
       <crem-button
+        [id]="'df-archiveObject'"
         [disabled]="loading"
         type="primary"
         (click)="archive()"

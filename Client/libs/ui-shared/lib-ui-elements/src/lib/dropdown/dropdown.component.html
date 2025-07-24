@@ -240,6 +240,7 @@
     [visible]="isVisible"
     [showClearButton]="showClearButton"
     (onValueChanged)="dropdownOnValueChanged($event)"
+    (onKeyDown)="onKeyDown($event)"
     (onKeyUp)="onSelectBoxDropDownKeyUp($event)"
     [deferRendering]="false"
     (onOpened)="openDropdown($event)"
@@ -331,7 +332,11 @@
 </ng-container>
 
 <ng-template #readOnlyTemplate>
-  <div role="textbox" [attr.aria-labelledby]="labelledby" aria-readonly="true">
-    {{ formatReadOnlySelection(selectedDisplay) }}
-  </div>
+  <div
+    role="textbox"
+    class="cremDropDown-selectedVal"
+    [attr.aria-labelledby]="labelledby"
+    aria-readonly="true"
+    [innerHTML]="formatReadOnlySelection(selectedDisplay)"
+  ></div>
 </ng-template>

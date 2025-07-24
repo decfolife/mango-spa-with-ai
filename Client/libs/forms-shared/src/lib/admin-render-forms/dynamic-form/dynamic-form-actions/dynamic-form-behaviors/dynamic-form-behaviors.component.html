@@ -1,0 +1,251 @@
+<crem-modal
+  modalId="dynamic-form-behaviors-modal"
+  modalTitleId="dynamic-form-modal-title"
+  [modalTitle]="modalTitle"
+  closeIconVisible="true"
+  [customFooter]="true"
+>
+  <div modalContent>
+    <form [formGroup]="behaviorsFormGroup">
+      <div class="field-group">
+        <crem-input-label
+          [id]="getId(componentName, 'behavior-type', 'dropdown')"
+          [showInfo]="false"
+          required="true"
+          label="Behavior Type"
+        >
+        </crem-input-label>
+
+        <crem-dropdown
+          [id]="getId(componentName, 'behavior-type', 'dropdown')"
+          placeholder="Select Behavior Type..."
+          selectMode="single"
+          [required]="true"
+          [showClearButton]="false"
+          [dataSource]="behaviorTypes"
+          displayExpr="behavior"
+          valueExpr="id"
+          [containerized]="false"
+          formControlName="behaviorType"
+          (selectedItems)="onBehaviorSelected($event)"
+          [isDisabled]="behaviorEditMode"
+        >
+        </crem-dropdown>
+      </div>
+      <div class="form-behavior-inputs">
+        <div class="field-group" *ngIf="showInput1">
+          <crem-input-label
+            [id]="getId(componentName, 'input1', 'label')"
+            [showInfo]="false"
+            required="true"
+            label="Form Item Input 1"
+          >
+          </crem-input-label>
+
+          <crem-dropdown
+            [id]="getId(componentName, 'input1', 'dropdown')"
+            placeholder="Select Form Item..."
+            selectMode="single"
+            [required]="true"
+            [showClearButton]="true"
+            [allowSearch]="true"
+            searchMode="contains"
+            searchExpr="name"
+            [dataSource]="filteredFormItemInputsLookup1"
+            displayExpr="displayName"
+            valueExpr="formItemID"
+            [containerized]="false"
+            formControlName="formItemInput1"
+          >
+          </crem-dropdown>
+        </div>
+        <div class="field-group" *ngIf="showInput2">
+          <crem-input-label
+            [id]="getId(componentName, 'inout2', 'label')"
+            [showInfo]="false"
+            required="true"
+            label="Form Item Input 2"
+          >
+          </crem-input-label>
+          <crem-dropdown
+            [id]="getId(componentName, 'input2', 'dropdown')"
+            placeholder="Select Form Item..."
+            selectMode="single"
+            [required]="true"
+            [showClearButton]="true"
+            [allowSearch]="true"
+            searchMode="contains"
+            searchExpr="name"
+            [dataSource]="filteredFormItemInputsLookup2"
+            displayExpr="displayName"
+            valueExpr="formItemID"
+            [containerized]="false"
+            formControlName="formItemInput2"
+          >
+          </crem-dropdown>
+        </div>
+
+        <div class="field-group" *ngIf="showRequestType">
+          <crem-input-label
+            [id]="getId(componentName, 'request-type', 'label')"
+            [showInfo]="false"
+            required="true"
+            label="Request Type"
+          >
+          </crem-input-label>
+          <crem-dropdown
+            [id]="getId(componentName, 'request-type', 'dropdown')"
+            placeholder="Select Request Type..."
+            selectMode="single"
+            [required]="true"
+            [showClearButton]="true"
+            [allowSearch]="true"
+            searchMode="contains"
+            searchExpr="requestTypeName"
+            [dataSource]="behaviorLookups"
+            displayExpr="requestTypeName"
+            valueExpr="id"
+            [containerized]="false"
+            formControlName="requestType"
+          >
+          </crem-dropdown>
+        </div>
+      </div>
+
+      <div class="field-group" *ngIf="showOutput">
+        <crem-input-label
+          [id]="getId(componentName, 'output', 'label')"
+          [showInfo]="false"
+          required="true"
+          label="Form Item Output"
+        >
+        </crem-input-label>
+
+        <crem-dropdown
+          [id]="getId(componentName, 'output', 'dropdown')"
+          placeholder="Select Form Item..."
+          selectMode="single"
+          [required]="true"
+          [showClearButton]="true"
+          [allowSearch]="true"
+          searchMode="contains"
+          searchExpr="name"
+          [dataSource]="formItemOutputLookup"
+          displayExpr="displayName"
+          valueExpr="formItemID"
+          [containerized]="false"
+          formControlName="formItemOutput"
+        >
+        </crem-dropdown>
+      </div>
+    </form>
+
+    <div class="form-behaviors-grid">
+      <h6>Active Behaviors</h6>
+      <dx-data-grid
+        [id]="getId(componentName, 'behaviors', 'grid')"
+        [dataSource]="behaviorsGridData"
+        [allowColumnReordering]="true"
+        [showBorders]="true"
+        [showRowLines]="true"
+        [showColumnLines]="true"
+        [allowColumnReordering]="true"
+        [allowColumnResizing]="true"
+        columnResizingMode="widget"
+        (onRowRemoving)="deleteBehavior($event)"
+      >
+        <dxo-paging [enabled]="true"> </dxo-paging>
+
+        <!-- Grid Columns Definitions -->
+        <dxi-column dataField="behaviorTypeName" caption="Behavior Type">
+        </dxi-column>
+
+        <dxi-column dataField="formItemInput1Label" caption="Form Item Input 1">
+        </dxi-column>
+
+        <dxi-column dataField="formItemInput2Label" caption="Form Item Input 2">
+        </dxi-column>
+
+        <dxi-column dataField="requestTypeName" caption="Request Type">
+        </dxi-column>
+
+        <dxi-column dataField="formItemOutputLabel" caption="Form Item Output">
+        </dxi-column>
+
+        <dxi-column
+          caption="Actions"
+          [width]="100"
+          [allowFiltering]="false"
+          [allowSorting]="false"
+          cellTemplate="cellTemplate"
+        ></dxi-column>
+
+        <div *dxTemplate="let data of 'cellTemplate'">
+          <a
+            (click)="editBehavior(data.data)"
+            (keydown.enter)="editBehavior(data.data)"
+            class="links"
+            tabindex="0"
+            >Edit
+          </a>
+          |
+          <a
+            (click)="deleteBehavior(data)"
+            (keydown.enter)="deleteBehavior(data)"
+            class="links"
+            tabindex="0"
+            >Delete
+          </a>
+        </div>
+      </dx-data-grid>
+    </div>
+  </div>
+
+  <div modalFooter>
+    <crem-button
+      [id]="getId(componentName, 'cancel', 'button')"
+      type="secondary"
+      (click)="close()"
+      >Cancel
+    </crem-button>
+
+    <crem-button
+      [id]="getId(componentName, 'save-and-new', 'button')"
+      type="secondary"
+      (click)="saveAndNew()"
+      >Save & New
+    </crem-button>
+
+    <crem-button
+      [id]="getId(componentName, 'save', 'button')"
+      type="primary"
+      (click)="save()"
+      >Save
+    </crem-button>
+  </div>
+</crem-modal>
+
+<crem-popup
+  [id]="getId(componentName, 'edit-confirmation', 'popup')"
+  [visible]="showConfirmationPopup"
+  [title]="'Changes Made'"
+  [showInfo]="false"
+  [saveButtonText]="'Continue '"
+  [closeButtonText]="'Discard'"
+  height="auto"
+  width="600"
+  [draggable]="'false'"
+  [resizable]="'true'"
+  [showCloseButton]="'true'"
+  [hideOnOutsideClick]="'true'"
+  [showFooter]="'true'"
+  (close)="discardEditing()"
+  (save)="continueEditing()"
+>
+  <div body>
+    <p>
+      Changes you have made have not been saved. Would you like to discard
+      changes or continue editing?
+    </p>
+  </div>
+</crem-popup>

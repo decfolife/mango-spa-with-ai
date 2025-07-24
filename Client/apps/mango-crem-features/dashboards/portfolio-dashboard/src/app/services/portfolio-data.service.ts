@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Dropdown, Metric } from '@mango/data-models/lib-data-models';
+import { Dropdown, ToastState } from '@mango/data-models/lib-data-models';
 import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../models';
 import { PortfolioDashboardService } from './portfolio-dashboard.service';
 import { ProjectsDashboardLeftNavService } from '../../../../../micro-components/src/app/services/projects-dashboard-left-nav.service';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioDataService {
@@ -32,7 +33,8 @@ export class PortfolioDataService {
 
   constructor(
     private portfolioDashboardService: PortfolioDashboardService,
-    private leftNavService: ProjectsDashboardLeftNavService
+    private leftNavService: ProjectsDashboardLeftNavService,
+    private toastService: CremToastService
   ) {
     //This should only be called once but just in case.
     if (this.redirectorLinks === null) {
@@ -259,33 +261,43 @@ export class PortfolioDataService {
       )
       .pipe(
         map((results) => {
-          if (cardDetail.id === 'financials_accounting_links_card') {
-            let accountingModuleId = 9;
-            this.leftNavService
-              .getModuleNavigationLinksClient(accountingModuleId)
-              .subscribe((res: any) => {
-                if (res && res.data && res.data.length) {
-                  for (var clientLink of res.data) {
-                    if (clientLink.isActive === false) {
-                      var accountingLinks = results.data.accountingLinks;
-                      accountingLinks.splice(
-                        accountingLinks.findIndex(
-                          (link) => link.name === clientLink.name
-                        ),
-                        1
-                      );
+          if (!results.success) {
+            this.toastService.show(
+              "We're currently unable to retrieve data. Please try again shortly.",
+              'Error',
+              ToastState.ERROR
+            );
+
+            return null;
+          } else {
+            if (cardDetail.id === 'financials_accounting_links_card') {
+              let accountingModuleId = 9;
+              this.leftNavService
+                .getModuleNavigationLinksClient(accountingModuleId)
+                .subscribe((res: any) => {
+                  if (res && res.data && res.data.length) {
+                    for (var clientLink of res.data) {
+                      if (clientLink.isActive === false) {
+                        var accountingLinks = results.data.accountingLinks;
+                        accountingLinks.splice(
+                          accountingLinks.findIndex(
+                            (link) => link.name === clientLink.name
+                          ),
+                          1
+                        );
+                      }
                     }
                   }
-                }
-              });
+                });
+            }
+            const resultsData = Array.isArray(results.data)
+              ? results.data.map((r, index) => ({ ...r, gridIndex: index }))
+              : results.data;
+            cardDetail.gridData.dataSource = resultsData;
+            cardDetail.chartData.dataSource = resultsData;
+            cardDetail.counter = results.data.length;
+            return cardDetail;
           }
-          const resultsData = Array.isArray(results.data)
-            ? results.data.map((r, index) => ({ ...r, gridIndex: index }))
-            : results.data;
-          cardDetail.gridData.dataSource = resultsData;
-          cardDetail.chartData.dataSource = resultsData;
-          cardDetail.counter = results.data.length;
-          return cardDetail;
         })
       );
   }

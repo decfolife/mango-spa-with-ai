@@ -4,18 +4,10 @@
   type="card"
 ></crem-skeleton>
 
-<div *ngIf="errorLoading">
-  <div class="center" style="margin-top: 20px">
-    <h2>Cannot load form</h2>
-    <section>
-      <div class="well">
-        <h3>{{ userMessage }}</h3>
-      </div>
-    </section>
-  </div>
-</div>
-
-<div *ngIf="!errorLoading && !reload" id="df-formContainer-formContainer">
+<div
+  *ngIf="(!errorLoading && !reload) || renderFormError"
+  id="df-formContainer-formContainer"
+>
   <div id="scroll-to-top-div"></div>
   <form [formGroup]="form" [ngClass]="{ 'df-editModeOn': editMode }">
     <div id="dynamic-forms-container">
@@ -29,25 +21,33 @@
           [customFilters]="false"
           [statusPill]="statusPillInfo"
         >
-          <div actions class="page-header__actions">
+          <div actions class="page-header__actions" *ngIf="!errorLoading">
+            <!-- View Legacy Page -->
             <a
-              class="legacy-page-link"
+              class="legacy-page-link color-primary font-size-eyebrow"
+              id="df-legacyLink"
               target="_blank"
               [href]="externalCremLink"
               rel="noopener"
-              >for legacy page, click me</a
+              [attr.title]="'Visit Legacy Page'"
+              >View Legacy Page ↗</a
             >
-            <crem-button
+
+            <!-- Alerts Buttons -->
+            <mango-alerts-root
+              [leaseAbstractId]="objectId"
+              id="df-leaseAlertsBtn"
+              [cremDataId]
               *ngIf="
                 isRenderForm &&
                 form.get('objectType').value.toLowerCase().trim() === 'lease'
               "
-              [id]="'dynamic-forms-alerts-btn'"
-              [text]="'Alerts (2)'"
-              [btnStyle]="'stroked'"
-              [color]="'danger'"
-            ></crem-button>
+            >
+            </mango-alerts-root>
+
+            <!-- Design Mode -->
             <crem-button
+              [dataId]
               *ngIf="isRenderForm && false"
               [id]="'dynamic-forms-design-btn'"
               [text]="'Design Mode'"
@@ -57,6 +57,8 @@
               [class]="'df-design-mode'"
             >
             </crem-button>
+
+            <!-- Add Section -->
             <crem-button
               *ngIf="!isRenderForm"
               [id]="'dynamic-forms-add-section-btn'"
@@ -65,31 +67,53 @@
               >Add Section</crem-button
             >
             <mat-menu #AddSectionMenu="matMenu">
-              <button mat-menu-item [matMenuTriggerFor]="ExistingSectionMenu">
+              <button
+                mat-menu-item
+                [matMenuTriggerFor]="ExistingSectionMenu"
+                id="df-menu-existingSection"
+              >
                 Existing Section
               </button>
-              <button mat-menu-item [matMenuTriggerFor]="NewSectionMenu">
+              <button
+                mat-menu-item
+                [matMenuTriggerFor]="NewSectionMenu"
+                id="df-menu-newSection"
+              >
                 New Section
               </button>
             </mat-menu>
-            <mat-menu #NewSectionMenu="matMenu">
-              <button mat-menu-item (click)="createNewSection(1)">
+            <mat-menu #NewSectionMenu="matMenu" id="df-newSectionMenu">
+              <button
+                mat-menu-item
+                (click)="createNewSection(1)"
+                id="df-newSecMenu-oneCol"
+              >
                 1 Column
               </button>
-              <button mat-menu-item (click)="createNewSection(2)">
+              <button
+                mat-menu-item
+                (click)="createNewSection(2)"
+                id="df-newSecMenu-twoCol"
+              >
                 2 Columns
               </button>
-              <button mat-menu-item (click)="createNewSection(0)">
+              <button
+                mat-menu-item
+                (click)="createNewSection(0)"
+                id="df-newSecMenu-widget"
+              >
                 Widget
               </button>
             </mat-menu>
             <mat-menu
+              id="df-existingSectionMenu"
               class="existing-section-menu"
               #ExistingSectionMenu="matMenu"
               (click)="$event.stopPropagation()"
             >
               <form (click)="$event.stopPropagation()">
                 <cs-search
+                  [id]="df - existingMenu - search"
                   class="df-search"
                   #SearchBox
                   [placeholder]="'Search...'"
@@ -122,8 +146,11 @@
                 >
               </form>
             </mat-menu>
+
+            <!-- Actions Dropdown -->
             <div class="dfActions">
               <crem-button
+                [disabled]="disableSaveAndApply"
                 [type]="'secondary'"
                 class="df-actionsButton"
                 id="df-actionsBtn"
@@ -137,6 +164,7 @@
                   >arrow_drop_down</mat-icon
                 >
               </crem-button>
+
               <mat-menu #dfActionsMenu="matMenu" class="df-actionsMenu">
                 <ng-container
                   *ngFor="
@@ -148,77 +176,123 @@
                     type="button"
                     mat-menu-item
                     class="df-actionsMenuBtn"
-                    id="pt-copyTransaction"
+                    id="{{ 'df-actionsMenuBtn-' + i }}"
                     (click)="performFormAction(action)"
                   >
                     <span>{{ action.formActionLabel }}</span>
                   </button>
                 </ng-container>
+                <hr />
+                <button
+                  type="button"
+                  mat-menu-item
+                  class="df-actionsMenuBtn"
+                  id="pt-expand-all"
+                  (click)="toggleAllCards(true)"
+                >
+                  <span>Expand All</span>
+                </button>
+                <button
+                  mat-menu-item
+                  type="button"
+                  class="df-actionsMenuBtn"
+                  id="pt-expand-all"
+                  (click)="toggleAllCards(false)"
+                >
+                  <span>Collapse All</span>
+                </button>
               </mat-menu>
             </div>
 
             <!-- RenderForm buttons -->
             <span *ngFor="let actionButton of buttonFormActions$ | async">
               <crem-button
-                *ngIf="isRenderForm"
+                *ngIf="
+                  isRenderForm &&
+                  ((objectTypeId != 11 && objectTypeId != 5) ||
+                    (objectTypeId == 11 && companyModuleUser.hasAddRights) ||
+                    (objectTypeId == 5 && contactModuleUser.hasAddRights))
+                "
                 class="df-headerActionsButton"
                 [id]="actionButton.id"
                 [text]="actionButton.text"
+                [icon]="
+                  ((actionButton.text | lowercase) == 'save' ||
+                    (actionButton.text | lowercase) == 'apply') &&
+                  disableSaveAndApply &&
+                  actionButtonText == actionButton.text
+                    ? 'faSpinner'
+                    : ''
+                "
+                [iconAnimation]="
+                  ((actionButton.text | lowercase) == 'save' ||
+                    (actionButton.text | lowercase) == 'apply') &&
+                  disableSaveAndApply &&
+                  actionButtonText == actionButton.text
+                    ? 'spin'
+                    : ''
+                "
                 [btnStyle]="'flat'"
                 [color]="actionButton.color"
                 (click)="onActionButtonClick(actionButton.text)"
+                [disabled]="disableSaveAndApply"
               ></crem-button>
             </span>
-            <!-- End RenderForm buttons -->
 
             <!-- Design mode buttons -->
-            <crem-button
-              *ngIf="!isRenderForm && editMode"
-              [id]="'dynamic-forms-cancel-btn'"
-              [text]="'Cancel'"
-              [btnStyle]="'flat'"
-              [color]="'secondary'"
-              (click)="toggleEditViewMode(); $event.preventDefault()"
-            ></crem-button>
-            <crem-button
-              *ngIf="!isRenderForm && editMode"
-              [id]="'dynamic-forms-apply-btn'"
-              [text]="'Apply'"
-              [btnStyle]="'flat'"
-              [color]="'secondary'"
-            ></crem-button>
-            <crem-button
-              *ngIf="!isRenderForm && !editMode"
-              [id]="'dynamic-forms-edit-btn'"
-              [text]="'Edit'"
-              [btnStyle]="'flat'"
-              [color]="'primary'"
-              (click)="toggleEditViewMode(); $event.preventDefault()"
-            ></crem-button>
-            <crem-button
-              *ngIf="!isRenderForm && editMode"
-              [id]="'dynamic-forms-save-btn'"
-              [text]="'Save'"
-              [btnStyle]="'flat'"
-              [color]="'primary'"
-              [disabled]="!form.dirty"
-              (click)="saveForm(); $event.preventDefault()"
-            ></crem-button>
+            <ng-container *ngIf="!isRenderForm && editMode">
+              <crem-button
+                [id]="'dynamic-forms-cancel-btn'"
+                [text]="'Cancel'"
+                [btnStyle]="'flat'"
+                [color]="'secondary'"
+                (click)="toggleEditViewMode(); $event.preventDefault()"
+              ></crem-button>
+              <crem-button
+                [id]="'dynamic-forms-apply-btn'"
+                [text]="'Apply'"
+                [btnStyle]="'flat'"
+                [color]="'secondary'"
+              ></crem-button>
+              <crem-button
+                [id]="'dynamic-forms-edit-btn'"
+                [text]="'Edit'"
+                [btnStyle]="'flat'"
+                [color]="'primary'"
+                (click)="toggleEditViewMode(); $event.preventDefault()"
+              ></crem-button>
+              <crem-button
+                [id]="'dynamic-forms-save-btn'"
+                [text]="'Save'"
+                [btnStyle]="'flat'"
+                [color]="'primary'"
+                [disabled]="!form.dirty"
+                (click)="saveForm(); $event.preventDefault()"
+              ></crem-button>
+            </ng-container>
             <!-- End Design mode buttons -->
-            <crem-icon
+
+            <!-- Bookmark -->
+            <crem-button
+              [dataId]
               *ngIf="allowedObjectTypes.includes(objectTypeId)"
+              id="df-bookMarkBtn"
               [icon]="'faBookmark'"
-              [pack]="'solid'"
+              [iconPack]="'solid'"
               (click)="addBookmark(); $event.preventDefault()"
-              [color]="'primary'"
+              [color]="'secondary'"
               [title]="'Click to create bookmark.'"
-            >
-            </crem-icon>
+              [ariaLabel]="'Click to create bookmark.'"
+            ></crem-button>
           </div>
         </crem-page-header>
       </div>
       <span class="df-anchor-ref-spacer-heading" id="{{ getFormId() }}"></span>
-      <div class="dynamic-form-content" #dynamicFormContent>
+      <div
+        class="dynamic-form-content"
+        #dynamicFormContent
+        *ngIf="!renderFormError"
+      >
         <div class="row">
           <div
             *ngFor="
@@ -233,6 +307,7 @@
               id="{{ getFormSectionId(section) }}"
             ></span>
             <mango-dynamic-form-section
+              [id]="'df-formSection-' + section.formSectionID"
               [section]="section"
               [form]="form"
               [formGroupName]="'section' + section.formSectionID"
@@ -246,9 +321,12 @@
               (hasParentObjectLinkerChange)="
                 handleHasParentObjectLinkerChange($event)
               "
+              (loadNextSections)="loadNextSections()"
+              [isExpanded]="section.formSectionDisplayHeading && expandAll"
             ></mango-dynamic-form-section>
             <div
               appAmIVisible
+              [id]="'df-getMoreSectionsafter-' + section.formSectionID"
               (elementVisible)="getMoreSections($event, section.id)"
               [isTargetElement]="section.id === sectionsVisible.length"
             ></div>
@@ -260,10 +338,22 @@
 
   <crem-button
     *ngIf="!isLoading"
+    [id]="'df-scrollToTopBtn'"
     class="scroll-to-top-button"
     type="primary"
     (click)="scrollToTop(); $event.preventDefault()"
   >
     <span>Scroll to Top</span>
   </crem-button>
+</div>
+
+<div *ngIf="errorLoading">
+  <div class="center">
+    <h2 *ngIf="showCannotLoadForm">Cannot load form</h2>
+    <section>
+      <div class="well">
+        <h3>{{ userMessage }}</h3>
+      </div>
+    </section>
+  </div>
 </div>

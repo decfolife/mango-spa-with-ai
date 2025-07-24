@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Dropdown, Metric } from '@mango/data-models/lib-data-models';
+import {
+  Dropdown,
+  Metric,
+  ToastState,
+} from '@mango/data-models/lib-data-models';
 import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -10,6 +14,7 @@ import {
   userSettings,
 } from '../models';
 import { DashboardService } from './dashboard.service';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 
 @Injectable({ providedIn: 'root' })
 export class CardsService {
@@ -28,7 +33,10 @@ export class CardsService {
 
   public dateFormat: string = null;
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private toastService: CremToastService
+  ) {}
 
   // DashboardId is the current dashboard that you are on.
   // filters parameters is all of the selected parameters on the page.
@@ -316,13 +324,23 @@ export class CardsService {
       .getCardDataByElementType(1, cardDetail.id, keyDateParam, selectedFilters)
       .pipe(
         map((results) => {
-          const resultsData = Array.isArray(results.data)
-            ? results.data.map((r, index) => ({ ...r, gridIndex: index }))
-            : results.data;
-          cardDetail.gridData.dataSource = resultsData;
-          cardDetail.chartData.dataSource = resultsData;
-          cardDetail.counter = results.data.length;
-          return cardDetail;
+          if (!results.success) {
+            this.toastService.show(
+              "We're currently unable to retrieve data. Please try again shortly.",
+              'Error',
+              ToastState.ERROR
+            );
+
+            return null;
+          } else {
+            const resultsData = Array.isArray(results.data)
+              ? results.data.map((r, index) => ({ ...r, gridIndex: index }))
+              : results.data;
+            cardDetail.gridData.dataSource = resultsData;
+            cardDetail.chartData.dataSource = resultsData;
+            cardDetail.counter = results.data.length;
+            return cardDetail;
+          }
         })
       );
   }

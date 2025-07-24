@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { DataService } from '@mango/core-shared';
 import {
   ObjectType,
+  ObjectTypeType,
   RequestType,
   ToastState,
   VALIDATION_ERROR,
@@ -67,12 +68,20 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
   saveClicked: boolean;
   public premiseObjectName: string = 'Premise Name';
   public premiseTypesDropdownItems: any = [];
+  public showPortfolio: boolean = true;
+  public useBuildingDataSource: boolean = true;
+  public useAutoSelectPremise: boolean | undefined;
+  public useAutoSelectBuilding: boolean = true;
+  hasPassedCenter = !!this.data.objectName;
   selectedPremiseType: any = null;
   selectedPremise: any = null;
+  savedAPremise = false; // true when "save and new" used at lease once
+
   @ViewChild('premisePortfolioId') premisePortfolioDropdown: DropdownComponent;
   @ViewChild('buildingId') premiseBuildingDropdown: DropdownComponent;
   @ViewChild('premiseType') premiseTypeDropdown: DropdownComponent;
   @ViewChild('premiseName') premiseNameTextBox: InputComponent;
+
   constructor(
     public dialogRef: MatDialogRef<AddPremiseModalComponent>,
     private formWizardService: FormWizardService,
@@ -83,6 +92,8 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
     public data: {
       objectTypeName: string;
       objectTypeId: number;
+      objectId: number;
+      objectName: string;
     }
   ) {
     this.initBuildingsDataSource();
@@ -133,6 +144,21 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
   }
 
   initBuildingsDataSource() {
+    if (this.hasPassedCenter) {
+      const result = {
+        data: [
+          {
+            buildingID: this.data.objectId,
+            buildingName: this.data.objectName,
+          },
+        ],
+      };
+      this.buildingDropdownItems = result.data;
+      this.onBuildingChanged(result.data);
+      this.useBuildingDataSource = false;
+      return;
+    }
+
     this.buildingsDataSource = new DataSource({
       load: async (loadOptions) => {
         try {
@@ -198,15 +224,27 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
   }
 
   setupAddPremiseFormGroup() {
+    const NONE_SELECTED = '-1';
     this.addPremiseFormGroup = new FormGroup({
-      portfolio: new FormControl('', [Validators.required]),
-      building: new FormControl('', [Validators.required]),
+      portfolio: new FormControl(this.hasPassedCenter ? NONE_SELECTED : '', [
+        Validators.required,
+      ]),
+      building: new FormControl(
+        this.hasPassedCenter ? this.data.objectId : '',
+        [Validators.required]
+      ),
       premiseName: new FormControl('', [Validators.required]),
       premiseType: new FormControl('', [Validators.required]),
     });
+    if (this.data.objectTypeId === ObjectType.PREMISE) {
+      this.showPortfolio = false;
+    }
   }
 
   public getPortfolioDropdownData() {
+    if (!this.showPortfolio) {
+      return;
+    }
     this.subscriptions.add(
       this.formWizardService
         .getRenderSelect('', RequestType.PORTFOLIO_LIST)
@@ -221,7 +259,9 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
       this.selectedPortfolio = null;
     } else {
       this.selectedPortfolio = e[0].companyID;
-      this.buildingsDataSource.reload();
+      if (this.useBuildingDataSource) {
+        this.buildingsDataSource.reload();
+      }
     }
   }
 
@@ -246,6 +286,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
         .subscribe((result) => {
           this.premiseObjectName = result.data[0].objectTypeTypeName;
           this.premiseTypesDropdownItems = result.data;
+          this.useAutoSelectPremise = result.data.length === 1;
           this.loading = false; // This prevents from seeing the change of title while the PREMISE TYPE ID is being resolved
         })
     );
@@ -261,7 +302,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
 
   public close() {
     if (!this.newPremiseSaved) {
-      this.dialogRef.close();
+      this.dialogRef.close(this.savedAPremise);
     }
   }
 
@@ -274,7 +315,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
         this.formWizardService
           .addPremise(
             this.selectedBuilding,
-            this.selectedPortfolio,
+            ObjectTypeType.Building,
             form.get('premiseName').value,
             this.selectedPremiseType
           )
@@ -286,7 +327,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
                 false
               );
               this.saveClicked = false;
-              this.dialogRef.close();
+              this.dialogRef.close(true);
             } else {
               this.displayMessage(
                 'An error has occurred. Please try again.',
@@ -321,7 +362,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
         this.formWizardService
           .addPremise(
             this.selectedBuilding,
-            this.selectedPortfolio,
+            ObjectTypeType.Building,
             form.get('premiseName').value,
             this.selectedPremiseType
           )
@@ -333,6 +374,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
                 false
               );
               this.saveClicked = false;
+              this.savedAPremise = true;
               this.resetInputFields();
             } else {
               this.displayMessage(
@@ -360,7 +402,18 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
   }
 
   resetInputFields() {
-    this.addPremiseFormGroup.reset();
+    let premiseDefaultValues = null;
+
+    if (this.hasPassedCenter) {
+      premiseDefaultValues = {
+        portfolio: this.addPremiseFormGroup.get('portfolio').value,
+        building: this.data.objectName,
+      };
+    }
+    this.addPremiseFormGroup.reset({
+      ...premiseDefaultValues,
+      premiseType: this.addPremiseFormGroup.get('premiseType').value,
+    });
     this.premisePortfolioDropdown.clearSelectBox();
     this.premiseBuildingDropdown.clearSelectBox();
     if (this.premiseTypeDropdown != undefined)
@@ -378,7 +431,7 @@ export class AddPremiseModalComponent implements OnInit, OnDestroy {
         this.formWizardService
           .addPremise(
             this.selectedBuilding,
-            this.selectedPortfolio,
+            ObjectTypeType.Building,
             form.get('premiseName').value,
             this.selectedPremiseType
           )

@@ -3,119 +3,310 @@
   [closeIconVisible]="true"
   [closeOrCancelButtonText]="'Cancel'"
   [customFooter]="true"
+  [id]="'dynamic-' + (sectionName | slugify)"
+  [closeDialogResult]="savedOnce"
+  [loading]="{
+    type: 'form',
+    instances: 3,
+    show: _isLoading,
+    headerLoading: true,
+  }"
 >
+  <!-- Modal Content -->
   <div modalContent class="body-content">
-    <div modalContent id="dynamicModal-content">
-      <div *ngFor="let d of popupData">
+    <div modalContent id="dynamic-modal-content">
+      <ng-container *ngIf="dynamicForm">
         <form
-          crem-form
           id="new-dynamic-form"
           layout="vertical"
           [formGroup]="dynamicForm"
           class="add-dynamic-form"
         >
-          <crem-form-item>
-            <div class="form-items">
-              <div class="dynamicLabel">
-                <crem-form-label>
-                  {{
-                    d.formItemSectionDetail.formItemLabel + ' : '
-                  }}</crem-form-label
-                ><span
-                  *ngIf="
-                    d.formItemSectionDetail.formItemMandatory.toLowerCase() ===
-                    'yes'
+          <ng-container *ngFor="let d of popupData; trackBy: trackByFormItemId">
+            <crem-form-item *ngIf="d.formItemType.formItemType !== 'Hidden'">
+              <div class="form-items">
+                <!-- Form Label Section -->
+                <div class="dynamicLabel">
+                  <crem-form-label>
+                    {{ d.formItemSectionDetail.formItemLabel }}
+                  </crem-form-label>
+                  <span
+                    *ngIf="
+                      d.formItemSectionDetail?.formItemMandatory
+                        | isFieldRequired
+                    "
+                    class="color-danger"
+                    >*</span
+                  >
+                </div>
+
+                <!-- Form Input Section -->
+                <div
+                  [ngSwitch]="
+                    d.formItemType.formItemTypeID
+                      | getFieldType
+                        : d.formItemSectionDetail.dataTypeID
+                        : d.formItemSectionDetail.formItemLabel
                   "
-                  class="color-danger"
-                  >*</span
+                  class="dynamicInput"
                 >
+                  <!-- Dropdown Input -->
+                  <ng-container *ngSwitchCase="'LIST_BOX'">
+                    <crem-dropdown
+                      *ngIf="!isDropdownValuesLoading"
+                      [id]="'df-dropdown' + d.formItemID && '-' + d.formItemID"
+                      [dataSource]="dropdownData[d.formItemID]"
+                      [displayExpr]="'display'"
+                      [valueExpr]="'value'"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [containerized]="false"
+                      [readOnlyStyle]="'text-only'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [showClearButton]="false"
+                      [initialSelectedValue]="
+                        getDropdownInitialValue(d.formItemID)
+                      "
+                      (selectedItems)="
+                        onDropdownValueChanged(
+                          $event,
+                          d.formItemSectionDetail.formItemJavaScript,
+                          d,
+                          false
+                        )
+                      "
+                    ></crem-dropdown>
+                  </ng-container>
+
+                  <!-- Textarea Input -->
+                  <ng-container *ngSwitchCase="'COMMENT_AREA'">
+                    <crem-input
+                      [id]="'df-textArea-' + d.formItemID && '-' + d.formItemID"
+                      [showHint]="true"
+                      [inputType]="'textarea'"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [minLengthField]="
+                        d.formItemMinValue !== 0
+                          ? d.formItemMinValue
+                          : undefined
+                      "
+                      [maxLengthField]="
+                        d.formItemMaxValue !== 0
+                          ? d.formItemMaxValue
+                          : undefined
+                      "
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+
+                  <!-- Date Picker Input -->
+                  <ng-container *ngSwitchCase="'DATE'">
+                    <crem-date-picker
+                      [id]="
+                        'df-datePicker-' + d.formItemID && '-' + d.formItemID
+                      "
+                      [value]="dateInputList[d.formItemID]"
+                      [isRequired]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [useMaskBehavior]="true"
+                      [showClearButton]="true"
+                      [inputId]="d.formItemFriendlyName"
+                      [showDefaultValidationTooltip]="false"
+                      [formControlName]="d.formItemFriendlyName"
+                      [dateFormat]="getDateFormat(d)"
+                      (changeEvent)="onDateChanged($event, d)"
+                    ></crem-date-picker>
+                  </ng-container>
+
+                  <!-- Simple Number Input -->
+                  <ng-container *ngSwitchCase="'NUMBER'">
+                    <crem-input
+                      [id]="'df-input-' + d.formItemID && '-' + d.formItemID"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [showHint]="true"
+                      [showLabel]="false"
+                      [showInfo]="false"
+                      [inputType]="'text'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      [mask]="
+                        {}
+                          | maskInput
+                            : d.formItemSectionDetail?.dataTypeFormatString
+                            : 'NUMBER'
+                      "
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+
+                  <!-- Currency Input -->
+                  <ng-container *ngSwitchCase="'CURRENCY'">
+                    <crem-input
+                      [id]="'df-input-' + d.formItemID && '-' + d.formItemID"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [showHint]="true"
+                      [showLabel]="false"
+                      [showInfo]="false"
+                      [inputType]="'text'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      [mask]="
+                        {}
+                          | maskInput
+                            : d.formItemSectionDetail?.dataTypeFormatString
+                            : 'NUMBER'
+                      "
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+
+                  <!-- Percent Input -->
+                  <ng-container *ngSwitchCase="'PERCENT'">
+                    <crem-input
+                      [id]="'df-input-' + d.formItemID && '-' + d.formItemID"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [showHint]="true"
+                      [showLabel]="false"
+                      [showInfo]="false"
+                      [inputType]="'text'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      [mask]="
+                        {}
+                          | maskInput
+                            : d.formItemSectionDetail.dataTypeFormatString
+                            : 'PERCENT'
+                      "
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+
+                  <!-- Email Input -->
+                  <ng-container *ngSwitchCase="'EMAIL'">
+                    <crem-input
+                      [id]="'df-input-' + d.formItemID && '-' + d.formItemID"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [showHint]="true"
+                      [showLabel]="false"
+                      [showInfo]="false"
+                      [inputType]="'email'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+
+                  <!-- Default Simple Text Input -->
+                  <ng-container *ngSwitchDefault>
+                    <crem-input
+                      [id]="'df-input-' + d.formItemID && '-' + d.formItemID"
+                      [required]="
+                        d.formItemSectionDetail.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [showHint]="true"
+                      [showLabel]="false"
+                      [showInfo]="false"
+                      [inputType]="'text'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [(value)]="textInputList[d.formItemID]"
+                      (valueChange)="onNewInput($event, d)"
+                    ></crem-input>
+                  </ng-container>
+                </div>
               </div>
-              <div
-                class="dynamicInput"
-                *ngIf="d.formItemType.formItemTypeID === 1"
-              >
-                <crem-dropdown
-                  *ngIf="!isDropdownValuesLoading"
-                  [dataSource]="dropdownData[d.formItemID]"
-                  [displayExpr]="'display'"
-                  [valueExpr]="'value'"
-                  [containerized]="false"
-                  [readOnlyStyle]="'text-only'"
-                  formControlName="d.formItemFriendlyName"
-                  [showClearButton]="false"
-                  (selectedItems)="
-                    onDropdownValueChanged(
-                      $event,
-                      d.formItemSectionDetail.formItemJavaScript,
-                      d
-                    )
-                  "
-                  [initialSelectedValue]="
-                    dropdownData[d.formItemID].length > 0
-                      ? dropdownData[d.formItemID][0].value
-                      : ''
-                  "
-                ></crem-dropdown>
-              </div>
-              <div
-                class="dynamicInput"
-                *ngIf="d.formItemType.formItemTypeID === 2"
-              >
-                <crem-input
-                  id="d.formItemFriendlyName"
-                  [showHint]="false"
-                  [showLabel]="false"
-                  [showInfo]="false"
-                  [inputType]="'text'"
-                  required="true"
-                  formControlName="d.formItemFriendlyName"
-                  [(value)]="textInputList[d.formItemID]"
-                  (valueChange)="onNewInput($event, d)"
-                ></crem-input>
-              </div>
-              <div
-                class="dynamicInput"
-                *ngIf="d.formItemType.formItemTypeID === 3"
-              >
-                <crem-input
-                  id="d.formItemFriendlyName"
-                  [inputType]="'textarea'"
-                  [formControlName]="d.formItemFriendlyName"
-                  (valueChange)="onNewInput($event, d)"
-                ></crem-input>
-              </div>
-            </div>
-          </crem-form-item>
+            </crem-form-item>
+          </ng-container>
         </form>
-      </div>
+      </ng-container>
     </div>
   </div>
+
+  <!-- Modal Footer -->
   <div modalFooter class="footerContent">
     <div class="footerLeftControls cl-userMsg"></div>
     <div id="buttonTemplate" class="footerRightControls">
       <crem-button
+        *ngIf="isEditMode"
         type="secondary"
-        id="cl-cancelBtnId"
+        [id]="'df-deleteBtn'"
+        class="cl-cancelChanges cl-btn"
+        [disabled]="isAnyActionLoading()"
+        (click)="onDelete()"
+      >
+        Delete
+      </crem-button>
+
+      <crem-button
+        type="secondary"
+        [id]="'df-cancelBtn'"
         class="cl-cancelChanges cl-btn"
         (click)="closeModal()"
       >
         Cancel
       </crem-button>
+
       <crem-button
+        *ngIf="!data.isEdit"
         type="secondary"
-        id="cl-saveNewBtnId"
+        [id]="'df-saveNewBtn'"
         class="cl-copyLease cl-btn"
-        (click)="save($event)"
+        [icon]="_isSavingAndNew ? 'faSpinner' : ''"
+        [iconPack]="_isSavingAndNew ? 'solid' : ''"
+        [iconAnimation]="_isSavingAndNew ? 'spin' : ''"
+        [disabled]="isAnyActionLoading()"
+        [dataId]="'save_new'"
+        (click)="saveAndNew()"
       >
         Save & New
       </crem-button>
+
       <crem-button
-        type="primary"
-        id="cl-saveBtnId"
+        [type]="isSubObject === true ? 'secondary' : 'primary'"
+        [id]="'df-saveBtn'"
         class="cl-copyLease cl-btn"
-        (click)="save($event)"
+        [icon]="_isSaving ? 'faSpinner' : ''"
+        [iconPack]="_isSaving ? 'solid' : ''"
+        [iconAnimation]="_isSaving ? 'spin' : ''"
+        [disabled]="isAnyActionLoading()"
+        (click)="save()"
       >
         Save
+      </crem-button>
+
+      <crem-button
+        *ngIf="isSubObject"
+        type="primary"
+        [id]="'df-launchBtn'"
+        class="cl-copyLease cl-btn"
+        [icon]="_isSaving ? 'faSpinner' : ''"
+        [iconPack]="_isSaving ? 'solid' : ''"
+        [iconAnimation]="_isSaving ? 'spin' : ''"
+        [disabled]="isAnyActionLoading()"
+        (click)="onLaunch($event)"
+      >
+        Launch
       </crem-button>
     </div>
   </div>

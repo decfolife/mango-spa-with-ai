@@ -1,9 +1,20 @@
-import { MatChipSelectionChange, MatChipsModule } from '@angular/material/chips';
+import {
+  MatChipSelectionChange,
+  MatChipsModule,
+} from '@angular/material/chips';
 import { Component, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ReportsService } from '@reports/services/reports.service';
 import { forkJoin, Observable, of, Subscription } from 'rxjs';
-import { ButtonModule, CremFormsModule, DynamicFormModule, IconModule, InputComponent, LoaderModule, ModalModule } from '@mango/ui-shared/lib-ui-elements';
+import {
+  ButtonModule,
+  CremFormsModule,
+  DynamicFormModule,
+  IconModule,
+  InputComponent,
+  LoaderModule,
+  ModalModule,
+} from '@mango/ui-shared/lib-ui-elements';
 import { ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { VerticalStepperModule } from 'libs/ui-shared/lib-ui-elements/src/lib/vertical-stepper/vertical-stepper.module';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,7 +40,7 @@ import { debounceTime, switchMap } from 'rxjs/operators';
     DynamicFormModule,
     InputComponent,
     CremFormsModule,
-    MatIconModule
+    MatIconModule,
   ],
 })
 export class AssignTagsComponent implements OnInit, OnDestroy {
@@ -54,7 +65,7 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
     public data: {
       reportId: number;
       reportType: string;
-      reportAssignedTags: ReportTag[]
+      reportAssignedTags: ReportTag[];
     }
   ) {}
 
@@ -70,11 +81,13 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
           debounceTime(250),
           switchMap((input) => {
             if (input) {
-              var data = this.reportTags.filter(x => x.reportTag.toLowerCase().includes(input.toLowerCase()))
-              return of(data)
+              var data = this.reportTags.filter((x) =>
+                x.reportTag.toLowerCase().includes(input.toLowerCase())
+              );
+              return of(data);
             }
 
-            return of(this.reportTags)
+            return of(this.reportTags);
           })
         )
         .subscribe(
@@ -120,12 +133,14 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
     let options = [];
 
     for (var tag of tags) {
-      let assignedTag = this.data.reportAssignedTags.find(x => x.reportTag === tag.reportTag);
+      let assignedTag = this.data.reportAssignedTags.find(
+        (x) => x.reportTag === tag.reportTag
+      );
       let opt: ReportTagOption = {
         reportTagID: tag.reportTagID,
         reportTag: tag.reportTag,
-        assigned: assignedTag ? true : false
-      }
+        assigned: assignedTag ? true : false,
+      };
       options.push(opt);
     }
 
@@ -138,10 +153,14 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
     const isSelected = event.selected;
 
     // For selections/unselections related to the source data
-    let assignedTag = this.data.reportAssignedTags.find(x => x.reportTag === tag.reportTag);
+    let assignedTag = this.data.reportAssignedTags.find(
+      (x) => x.reportTag === tag.reportTag
+    );
     if (assignedTag) {
       if (isSelected) {
-        this.removedTags = this.removedTags.filter(x => x.reportTagID !== tag.reportTagID);
+        this.removedTags = this.removedTags.filter(
+          (x) => x.reportTagID !== tag.reportTagID
+        );
       } else {
         this.removedTags.push(tag);
       }
@@ -152,7 +171,9 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
     if (isSelected) {
       this.selectedTags.push(tag);
     } else {
-      this.selectedTags = this.selectedTags.filter(x => x.reportTagID !== tag.reportTagID);
+      this.selectedTags = this.selectedTags.filter(
+        (x) => x.reportTagID !== tag.reportTagID
+      );
     }
   }
 
@@ -160,7 +181,7 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
     this.userMsg = '';
 
     if (this.removedTags.length === 0 && this.selectedTags.length === 0) {
-      this.userMsg = "No updates have been made.";
+      this.userMsg = 'No updates have been made.';
       return;
     }
 
@@ -171,15 +192,17 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
 
     if (this.removedTags.length > 0) {
       unAssignTags$ = this.reportsService.unAssignReportTags(
-        this.data.reportId, 
-        this.removedTags.map(x => x.reportTagID));
+        this.data.reportId,
+        this.removedTags.map((x) => x.reportTagID)
+      );
     }
 
     if (this.selectedTags.length > 0) {
       assignTags$ = this.reportsService.assignReportTags(
-        this.data.reportId, 
-        this.data.reportType, 
-        this.selectedTags)
+        this.data.reportId,
+        this.data.reportType,
+        this.selectedTags
+      );
     }
 
     forkJoin({
@@ -187,9 +210,10 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
       assignTags: assignTags$,
     }).subscribe((result: any) => {
       this.isLoading = false;
-      let error: string = "";
+      let error: string = '';
 
-      let hasChanges = result.unAssignTags?.success || result.assignTags?.success;
+      let hasChanges =
+        result.unAssignTags?.success || result.assignTags?.success;
       this.hasSavedChanges = hasChanges ? true : false;
 
       if (result.unAssignTags && !result.unAssignTags.success) {
@@ -216,7 +240,7 @@ export class AssignTagsComponent implements OnInit, OnDestroy {
 
   public close() {
     this.dialogRef.close({
-      hasSavedChanges: this.hasSavedChanges
+      hasSavedChanges: this.hasSavedChanges,
     });
   }
 }

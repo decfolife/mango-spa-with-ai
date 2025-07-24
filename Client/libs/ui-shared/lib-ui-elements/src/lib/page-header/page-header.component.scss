@@ -1,13 +1,14 @@
 @use 'styles' as *;
 
 .page-header {
-  @include costar(background-color, background);
-  padding: 5px;
   width: 100%;
   display: flex;
   justify-content: flex-start;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  @include costar(padding-top, 2);
+  @include costar(padding-bottom, 2);
+  @include costar(padding-left, 4);
+  @include costar(padding-right, 4);
+  @include costar(background-color, background);
 
   &__body {
     display: flex;

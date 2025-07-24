@@ -1,0 +1,77 @@
+<crem-modal
+  modalId="df-copyLease-modal"
+  [modalTitle]="'Copy Lease'"
+  [closeIconVisible]="true"
+  [primaryFooterButtonText]="'Copy'"
+  [closeOrCancelButtonText]="'Cancel'"
+  [customFooter]="true"
+  [primaryFooterButtonEnabledDisabled]="footerButtonDisabled"
+  (primaryButtonAction)="copyLease()"
+>
+  <div modalContent class="body-content">
+    <div>Copy: {{ leaseName }}</div>
+    <div class="cl-buildings">
+      <div class="cl-buildings-label flex30">{{ buildingObjectTypeName }}:</div>
+      <crem-dropdown
+        class="flex70"
+        id="df-copyLease-buildingList"
+        dropDownContainerCustomClass="df-copyLease-buildings"
+        [dataSource]="availableBuildings"
+        [showClearButton]="false"
+        [showColumnHeader]="false"
+        displayExpr="building"
+        valueExpr="buildingID"
+        [allowSearch]="true"
+        [useSelectBox]="true"
+        (selectedItems)="onBuildingSelectionChanged($event)"
+      >
+      </crem-dropdown>
+    </div>
+    <div
+      class="cl-building-premises"
+      [ngClass]="{ 'cl-hidePremise': hidePremise }"
+    >
+      <div class="cl-premises-label flex30">{{ premiseObjectTypeName }}:</div>
+      <crem-dropdown
+        class="flex70"
+        id="df-copyLease-buildingPremisesList"
+        dropDownContainerCustomClass="df-copyLease-premises"
+        [dataSource]="availablePremises"
+        [showClearButton]="false"
+        [showColumnHeader]="false"
+        displayExpr="premiseID"
+        valueExpr="premiseID"
+        [allowSearch]="true"
+        [useSelectBox]="true"
+        (selectedItems)="onPremiseSelectionChanged($event)"
+      >
+      </crem-dropdown>
+    </div>
+    <crem-loader class="cl-loader" *ngIf="loadingIndicator"></crem-loader>
+  </div>
+  <div modalFooter class="footerContent">
+    <div footerLeftControls class="footerLeftControls cl-userMsg">
+      {{ userMsg }}
+    </div>
+    <div footerRightControls id="buttonTemplate" class="footerRightControls">
+      <crem-button
+        type="secondary"
+        id="cl-cancelBtnId"
+        class="cl-cancelChanges cl-btn"
+        (click)="closeModal()"
+      >
+        Cancel
+      </crem-button>
+      <crem-button
+        [title]="copyBtnTitle"
+        type="primary"
+        id="cl-copyBtnId"
+        class="cl-copyLease cl-btn"
+        [disabled]="getCopyButtonStatus()"
+        (click)="copyLease()"
+      >
+        Copy
+      </crem-button>
+    </div>
+  </div>
+</crem-modal>

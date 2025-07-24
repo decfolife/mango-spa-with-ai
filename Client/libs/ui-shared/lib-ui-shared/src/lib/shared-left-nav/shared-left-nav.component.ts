@@ -43,12 +43,23 @@ export class SharedLeftNavComponent implements OnChanges {
     for (const propName in changes) {
       if (propName.toLowerCase() === 'navigationlinks') {
         this.getCategorizeLinks();
+        this.setActiveLinkFromIsCurrentlyActiveLink();
         break;
       } else if (propName.toLowerCase() === 'activelink') {
-        const navLink: SharedLeftNavLink | undefined =
-          this.navigationLinks?.filter(
+        let navLink: SharedLeftNavLink | undefined = undefined;
+
+        if (
+          !!changes.activeLink.currentValue &&
+          changes.activeLink.currentValue.trim() !== ''
+        ) {
+          navLink = this.navigationLinks?.filter(
             (x) => x.name === changes.activeLink.currentValue
           )[0];
+        } else {
+          navLink = this.returnIsCurrentlyActiveLinkIfSet();
+          this.setActiveLinkFromIsCurrentlyActiveLink(navLink);
+        }
+
         if (navLink && navLink.moduleID && navLink.dynamicName) {
           const id =
             'left-nav__' +
@@ -75,12 +86,72 @@ export class SharedLeftNavComponent implements OnChanges {
     );
   }
 
+  private setActiveLinkFromIsCurrentlyActiveLink(
+    navLink: SharedLeftNavLink = null
+  ) {
+    let currentlyActiveLink = navLink;
+
+    if (!!!navLink) {
+      currentlyActiveLink = this.returnIsCurrentlyActiveLinkIfSet();
+    }
+
+    if (!!currentlyActiveLink) {
+      if (!!currentlyActiveLink.category) {
+        this.activeLink = currentlyActiveLink.category;
+      } else {
+        this.activeLink = currentlyActiveLink.name;
+      }
+    }
+  }
+
+  private returnIsCurrentlyActiveLinkIfSet(): SharedLeftNavLink {
+    let foundLink = this.navigationLinks.find(
+      (navlink) =>
+        !!navlink.category &&
+        !!navlink.categoryIsCurrentlyActiveLink &&
+        navlink.categoryIsCurrentlyActiveLink &&
+        !!navlink.isCurrentlyActiveLink &&
+        navlink.isCurrentlyActiveLink
+    );
+    if (!!foundLink) {
+      //Category link is active and single link is active
+      return foundLink;
+    }
+
+    foundLink = this.navigationLinks.find(
+      (navlink) =>
+        !!navlink.category &&
+        !!navlink.categoryIsCurrentlyActiveLink &&
+        navlink.categoryIsCurrentlyActiveLink
+    );
+    if (!!foundLink) {
+      //Category link is active
+      return foundLink;
+    }
+
+    //Single link is active
+    foundLink = this.navigationLinks.find(
+      (navlink) =>
+        !!!navlink.category &&
+        !!navlink.isCurrentlyActiveLink &&
+        navlink.isCurrentlyActiveLink
+    );
+
+    if (!!foundLink) {
+      return foundLink;
+    } else {
+      return null;
+    }
+  }
+
   categorizeNavLinks(navLinks: SharedLeftNavLink[]): NavLinksByCategory[] {
     return navLinks.reduce((acc: NavLinksByCategory[], currentNavLink) => {
       if (!currentNavLink.category) {
         acc.push({
           category: currentNavLink.category,
           categoryHasFlyOutMenu: currentNavLink.categoryHasFlyOutMenu,
+          categoryIsCurrentlyActiveLink:
+            currentNavLink.categoryIsCurrentlyActiveLink,
           categoryLinkUrl: currentNavLink.categoryLinkUrl,
           categorySpaUrl: currentNavLink.categorySpaUrl,
           categorySpaQueryParameters: currentNavLink.categorySpaQueryParameters,
@@ -95,6 +166,8 @@ export class SharedLeftNavComponent implements OnChanges {
           : acc.push({
               category: currentNavLink.category,
               categoryHasFlyOutMenu: currentNavLink.categoryHasFlyOutMenu,
+              categoryIsCurrentlyActiveLink:
+                currentNavLink.categoryIsCurrentlyActiveLink,
               categoryLinkUrl: currentNavLink.categoryLinkUrl,
               categorySpaUrl: currentNavLink.categorySpaUrl,
               categorySpaQueryParameters:
@@ -126,28 +199,35 @@ export class SharedLeftNavComponent implements OnChanges {
     this.expandNav = !this.expandNav;
   }
 
-  onCategoryNavLinkClick(e: any, navLink: SharedLeftNavLink, ) {
+  onCategoryNavLinkClick(e: any, navLink: SharedLeftNavLink) {
     if (navLink.categoryLinkUrl === null) {
       e.stopPropagation();
-    } 
-    else {
+    } else {
       this.onNavLinkClick(navLink);
     }
   }
 
   onNavLinkClick(navLink: SharedLeftNavLink) {
-    if (
-      !navLink.hasOwnProperty('dynamicName') &&
-      navLink.hasOwnProperty('categoryHasFlyOutMenu') &&
-      navLink.categoryHasFlyOutMenu
-    ) {
-      this.activeLink = navLink.category;
-    } else if (navLink.name) {
-      this.activeLink = navLink.name;
-    } else {
-      this.activeLink = navLink.dynamicName;
+    const skipSetActiveLink: boolean =
+      (navLink.hasOwnProperty('subChildLevel') &&
+        !!navLink.subChildLevel &&
+        navLink.subChildLevel > 0) ||
+      navLink.linkUrl.startsWith('#');
+
+    if (!skipSetActiveLink) {
+      if (
+        !navLink.hasOwnProperty('dynamicName') &&
+        navLink.hasOwnProperty('categoryHasFlyOutMenu') &&
+        navLink.categoryHasFlyOutMenu
+      ) {
+        this.activeLink = navLink.category;
+      } else if (navLink.name) {
+        this.activeLink = navLink.name;
+      } else {
+        this.activeLink = navLink.dynamicName;
+      }
     }
-  
+
     this.toActiveLink.emit(this.activeLink);
     this.navigateSpa.emit(navLink);
   }

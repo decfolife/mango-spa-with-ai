@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, HostListener, Input } from '@angular/core';
 import { NgClass, CommonModule } from '@angular/common';
 import { PillType } from '@mango/data-models/lib-data-models';
 import { IconModule } from '../icon';
@@ -15,4 +15,19 @@ export class CremPillComponent {
   @Input() type: PillType;
   @Input() titleOnHover?: string = '';
   @Input() displayLockIcon?: boolean = false;
+  @Input() lockedMessage?: string = '';
+  showLockedMessage = false;
+
+  constructor(private elementRef: ElementRef) {}
+
+  toggleLockedMessage() {
+    this.showLockedMessage = !this.showLockedMessage;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.showLockedMessage = false;
+    }
+  }
 }

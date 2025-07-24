@@ -130,7 +130,7 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
         (clicked) => {
           if (clicked) {
             this.classificationBlur = true;
-            this.jeProfileBlur = this.journalEntryProfileList.length > 0;
+            this.jeProfileBlur = this.journalEntryProfileList.length >= 0;
             this.termBeginBlur = true;
             this.termEndBlur = true;
             this.scheduleDetailsValidation();

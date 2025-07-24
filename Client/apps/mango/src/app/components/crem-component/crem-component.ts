@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   HostListener,
@@ -89,6 +90,7 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
   public headerDefaultHeight: number;
   public showRenderFormPropertyHeader: boolean;
   public renderFormHeaderData: RenderFormHeaderData;
+  private routerOutletComponent: any;
 
   bookmarkGroups: BookmarkGroup[] = null;
   public delineator = '»';
@@ -110,7 +112,8 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
     public facade: MangoAppFacade,
     private renderer: Renderer2,
     private currentObjectService: CurrentObjectService,
-    private rightsAuthGuard: RightsAuthGuard
+    private rightsAuthGuard: RightsAuthGuard,
+    private ref: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -157,10 +160,19 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
     //We will check those routes here
 
     this.subs.add(
-      this.router.events.subscribe(e => {
+      this.router.events.subscribe((e) => {
         let eventAsAny: any = e;
-        let event = eventAsAny.hasOwnProperty("routerEvent") ? eventAsAny.routerEvent : eventAsAny;
-        if (!!event && !!event.url && event.url.toString().toLowerCase().startsWith('/crem/forms/render-form')) {
+        let event = eventAsAny.hasOwnProperty('routerEvent')
+          ? eventAsAny.routerEvent
+          : eventAsAny;
+        if (
+          !!event &&
+          !!event.url &&
+          event.url
+            .toString()
+            .toLowerCase()
+            .startsWith('/crem/forms/render-form')
+        ) {
           this.rightsAuthGuard.canActivate(null, event);
         }
       })
@@ -253,8 +265,46 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
+  onActivate(e: any) {
+    this.routerOutletComponent = e;
+  }
+
   navigateLeftNavMenu(navLink: SharedLeftNavLink) {
-    this.facade.navigateLeftNavMenu(navLink);
+    let timeInterval = 0;
+    let isCategory =
+      !navLink.hasOwnProperty('dynamicName') &&
+      navLink.hasOwnProperty('categoryHasFlyOutMenu') &&
+      navLink.categoryHasFlyOutMenu;
+
+    // When the linkUrl is an anchor link we need to scroll to the anchor.
+    if (
+      !isCategory &&
+      navLink.linkUrl.startsWith('#') &&
+      this.router.url.toLowerCase().startsWith('/crem/forms/render-form')
+    ) {
+      if (!!this.routerOutletComponent) {
+        if (
+          this.routerOutletComponent.hasOwnProperty(
+            'funcLoadAllSectionsForScroll'
+          )
+        ) {
+          let resultObservable =
+            this.routerOutletComponent.funcLoadAllSectionsForScroll(navLink);
+          this.subs.add(
+            resultObservable.subscribe((sectionsLoaded) => {
+              if (sectionsLoaded) {
+                timeInterval = 800;
+                this.ref.detectChanges();
+              }
+            })
+          );
+        }
+      }
+    }
+
+    setTimeout(() => {
+      this.facade.navigateLeftNavMenu(navLink);
+    }, timeInterval);
   }
 
   navigateToBreadcrumb(breadcrumb: BreadCrumb) {
@@ -264,6 +314,7 @@ export class CremComponent implements AfterViewInit, OnInit, OnDestroy {
 
   getActiveLink(toActiveLink: string) {
     this.activeLink = toActiveLink;
+    this.ref.detectChanges();
   }
 
   buildBreadCrumbs() {

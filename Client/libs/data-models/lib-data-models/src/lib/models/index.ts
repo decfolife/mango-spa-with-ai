@@ -17,6 +17,9 @@ export { BuildingInfo } from './costar-matching/building-info';
 // cardConfig
 export * from './dashboards/cardConfig';
 
+// Data and Pivot Grid
+export * from './data-grid/index.interface';
+
 // central-auth
 export { ClientSettings } from './central-auth/client-settings';
 export { ClientSitesByUser } from './central-auth/client-sites-by-user';

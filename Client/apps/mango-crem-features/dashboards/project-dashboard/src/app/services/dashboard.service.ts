@@ -523,7 +523,7 @@ export class DashboardService extends EndpointService {
     objectId: number
   ): Observable<GetFoldersHttpResponse> {
     return this.callHttpGet(
-      `${this.projects}filemanagement/getfolders?relativePath=/vpdocuments%2F${clientKey}%2F1_${objectId}%2F&objectTypeId=1&objectId=${objectId}`,
+      `${this.projects}filemanagement/getfolders?relativePath=1_${objectId}%2F&objectTypeId=1&objectId=${objectId}`,
       'createTaskFolder'
     );
   }

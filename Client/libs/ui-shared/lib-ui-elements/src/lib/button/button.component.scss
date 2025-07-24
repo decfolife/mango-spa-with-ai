@@ -16,6 +16,7 @@ button {
   box-shadow: none;
   height: 32px;
   cursor: pointer;
+  outline: unset;
 
   // Flat Button
   &.btn-flat {

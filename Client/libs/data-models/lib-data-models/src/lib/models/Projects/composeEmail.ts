@@ -1,5 +1,6 @@
 export interface ComposeEmailCommand {
   objectId: number; // project id |
+  objectTypeId: number;
   noteTypeId: number;
   ToContactIds: string[];
   body?: string;

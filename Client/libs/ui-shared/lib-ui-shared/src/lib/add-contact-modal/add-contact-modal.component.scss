@@ -18,3 +18,10 @@
     }
   }
 }
+
+::ng-deep #addContactModal {
+  min-width: 320px;
+  max-width: 70vw;
+  min-height: 420px;
+  max-height: 80vh;
+}

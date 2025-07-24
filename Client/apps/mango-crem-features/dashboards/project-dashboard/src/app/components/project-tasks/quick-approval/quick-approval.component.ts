@@ -100,6 +100,9 @@ export class CremQuickApprovalComponent implements OnInit {
   currentSelectedKeys: any[];
   selectablekeys: any[];
   isSelectAllActive: boolean;
+  summaryText: string = `A user can modify the Actual Start Date without approving the task by entering or clearing the 
+  Actual Start Date and selecting Apply. Apply will only update the Actual Start Date and will not approve tasks. Check the 
+  box next to the task(s) to enable the Approve Tasks button. This button will only approve the tasks that have been selected.`;
 
   private triggerRefreshGrid$ = new Subject<void>();
   constructor(

@@ -15,7 +15,7 @@
     div.clause-text-label-field {
       ::ng-deep {
         crem-input-label > label {
-          padding-top: 8px;
+          padding-top: 0;
           padding-bottom: unset;
         }
       }
@@ -48,7 +48,7 @@
 
         crem-input {
           .input-container {
-            height: 30px;
+            height: 26px;
           }
         }
 
@@ -70,6 +70,7 @@
 
     &.df-clauseEditMode {
       div.clause-details-label-field {
+        margin-bottom: 4px;
         &.df-clauseDocument {
           flex: 2 1 170px;
         }
@@ -94,7 +95,6 @@
     div.section-clause-description {
       ::ng-deep {
         crem-input div.input-container {
-          padding-top: 8px;
           height: unset;
         }
       }

@@ -8,7 +8,7 @@ $disable-underline: true;
   text-decoration: none !important;
   display: flex;
   align-items: center;
-  height: 36px;
+  min-height: 36px;
   padding: 0 16px;
   cursor: pointer;
 
@@ -67,10 +67,26 @@ $disable-underline: true;
       max-height: 200px;
       overflow-y: auto;
       scrollbar-width: thin;
+      li.childActive > a.childSelected > span,
+      li.subChildActive > a.subChildSelected {
+        font-weight: 500;
+      }
     }
   }
 
   #sidebar-nav > ul.navList > li {
+    &.parent-link-padding {
+      padding-bottom: 25px;
+
+      & > a {
+        height: unset;
+      }
+    }
+
+    .bold-object-type-name {
+      font-weight: 500;
+    }
+
     button {
       padding-right: 0 !important;
 
@@ -269,6 +285,19 @@ $disable-underline: true;
               outline-offset: -2px;
               @include costar(background-color, gray05);
             }
+          }
+
+          //Category Menu Items
+          &.active {
+            div.selected {
+              font-weight: bold;
+              padding-bottom: 4px;
+              border-bottom: 3px solid map-get($color, color, danger);
+            }
+          }
+
+          button.flyout_anchor div:not(.selected) {
+            font-weight: 400 !important;
           }
         }
       }

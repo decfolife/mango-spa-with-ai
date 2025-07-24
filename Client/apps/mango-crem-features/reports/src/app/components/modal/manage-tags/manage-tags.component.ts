@@ -3,14 +3,26 @@ import { Component, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ReportsService } from '@reports/services/reports.service';
 import { Subscription } from 'rxjs';
-import { ButtonModule, CremFormsModule, DynamicFormModule, IconModule, InputComponent, LoaderModule, ModalModule } from '@mango/ui-shared/lib-ui-elements';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  ButtonModule,
+  CremFormsModule,
+  DynamicFormModule,
+  IconModule,
+  InputComponent,
+  LoaderModule,
+  ModalModule,
+} from '@mango/ui-shared/lib-ui-elements';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { VerticalStepperModule } from 'libs/ui-shared/lib-ui-elements/src/lib/vertical-stepper/vertical-stepper.module';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ReportTag } from '@reports/models/report-tag';
 import { VALIDATION_ERROR } from '@mango/data-models/lib-data-models';
-
 
 @Component({
   selector: 'manage-tags-modal',
@@ -29,7 +41,7 @@ import { VALIDATION_ERROR } from '@mango/data-models/lib-data-models';
     DynamicFormModule,
     InputComponent,
     CremFormsModule,
-    MatIconModule
+    MatIconModule,
   ],
 })
 export class ManageTagsComponent implements OnInit, OnDestroy {
@@ -87,7 +99,7 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
         },
         () => {}
       )
-    )
+    );
   }
 
   addTag() {
@@ -109,7 +121,7 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
           if (!res?.success) {
             this.userMsg = `There was an issue creating new report tag. Please contact the system administrator.`;
             return;
-          } 
+          }
 
           this.getReportTags();
         },
@@ -118,7 +130,7 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
           this.userMsg = `There was an issue creating new report tag. Please contact the system administrator.`;
         }
       )
-    )
+    );
   }
 
   edit(tag: ReportTag, event: MatChipEditedEvent) {
@@ -138,7 +150,7 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
 
     this.userMsg = '';
     this.isLoading = true;
-    
+
     this.subs.push(
       this.reportsService.editReportTag(tag.reportTagID, value).subscribe(
         (res: any) => {
@@ -147,7 +159,7 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
           if (!res?.success) {
             this.userMsg = `There was an issue updating the report tag. Please contact the system administrator.`;
             return;
-          }  
+          }
 
           this.reportTags[index].reportTag = value;
         },
@@ -156,13 +168,13 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
           this.userMsg = `There was an issue updating the report tag. Please contact the system administrator.`;
         }
       )
-    )
+    );
   }
 
   removeTag(tag: ReportTag): void {
     this.userMsg = '';
     this.isLoading = true;
-    
+
     this.subs.push(
       this.reportsService.removeReportTag(tag.reportTagID).subscribe(
         (res: any) => {
@@ -171,16 +183,18 @@ export class ManageTagsComponent implements OnInit, OnDestroy {
           if (!res?.success) {
             this.userMsg = `There was an issue deleting the report tag. Please contact the system administrator.`;
             return;
-          }  
+          }
 
-          this.reportTags = this.reportTags.filter(x => x.reportTagID !== tag.reportTagID)
+          this.reportTags = this.reportTags.filter(
+            (x) => x.reportTagID !== tag.reportTagID
+          );
         },
         (error: any) => {
           this.isLoading = false;
           this.userMsg = `There was an issue deleting the report tag. Please contact the system administrator.`;
         }
       )
-    )
+    );
   }
 
   public closeModal() {

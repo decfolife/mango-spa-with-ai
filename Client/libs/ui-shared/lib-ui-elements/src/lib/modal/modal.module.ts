@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TooltipModule } from '../tooltip/tooltip.module';
 import { DxLoadPanelModule } from 'devextreme-angular';
 import { SkeletonModule } from '../skeleton';
+import { CremDataIdDirective } from '../../../../../core-shared/src/lib/directives/data-id.directive';
 
 @NgModule({
   declarations: [ModalComponent],
@@ -18,6 +19,7 @@ import { SkeletonModule } from '../skeleton';
     DxLoadPanelModule,
     TooltipModule,
     SkeletonModule,
+    CremDataIdDirective,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   exports: [ModalComponent],

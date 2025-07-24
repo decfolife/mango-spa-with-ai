@@ -1,64 +1,38 @@
 @use 'styles' as *;
 
-.body-content {
-  height: 100%;
-}
-@mixin flex-row-direction {
-  display: flex;
-  flex-direction: row;
-}
-.form-items {
-  @include flex-row-direction;
-  align-items: center;
-  column-gap: 10px;
-  @include costar(padding-top, 4);
-  font-size: 16px;
-}
-
-.dynamicLabel {
-  width: 30%;
-  margin-left: 10%;
-  text-align: right;
-}
-.dynamicInput {
-  margin-right: 10%;
-}
-::ng-deep crem-form-label {
-  color: $color-secondary;
-}
 :host ::ng-deep {
-  .crem-form {
-    @include costar(gap, 2);
+  // Label
+  crem-form-label {
+    @include costar(font-size, eyebrow);
   }
+  // Input Field
   crem-form-control {
     .crem-form-item-status:empty {
       display: none;
     }
   }
-}
-.footerContent {
-  display: flex;
-  justify-content: space-between;
 
-  .footerRightControls {
+  .modalContent .body-content > div {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    @include costar(gap, 2);
+  }
 
+  crem-input .input-container:has(textarea) {
+    height: auto !important; // The text area height is fixed in the shared component making the min height overflow
+  }
+}
+
+.footerContent {
+  .footerRightControls {
     & > .reason-required-text {
       font-size: 0.95rem;
       font-style: italic;
     }
-
-    & > .cl-btn {
-      margin-left: 8px;
-    }
-
-    .modalFooter {
-      @include costar(border-top, gray05);
-    }
   }
 
   .cl-userMsg {
-    color: $color-brand-red;
+    @include costar(color, danger);
+    // color: $color-brand-red;
   }
 }

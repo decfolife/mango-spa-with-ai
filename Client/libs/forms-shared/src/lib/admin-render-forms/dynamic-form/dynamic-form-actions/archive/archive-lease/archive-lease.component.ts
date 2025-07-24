@@ -20,10 +20,7 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { CommonModule } from '@angular/common';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
-import {
-  DevExtremeModule,
-  DxDataGridModule,
-} from 'devextreme-angular';
+import { DevExtremeModule, DxDataGridModule } from 'devextreme-angular';
 
 @Component({
   selector: 'mango-archive-action',
@@ -119,7 +116,7 @@ export class ArchiveLeaseComponent implements OnInit {
       let path = window.location.pathname;
       let params = window.location.search;
       params = params.replace('&pgMode=Edit', '');
-      
+
       this.router.navigateByUrl(`${path}${params}`);
     }
   }
@@ -241,7 +238,7 @@ export class ArchiveLeaseComponent implements OnInit {
   }
 
   public archiveValidation() {
-    // if inProcess count > 0, hard stop for archiving, retrive error Reasons for leases
+    // if inProcess count > 0, hard stop for archiving, retrieve error Reasons for leases
     const needArchive = this.getValidationStatus();
     if (needArchive) {
       this.archive();
@@ -290,7 +287,7 @@ export class ArchiveLeaseComponent implements OnInit {
       let path = window.location.pathname;
       let params = window.location.search;
       params = params.replace('&pgMode=Edit', '');
-      
+
       this.router.navigateByUrl(`${path}${params}`);
     }
   }
@@ -307,7 +304,7 @@ export class ArchiveLeaseComponent implements OnInit {
     let leaseId = 0;
     let buildingId = 0;
     let premiseId = 0;
-    
+
     if (this.archiveType === 'Lease') {
       if (this.buildingSelected) {
         // just pass in building and lease id
@@ -383,7 +380,7 @@ export class ArchiveLeaseComponent implements OnInit {
 
         this.sortLeaseData();
         this.setGridcolumns();
-      }); 
+      });
   }
 
   public sortLeaseData() {
@@ -588,7 +585,7 @@ export class ArchiveLeaseComponent implements OnInit {
   }
 
   private buildModalTitle() {
-    this.modalTitle =  `Archive ${this.objectTypeTypeName}`;
+    this.modalTitle = `Archive ${this.objectTypeTypeName}`;
   }
 
   private setGridData() {
@@ -706,15 +703,10 @@ export class ArchiveLeaseComponent implements OnInit {
   }
 
   public getValidationStatus(): boolean {
-    let needArchive = false;
-
-    if (this.archiveType === 'Lease' && this.defaultLeaseInProcessCountCount > 0) {
-      needArchive = true;
-    } else {
-      if (this.inProcessCount > 0) {
-        needArchive = true;
-      }
-    }
-    return needArchive;
+    const inProcessCount =
+      this.archiveType === 'Lease'
+        ? this.defaultLeaseInProcessCountCount
+        : this.inProcessCount;
+    return inProcessCount > 0;
   }
 }

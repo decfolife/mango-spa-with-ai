@@ -1,0 +1,6 @@
+@use 'styles' as *;
+
+crem-button {
+  display: inline-block;
+  @include costar(margin-left, 2);
+}

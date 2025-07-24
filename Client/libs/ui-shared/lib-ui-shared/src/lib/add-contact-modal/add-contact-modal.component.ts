@@ -1,4 +1,5 @@
-import { Component, Inject, ViewChild } from '@angular/core';
+import { Component, Inject, ViewChild, ChangeDetectorRef } from '@angular/core';
+
 import {
   FormBuilder,
   FormGroup,
@@ -6,9 +7,11 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+
 import {
   ButtonModule,
   CremFormsModule,
@@ -20,6 +23,7 @@ import {
   LibUiElementsModule,
   ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
+
 import {
   ObjectType,
   RequestType,
@@ -29,14 +33,16 @@ import {
   RegexPatterns,
   CONTACT_WIZARD_MESSAGES,
 } from '@mango/data-models/lib-data-models';
+
 import { CommonModule } from '@angular/common';
 import { Toast } from 'ngx-toastr';
 import { DataService } from '@mango/core-shared';
-import { Observable, Subscription, combineLatest } from 'rxjs';
-import { filter, tap } from 'rxjs/operators';
-import DataSource from 'devextreme/data/data_source';
 
+import { Observable, Subscription, combineLatest } from 'rxjs';
+
+import { filter, tap } from 'rxjs/operators';
 import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
+import DataSource from 'devextreme/data/data_source';
 
 @Component({
   selector: 'crem-add-contact-modal-component',
@@ -61,8 +67,8 @@ import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
 export class AddContactModalComponent {
   @ViewChild('subGroupDropDown') subGroupDropDown: DropdownComponent;
   @ViewChild('groupDropDown') groupDropDown: DropdownComponent;
-  @ViewChild('companyDropDown') companyDropdown: DropdownComponent;
-  @ViewChild('isPublicdropDown') isPublicdropDown: DropdownComponent;
+  @ViewChild('companyDropDown') companyDropDown: DropdownComponent;
+  @ViewChild('isPublicDropDown') isPublicDropDown: DropdownComponent;
 
   componentName = 'Add-contact-modal';
   contactForm: FormGroup;
@@ -78,10 +84,10 @@ export class AddContactModalComponent {
   searchTimeoutOption = 600;
   contactGroupDefaultValue: any;
 
-  public contactGroupDropdownItem: any[];
+  public contactGroupDropDownItem: any[];
   private subscriptions = new Subscription();
   private subs: Subscription[] = [];
-  public subGroupDropdownItem: any[];
+  public subGroupDropDownItem: any[];
   selectedPortfolio: any[];
   private redirectorLinks: any[] = null;
 
@@ -92,20 +98,34 @@ export class AddContactModalComponent {
     private fb: FormBuilder,
     private toastService: CremToastService,
     private dataService: DataService,
+    private changeDetector: ChangeDetectorRef,
 
     @Inject(MAT_DIALOG_DATA)
     public data: {
       objectTypeName: string;
       objectTypeId: number;
+      companyID: number;
     }
   ) {
     this.initCompanyDataSource();
+    this.selectCompanyDropDownValue();
+  }
+
+  selectCompanyDropDownValue(): void {
+    setTimeout(() => {
+      if (this.data.companyID)
+        this.companyDropDown.selectBoxValue = this.data.companyID.toString();
+    }, 250);
   }
 
   ngOnInit(): void {
     this.initializeForm();
-    this.loadDropdownData().subscribe();
+    this.loadContactGroupDropDown().subscribe();
     this.fetchRedirectorLinks();
+  }
+
+  ngAfterContentChecked(): void {
+    this.changeDetector.detectChanges();
   }
 
   ngOnDestroy() {
@@ -140,7 +160,7 @@ export class AddContactModalComponent {
         try {
           const params = {
             page: loadOptions.skip / loadOptions.take + 1 || 1,
-            pageSize: loadOptions.take || 100,
+            pageSize: loadOptions.take || 1500,
             searchValue: loadOptions.searchValue || '',
           };
 
@@ -171,6 +191,10 @@ export class AddContactModalComponent {
             return { data: [], totalCount: 0 };
           }
 
+          result.data.items.forEach((e) => {
+            e.companyID = e.companyID.toString();
+          });
+
           return {
             data: result.data.items,
             totalCount: result.data.totalItems,
@@ -189,15 +213,18 @@ export class AddContactModalComponent {
         }
       },
       paginate: true,
-      pageSize: 100,
+      pageSize: 1500,
     });
   }
 
-  loadDropdownData(): Observable<any> {
+  loadContactGroupDropDown(): Observable<any> {
     return combineLatest([this.formWizardService.getAllUserGroups()]).pipe(
-      filter(([contactGroupDropdownItem]) => !!contactGroupDropdownItem),
-      tap(([contactGroupDropdownItem]) => {
-        this.contactGroupDropdownItem = contactGroupDropdownItem.data;
+      filter(([contactGroupDropDownItem]) => !!contactGroupDropDownItem),
+      tap(([contactGroupDropDownItem]) => {
+        contactGroupDropDownItem.data.forEach((e) => {
+          e.companyID = e.companyID.toString();
+        });
+        this.contactGroupDropDownItem = contactGroupDropDownItem.data;
       })
     );
   }
@@ -253,7 +280,7 @@ export class AddContactModalComponent {
                   this.router.navigateByUrl(currURL);
                   break;
                 case 'saveNew':
-                  this.resetPopupSelection();
+                  this.resetSaveNew();
                   break;
               }
             } else {
@@ -298,6 +325,12 @@ export class AddContactModalComponent {
 
   public launch() {
     this.handleContactRequest('launch');
+  }
+
+  resetSaveNew() {
+    this.contactForm.get('firstName').setValue('');
+    this.contactForm.get('lastName').setValue('');
+    this.contactForm.get('emailAddress').setValue('');
   }
 
   getContactData() {
@@ -351,14 +384,6 @@ export class AddContactModalComponent {
     if (componentType != undefined)
       return `${componentName}-${componentType}-${uniqueName}-${elementType}`;
     else return `${componentName}-${uniqueName}-${elementType}`;
-  }
-
-  resetPopupSelection() {
-    this.companyDropdown.clearSelectBox();
-    this.subGroupDropDown.clearSelectBox();
-    this.groupDropDown.clearSelectBox();
-    this.isPublicdropDown.clearSelectBox();
-    this.contactForm.reset();
   }
 
   getRedirectorURL(

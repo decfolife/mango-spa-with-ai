@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/core-shared/src",
-  "prefix": "mango",
+  "prefix": "crem",
   "targets": {
     "lint": {
       "executor": "@nx/linter:eslint",

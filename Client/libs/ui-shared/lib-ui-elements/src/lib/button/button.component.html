@@ -1,6 +1,6 @@
 <button
   type="button"
-  [attr.id]="id"
+  [attr.id]="id ?? ''"
   [ngClass]="getCssClasses()"
   [class]="className"
   [style]="styles"
@@ -9,6 +9,7 @@
   (click)="handleClick()"
   [attr.aria-haspopup]="ariaHasPopUp"
   [attr.aria-expanded]="ariaExpanded"
+  [cremDataId]="dataId"
 >
   <ng-container *ngIf="icon">
     <crem-icon

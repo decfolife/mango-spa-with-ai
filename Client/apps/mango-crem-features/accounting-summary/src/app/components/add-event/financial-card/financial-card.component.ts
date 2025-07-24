@@ -102,6 +102,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   @Input() measureEvent: string;
   @Input() currencyList: Currency[];
   @Input() rouAssetMethodsList: ROUAssetMethod[];
+  @Input() minROUActionDate: string;
   @ViewChild('rouActionDatePicker') rouDatePicker: DatePickerComponent;
 
   functionalCurrencyRateLookup: FunctionalCurrencyRateLookupResponse;
@@ -186,7 +187,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   rouMethodTouched = false;
   rouAmountTouched = false;
   currencyRateTouched = false;
-  calculateValuesClicked = false;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -210,7 +210,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     this.subscription.add(
       this.addEventFormService.validateCalculateComponents$.subscribe(
         (clicked) => {
-          this.calculateValuesClicked = clicked;
           if (clicked) {
             this.amortizationCompositeDropdownTouched = true;
             this.amortizationProfileTouched = true;
@@ -753,7 +752,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     );
 
     this.financialForm.valueChanges
-      .pipe(debounceTime(debounce), takeUntil(this.formSubscription$))
+      .pipe(debounceTime(100), takeUntil(this.formSubscription$))
       .subscribe(() => {
         setTimeout(() => {
           this.executeFinancialFormValueChanges();
@@ -943,8 +942,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
 
     if (this.discountRateProfileTouched && discountRateProfile === null) {
       this.discountRateProfileStatus = 'error';
+      this.discountRateCompositeDropdownValidation = 'error';
     } else {
       this.discountRateProfileStatus = 'default';
+      this.discountRateCompositeDropdownValidation = 'default';
     }
     if (this.annualRateTouched && (annualRate === null || annualRate === '')) {
       this.annualRateValidation = 'error';
@@ -1094,8 +1095,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.rouDateStatusMessage = 'Required';
         this.rouDatePicker.validate();
       } else {
-        this.rouDateStatus = 'default';
-        this.rouDateStatusMessage = '';
+        this.validateROUActionDate();
         this.rouDatePicker.validate();
       }
 
@@ -1148,23 +1148,25 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.updateFinancialCardValidity(true, false);
       } else if (
         this.measureEvent !== 'Initial' &&
-        (rouActionDate < this.termBegin || rouActionDate > this.termEnd)
+        rouActionDate < new Date(this.minROUActionDate)
       ) {
         this.addEditScheduleService.showToast(
           'ROU Asset Obtained Action Date',
-          'The action date has to be between the accounting term begin and end dates.'
+          'The action date has to be within the calendar range.'
         );
         this.rouDateStatus = 'error';
         this.rouDateStatusMessage =
-          'The action date has to be between the accounting term begin and end dates.';
+          'The action date has to be within the calendar range.';
         this.updateFinancialCardValidity(true, false);
       } else {
         this.addEditScheduleService.clearToastBySummary(
           'ROU Asset Obtained Action Date'
         );
         this.rouDateStatus = 'default';
+        this.rouDateStatusMessage = '';
         this.updateFinancialCardValidity(true, true);
       }
+      this.rouDatePicker?.validate();
     }
   }
 
@@ -1843,23 +1845,15 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     switch (name) {
       case 'discountProfile': {
         this.discountRateProfileTouched = true;
-        const discountRateProfile = this.financialForm.get(
-          'discountRateProfile'
-        ).value;
-        if (
-          discountRateProfile === null ||
-          this.financialForm.get('discountRateProfile').value.length == 0
-        ) {
-          this.discountRateProfileStatus = 'error';
-          this.discountRateCompositeDropdownValidation = 'error';
-        } else {
-          this.discountRateProfileStatus = 'default';
-          this.financialFormValidation();
-        }
         break;
       }
       case 'amortization': {
         this.amortizationCompositeDropdownTouched = true;
+        if (this.financialForm.get('amortizationProfile').value !== null) {
+          this.financialForm.get('overrideAmortizationProfile').enable();
+        } else {
+          this.financialForm.get('overrideAmortizationProfile').disable();
+        }
         break;
       }
       case 'currency': {
@@ -1876,85 +1870,29 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       }
       case 'amortizationProfile': {
         this.amortizationProfileTouched = true;
-        const amortizationProfile = this.financialForm.get(
-          'amortizationProfile'
-        ).value;
-        if (!amortizationProfile && amortizationProfile !== 0) {
-          this.amortizationProfileStatus = 'invalid';
-          this.financialForm.get('overrideAmortizationProfile').disable();
-        } else {
-          this.amortizationProfileStatus = 'valid';
-          this.financialForm.get('overrideAmortizationProfile').enable();
-        }
         break;
       }
       case 'annualRate': {
         this.annualRateTouched = true;
-        const annualRate = this.financialForm.get('discountRate').value;
-        if (annualRate === null || annualRate === '') {
-          this.annualRateValidation = 'error';
-          this.discountRateCompositeDropdownValidation = 'error';
-        } else {
-          this.annualRateValidation = 'default';
-          this.discountRateCompositeDropdownValidation = 'default';
-        }
         break;
       }
       case 'rouMethod': {
         this.rouMethodTouched = true;
-        const ROUMethod = this.financialForm.get('ROUMethod').value;
-        if ((!ROUMethod && ROUMethod !== 0) || ROUMethod.length == 0) {
-          this.rouMethodStatus = 'invalid';
-        } else {
-          this.rouMethodStatus = 'valid';
-        }
         break;
       }
       case 'rouDate': {
         this.rouDateTouched = true;
-        const ROUActionDate = this.financialForm.get('ROUActionDate').value;
-        if (ROUActionDate == null) {
-          this.rouDateStatus = 'error';
-          this.rouDateStatusMessage = 'Required';
-          this.rouDatePicker?.validate();
-        } else {
-          this.rouDateStatus = 'default';
-          this.rouDateStatusMessage = '';
-        }
         break;
       }
       case 'rouAmount': {
         this.rouAmountTouched = true;
-        const ROUAmount = this.financialForm.get('ROUAmount').value;
-        if (!ROUAmount && ROUAmount !== 0 && this.rouAmountTouched) {
-          this.rouAmountStatus = 'invalid';
-        } else {
-          this.rouAmountStatus = 'valid';
-        }
         break;
       }
       case 'currencyRate': {
         this.currencyRateTouched = true;
-        const currencyRate = this.financialForm.get('currencyRate').value;
-        if (!currencyRate && currencyRate !== 0) {
-          this.currencyRateStatus = 'error';
-          this.currencyRateValidationMessage = 'Required';
-        } else if (+currencyRate === 0) {
-          this.currencyRateStatus = 'error';
-          this.currencyRateValidationMessage =
-            'Functional Currency Rate is required and cannot be zero.';
-          this.currencyCompositeDropdownValidation = 'error';
-        } else {
-          this.currencyRateStatus = 'default';
-          this.currencyRateValidationMessage = '';
-        }
         break;
       }
     }
-    this.rouAmountStatus === 'invalid' ||
-    this.rouDateStatus === 'error' ||
-    this.rouMethodStatus === 'invalid'
-      ? (this.ROUCompositeDropdownValidation = 'error')
-      : (this.ROUCompositeDropdownValidation = 'default');
+    this.financialCardCalculateValidation();
   }
 }

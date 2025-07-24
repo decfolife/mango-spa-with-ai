@@ -55,7 +55,10 @@
           class="module-content scroll-container vertical"
           tabindex="-1"
         >
-          <router-outlet class="mainContent-outlet"></router-outlet>
+          <router-outlet
+            (activate)="onActivate($event)"
+            class="mainContent-outlet"
+          ></router-outlet>
         </main>
       </div>
     </ng-container>

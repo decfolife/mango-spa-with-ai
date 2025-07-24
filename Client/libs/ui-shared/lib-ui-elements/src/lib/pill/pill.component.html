@@ -11,6 +11,7 @@
     disabled: type === 'disabled',
   }"
   [title]="titleOnHover"
+  (click)="toggleLockedMessage()"
 >
   <crem-icon
     *ngIf="displayLockIcon"
@@ -20,4 +21,9 @@
   >
   </crem-icon>
   {{ text }}
+  <div
+    class="locked-message"
+    *ngIf="showLockedMessage && lockedMessage"
+    [innerHTML]="lockedMessage"
+  ></div>
 </div>

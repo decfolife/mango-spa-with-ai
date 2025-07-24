@@ -74,7 +74,7 @@ export class IFields {
   formItemTop: number;
   formItemLeft: number;
   formItemLabelPlacement: string;
-  formItemLabelWidth: number;
+  formItemLabelWidth: string;
   formItemLabelColor: string;
   formItemLabelWeight: string;
   formItemLabelAlign: string;
@@ -104,7 +104,11 @@ export class IFields {
   parentID: number;
   isAuditable: boolean;
   vpDictionaryFormItemDesc: string;
-
+  requestTypeID: number;
+  formItemInput1ID: number;
+  formItemInput2ID: number;
+  formItemOutputID: number;
+  behaviorTypeID: number;
   formItemSectionDetail: IFieldDetails;
   formItemType: FormItemTypes;
 }
@@ -228,7 +232,7 @@ export class Widget {
   allowEdits: boolean;
   allowCreation: boolean;
   viewOnlyPopUp: boolean;
-  formWidgetTypeID: number;
+  formWidgetTypeID: FormWidgetTypeIDValue;
   columnGroupID: number;
   formID: number;
   relationshipDefinitionID: number;
@@ -255,8 +259,12 @@ export class Widget {
   widgetJSClickEvent: string;
   keyField: string;
   objectTypeTypeID: number;
-
   columnGroupInfo: ColumnGroupInfo;
+  /**
+   * The same as 'columnGroupInfo' but this is what the API returns
+   * for the widgets
+   */
+  columnGroup: ColumnGroupInfo;
   renderFormWidgetData: any;
 }
 
@@ -328,13 +336,14 @@ export class ColumnFields {
 
 export class SaveRenderFormDto {
   formItemId: string;
+  formItemTypeId: string;
   oldValue: string;
   newValue: string;
   type: string;
 }
 
 export class SaveRenderFormCommand {
-  isNew: boolean = false;
+  isDynamicPopup: boolean = false;
   formId: number;
   objectId: number;
   objectTypeId: number;
@@ -347,6 +356,7 @@ export class SaveRenderFormCommand {
 
 export enum AllowedObjectTypes {
   PROJECT = 1,
+  PREMISE = 2,
   BUILDING = 3,
   LEASE = 4,
   REPORT = 7,
@@ -374,3 +384,79 @@ export interface UpdateLeaseVerificationStatusRequest {
   oldStatus: number;
   comments: string;
 }
+
+/**
+ * Widget Type, corresponding to the 'Configure Widget' page
+ */
+export enum FormWidgetTypeID {
+  COMPARE_ITEM = 6,
+  COMPARISON = 3,
+  CROSS_TAB = 2,
+  DYNAMIC = 9,
+  EDIT_LIST = 1,
+  GROUPED_LIST = 8,
+  LINKLIST = 5,
+  PIVOT_DYNAMIC = 11,
+  REPORT_ITO = 4,
+  SUMMARY = 7,
+  SUMMARY_DYNAMIC = 1,
+}
+
+/**
+ * Extracts only the values of the enum to be used as a type for Widget class
+ */
+export type FormWidgetTypeIDValue = `${FormWidgetTypeID}` extends `${number}`
+  ? number
+  : never;
+
+export interface DeleteSubObjectRequest {
+  objectId: number;
+  objectTypeId: number;
+  relatedObjectId: number;
+  relatedObjectTypeId: number;
+  relationshipDefinitionId: number;
+}
+
+/**
+ * Enum representing control type IDs used in the form wizard.
+ * These IDs correspond to different types of form input controls such as dropdowns, text fields, etc.
+ *
+ * Mapped from `formItemType.formItemTypeID` in the data model.
+ * Examples: dropdown, input, text-area, date.
+ *
+ * @export
+ * @enum {number}
+ */
+export enum FormWizardTypeID {
+  LIST_BOX = 1, // Dropdown or list selection
+  TEXT_FIELD = 2, // Single-line text input
+  COMMENT_AREA = 3, // Multi-line text area
+  CALCULATED = 9,
+}
+export type FormWizardTypeIDType = keyof typeof FormWizardTypeID;
+
+/**
+ * Enum representing data type IDs used to determine input masking behavior.
+ * These are contextually dependent on the selected `FormWizardTypeID`.
+ *
+ * Mapped from `formItemSectionDetail.dataTypeID` in the data model.
+ * Examples: currency, double, percent, date, etc.
+ *
+ * @export
+ * @enum {number}
+ */
+export enum FormWizardDataTypeID {
+  SMALL_INT = 2,
+  INTEGER = 3,
+  DOUBLE = 5,
+  CURRENCY = 6,
+  DATE = 7,
+  NUMBER = 131,
+  EMAIL = 201,
+  PERCENT = 206,
+}
+export type FormWizardDataTypeIDType = keyof typeof FormWizardDataTypeID;
+
+export type FormWizardFieldType =
+  | FormWizardTypeIDType
+  | FormWizardDataTypeIDType;

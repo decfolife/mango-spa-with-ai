@@ -15,7 +15,7 @@ import {
   RenderFormDropdowns,
   Widget,
 } from '../model/dynamic-forms.interface';
-import { ApiResponse } from '@forms/model/api-response';
+import { ApiResponse } from '@mango/data-models/lib-data-models';
 
 export const APP_FEATURE_KEY = 'dynamicForms';
 
@@ -25,7 +25,7 @@ export interface DynamicFormsState extends EntityState<DynamicFormEntity> {
   isRenderForm: boolean;
 
   error?: string | any; // last known error (if any)]
-
+  renderFormError?: string | any;
   dynamicFormApiResponse: ApiResponse;
   dynamicForm?: IDynamicForm;
 
@@ -71,6 +71,7 @@ export const initialState: DynamicFormsState =
     loaded: false,
     isRenderForm: false,
     error: null,
+    renderFormError: null,
     dynamicForm: null,
     objectID: 0,
     formActions: null,
@@ -194,6 +195,7 @@ const reducer = createReducer(
     (state, { error }): DynamicFormsState => ({
       ...state,
       error,
+      renderFormError: error,
       isLoading: false,
       loaded: false,
     })
@@ -580,7 +582,8 @@ const reducer = createReducer(
     dynamicFormsActions.dynamicFormLoadRenderFormFailure,
     (state, { error }) => ({
       ...state,
-      error,
+      error: error,
+      renderFormError: error,
       isLoading: false,
     })
   ),

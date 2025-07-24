@@ -62,6 +62,13 @@
   </div>
 
   <div class="menu-section btns-right">
+    <!-- Alert Button for Leases -->
+    <mango-alerts-root
+      [leaseAbstractId]="urlOID"
+      id="df-leaseGLEventAlertsBtn"
+      *ngIf="isGLEvent"
+    >
+    </mango-alerts-root>
     <button
       mat-stroked-button
       *ngIf="inCriticalViewDataError && isSuperUser"

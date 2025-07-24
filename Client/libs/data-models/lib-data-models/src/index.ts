@@ -116,3 +116,5 @@ export * from './lib/models/etl/template';
 export * from './lib/models/link.interface';
 export * from './lib/types/index';
 export * from './lib/models/ui-components/page-header';
+export * from './lib/models/ui-components/popover.interface';
+export * from './lib/models/data-grid/index.interface';

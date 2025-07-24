@@ -1424,10 +1424,6 @@
   width: 100%;
   height: 100%;
 }
-.dx-overlay-shader {
-  pointer-events: auto;
-  background-color: rgba(255, 255, 255, 0.8);
-}
 .dx-overlay-content {
   position: absolute;
   pointer-events: auto;
@@ -2526,9 +2522,6 @@
 }
 .dx-popup-inherit-height .dx-popup-content > .dx-template-wrapper > .dx-widget {
   max-height: inherit;
-}
-.dx-dialog-root .dx-overlay-shader {
-  background-color: #444;
 }
 .dx-prevent-safari-scrolling {
   position: fixed;

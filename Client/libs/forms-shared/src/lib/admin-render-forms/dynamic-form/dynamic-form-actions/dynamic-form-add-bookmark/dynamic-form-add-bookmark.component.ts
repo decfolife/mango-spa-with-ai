@@ -87,7 +87,10 @@ export class DynamicFormAddBookmarkComponent implements OnInit, OnDestroy {
           this.notifyErrorMessage(
             'There was an error saving details. Please review and try again.'
           );
-          console.log('Error occurred while saving Lease Association: ', error);
+          console.error(
+            'Error occurred while saving Lease Association: ',
+            error
+          );
         }
       )
     );
@@ -95,10 +98,11 @@ export class DynamicFormAddBookmarkComponent implements OnInit, OnDestroy {
 
   notifySuccessMessage() {
     this.toastService.show(
-      'Added bookmark successfully',
+      'Bookmarked successfully!',
       'Success',
       ToastState.SUCCESS,
       {
+        duration: 3000,
         position: 'bottom right',
         maxWidth: '500px',
       }

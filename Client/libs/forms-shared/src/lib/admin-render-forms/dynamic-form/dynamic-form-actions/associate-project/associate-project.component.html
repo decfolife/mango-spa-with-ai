@@ -1,4 +1,5 @@
 <crem-modal
+  modalId="df_associateProject_modal"
   [modalTitle]="'Associate to Project'"
   [closeIconVisible]="true"
   [primaryFooterButtonText]="'Save'"
@@ -29,7 +30,7 @@
 
     <crem-loader class="ae-loader" *ngIf="loadingIndicator"></crem-loader>
   </div>
-  
+
   <div modalFooter class="footerContent">
     <div footerLeftControls class="footerLeftControls ae-userMsg">
       {{ userMsg }}

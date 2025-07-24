@@ -1,5 +1,22 @@
 @use 'styles' as *;
 
+@mixin df-invalidControlStyle {
+  @include costar(border, danger);
+  @include costar(border-radius, medium);
+
+  & *,
+  & * .dx-state-focused {
+    box-shadow: none;
+    border: none;
+    outline: none !important;
+  }
+
+  &:focus {
+    box-shadow: none;
+    outline: none;
+  }
+}
+
 #dynamic-forms-container {
   height: 100%;
   display: flex;
@@ -50,6 +67,12 @@
         }
       }
     }
+  }
+
+  textarea {
+    white-space: pre;
+    text-wrap: wrap;
+    word-break: break-all;
   }
 }
 
@@ -115,12 +138,29 @@
   height: 0;
 }
 
-::ng-deep .df-editModeOn div.dynamic-form-content .field-content .ng-invalid {
-  @include costar(border, danger);
-  @include costar(border-radius, medium);
-
-  & * {
-    box-shadow: none;
-    border: none;
+::ng-deep {
+  .df-editModeOn div.dynamic-form-content {
+    .field-content .ng-invalid,
+    .field-content.ng-invalid {
+      @include df-invalidControlStyle;
+    }
   }
+
+  #df-leaseAlertsBtn #openLeaseAlertsPopupButton {
+    height: 32px;
+    &:focus {
+      box-shadow: 0 0 0 0.3rem #c8c8c8;
+      outline: -webkit-focus-ring-color auto 1px;
+    }
+  }
+
+  #dynamic-forms-container {
+    .page-header__status-pill .pill-container {
+      cursor: pointer;
+    }
+  }
+}
+
+.center {
+  margin-top: 20px;
 }

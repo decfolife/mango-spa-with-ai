@@ -10,8 +10,8 @@
       ],
       "parserOptions": {
         "project": [
-          "libs/ui-shared/lib-ui-elements/tsconfig.*?.json",
-          "libs\\ui-shared\\lib-ui-elements\\.storybook\\tsconfig.json"
+          "./Client/libs/ui-shared/lib-ui-elements/tsconfig.*?.json",
+          "./Client/libs/ui-shared/lib-ui-elements/.storybook/tsconfig.json"
         ]
       },
       "rules": {

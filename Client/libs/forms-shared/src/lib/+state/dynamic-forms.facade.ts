@@ -10,7 +10,7 @@ import {
   Widget,
 } from '@forms/model/dynamic-forms.interface';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '@forms/model/api-response';
+import { ApiResponse } from '@mango/data-models/lib-data-models';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +19,7 @@ export class DynamicFormsFacade {
   forms$ = this.store.select(fromDynamicForms.selectAllForms);
   loading$ = this.store.select(fromDynamicForms.selectLoading);
   error$ = this.store.select(fromDynamicForms.selectError);
+  renderFormError$ = this.store.select(fromDynamicForms.selectRenderFormError);
 
   selectedDynamicForm$ = this.store.select(fromDynamicForms.selectDynamicForm);
   selectDynamicFormApiResponse$ = this.store.select(
@@ -78,9 +79,27 @@ export class DynamicFormsFacade {
     this.store.dispatch(dynamicFormsActions.initForms());
   }
 
-  loadDynamicForm(formId: number, objectId: number): void {
+  loadDynamicForm(
+    formId: number,
+    objectId: number,
+    objectTypeId: number,
+    objectTypeTypeId: number,
+    relationshipDefinitionId: number,
+    parentObjectId: number,
+    relatedObjectId: number,
+    relatedObjectTypeId: number
+  ): void {
     this.store.dispatch(
-      dynamicFormsActions.dynamicFormLoad({ formId, objectId })
+      dynamicFormsActions.dynamicFormLoad({
+        formId,
+        objectId,
+        objectTypeId,
+        objectTypeTypeId,
+        relationshipDefinitionId,
+        parentObjectId,
+        relatedObjectId,
+        relatedObjectTypeId,
+      })
     );
   }
 
@@ -113,6 +132,9 @@ export class DynamicFormsFacade {
     objectId: number,
     objectTypeId: number,
     objectTypeTypeId: number,
+    relationshipDefinitionId: number,
+    parentObjectId: number,
+    parentObjectTypeId: number,
     isEditMode: boolean
   ): void {
     this.store.dispatch(
@@ -121,6 +143,9 @@ export class DynamicFormsFacade {
         objectId,
         objectTypeId,
         objectTypeTypeId,
+        relationshipDefinitionId,
+        parentObjectId,
+        parentObjectTypeId,
         isEditMode,
       })
     );
@@ -186,6 +211,8 @@ export class DynamicFormsFacade {
     formId: number,
     objectId: number,
     objectTypeId: number,
+    formObjectId: number,
+    formObjectTypeId: number,
     parentObjectId: number,
     parentObjectTypeId: number
   ): void {
@@ -194,6 +221,8 @@ export class DynamicFormsFacade {
         formId,
         objectId,
         objectTypeId,
+        formObjectId,
+        formObjectTypeId,
         parentObjectId,
         parentObjectTypeId,
       })

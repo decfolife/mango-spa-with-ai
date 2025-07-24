@@ -1,0 +1,273 @@
+@use '../abstracts/variables' as *;
+
+// Make sure to update the crem-button if this style changes to sync the styles
+// TODO: make the crem-button to use this mixin
+@mixin crem-button-base() {
+  @include costar(font-family, body);
+  @include costar(border-radius, small);
+  @include costar(font-size, normal);
+  @include costar(transition, fast);
+  @include costar(gap, 1);
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+@mixin crem-button-size($size) {
+  @if $size == small {
+    height: 28px;
+    padding: 0.5rem;
+  } @else if $size == medium {
+    height: 32px;
+    padding: 0.7rem;
+  } @else if $size == big {
+    height: 40px;
+    padding: 0.9rem;
+  }
+}
+
+@mixin crem-button-style($btn-style, $color) {
+  // Flat
+  @if $btn-style == flat {
+    background-color: transparent;
+    border: none;
+
+    // Primary
+    @if $color == primary {
+      @include costar(background-color, primary-light);
+      @include costar(color, light);
+      &:hover {
+        @include costar(background-color, primary-lighter);
+      }
+      &:disabled {
+        @include costar(color, light);
+        @include costar(background-color, primary-lighter);
+        &:hover {
+          @include costar(color, light);
+          @include costar(background-color, primary-lighter);
+        }
+      }
+    }
+    // Secondary
+    @else if $color == secondary {
+      @include costar(background-color, light);
+      @include costar(color, dark);
+      @include costar(border, gray04);
+      &:hover {
+        @include costar(color, gray03);
+      }
+      &:disabled {
+        @include costar(color, gray04);
+        @include costar(background-color, light);
+        &:hover {
+          @include costar(color, gray04);
+          @include costar(background-color, light);
+        }
+      }
+    }
+    // Warning
+    @else if $color == warning {
+      @include costar(background-color, warning-light);
+      @include costar(color, dark);
+      &:hover {
+        @include costar(background-color, warning-lighter);
+      }
+      &:disabled {
+        @include costar(color, light);
+        @include costar(border-color, warning-lightest);
+        @include costar(background-color, warning-lighter);
+        &:hover {
+          @include costar(color, light);
+          @include costar(border-color, warning-lightest);
+          @include costar(background-color, warning-lighter);
+        }
+      }
+    }
+    // Danger
+    @else if $color == danger {
+      @include costar(background-color, danger-light);
+      @include costar(color, light);
+      &:hover {
+        @include costar(background-color, danger-lighter);
+      }
+      &:disabled {
+        @include costar(color, light);
+        @include costar(border, danger-lightest);
+        @include costar(background-color, danger-lightest);
+        &:hover {
+          @include costar(color, light);
+          @include costar(border, danger-lightest);
+          @include costar(background-color, danger-lightest);
+        }
+      }
+    }
+  }
+  // Stroke
+  @else if $btn-style == stroked {
+    background-color: transparent;
+    border-width: 1px;
+    border-style: solid;
+
+    // Primary
+    @if $color == primary {
+      @include costar(border, primary);
+      @include costar(color, primary);
+      &:hover {
+        @include costar(background-color, primary-lightest);
+      }
+      &:disabled {
+        @include costar(color, primary-lightest);
+        @include costar(border-color, primary-lightest);
+        &:hover {
+          @include costar(color, primary-lightest);
+          background-color: transparent;
+        }
+      }
+    }
+    // Secondary
+    @else if $color == secondary {
+      @include costar(border, gray03);
+      @include costar(color, dark);
+      &:hover {
+        @include costar(background-color, gray-lightest);
+      }
+      &:disabled {
+        @include costar(color, gray04);
+        @include costar(border, gray04);
+        &:hover {
+          @include costar(color, gray04);
+          background-color: transparent;
+        }
+      }
+    }
+    // Warning
+    @else if $color == warning {
+      @include costar(border, warning);
+      @include costar(color, warning);
+      &:hover {
+        @include costar(background-color, warning-lightest);
+      }
+      &:disabled {
+        @include costar(color, warning-lighter);
+        @include costar(border-color, warning-lightest);
+        &:hover {
+          @include costar(color, warning-lighter);
+          background-color: transparent;
+        }
+      }
+    }
+    // Danger
+    @else if $color == danger {
+      @include costar(border, danger);
+      @include costar(color, danger);
+      &:hover {
+        @include costar(background-color, danger-lightest);
+      }
+      &:disabled {
+        @include costar(color, danger-lightest);
+        @include costar(border-color, danger-lightest);
+        &:hover {
+          @include costar(color, danger-lightest);
+          background-color: transparent;
+        }
+      }
+    }
+  }
+  // Basic
+  @else if $btn-style == basic {
+    background-color: unset;
+    border: none;
+
+    // Primary
+    @if $color == primary {
+      @include costar(color, primary);
+      &:hover {
+        @include costar(background-color, primary-lightest);
+      }
+      &:disabled {
+        @include costar(color, primary-lightest);
+        &:hover {
+          background-color: unset;
+          @include costar(color, primary-lightest);
+        }
+      }
+    }
+    // Secondary
+    @else if $color == secondary {
+      @include costar(color, gray03);
+      &:hover {
+        @include costar(background-color, gray-lightest);
+      }
+      &:disabled {
+        @include costar(color, gray04);
+        &:hover {
+          background-color: unset;
+          @include costar(color, gray04);
+        }
+      }
+    }
+    // Warning
+    @else if $color == warning {
+      @include costar(color, warning);
+      &:hover {
+        @include costar(background-color, warning-lightest);
+      }
+      &:disabled {
+        @include costar(color, warning-lightest);
+        &:hover {
+          background-color: unset;
+          @include costar(color, warning-lightest);
+        }
+      }
+    }
+    // Danger
+    @else if $color == danger {
+      @include costar(color, danger);
+      &:hover {
+        @include costar(background-color, danger-lightest);
+      }
+      &:disabled {
+        @include costar(color, danger-lightest);
+        &:hover {
+          background-color: unset;
+          @include costar(color, danger-lightest);
+        }
+      }
+    }
+  }
+}
+
+@mixin crem-button(
+  $btn-style,
+  $color,
+  $size: medium,
+  $disabled: false,
+  $icon-position: left
+) {
+  // 1. Base style
+  @include crem-button-base();
+
+  // 2. Size
+  @include crem-button-size($size);
+
+  // 3. Icon position
+  @if $icon-position == left {
+    flex-direction: row;
+  } @else if $icon-position == right {
+    flex-direction: row-reverse;
+  }
+
+  // 4. Button Style & Color Logic
+  @include crem-button-style($btn-style, $color);
+
+  // 5. Disabled State
+  @if $disabled == true {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}

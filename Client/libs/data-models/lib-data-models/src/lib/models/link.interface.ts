@@ -10,6 +10,7 @@ export interface SharedLeftNavLink {
   name: string;
   category: string;
   categoryHasFlyOutMenu: boolean;
+  categoryIsCurrentlyActiveLink: boolean;
   categoryLinkUrl: string;
   categorySpaUrl: string;
   categorySpaQueryParameters?: string;
@@ -18,10 +19,13 @@ export interface SharedLeftNavLink {
   moduleID: number;
   isAuthorized: boolean;
   objectTypeID: number;
+  objectTypeName: string;
   dynamicName: string;
   usesNgRouting: boolean;
   spaUrl: string;
   spaQueryParameters?: string;
   isCommon?: boolean;
+  isCurrentlyActiveLink: boolean;
+  subChildLevel: number;
   subChildLevelNavLinks: SharedLeftNavLink[];
 }

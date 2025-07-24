@@ -14,7 +14,7 @@ import { Subscription } from 'rxjs';
 import { DynamicFormsService } from '@forms/services/dynamic-forms.service';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ApiResponse } from '@forms/model/api-response';
+import { ApiResponse } from '@mango/data-models/lib-data-models';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { DynamicFormsFacade } from '@forms/+state/dynamic-forms.facade';
 import {
@@ -219,7 +219,7 @@ export class DynamicFormLeaseVerificationComponent
     this.subscription.push(
       this.dynamicFormService
         .updateLeaseVerificationStatus(leaseVerificationStatus)
-        .subscribe((res: ApiResponse) => {
+        .subscribe((res) => {
           if (res && res.success) {
             this.toastService.show(
               'Lease verification status updated successfully.',

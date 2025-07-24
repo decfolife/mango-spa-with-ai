@@ -4,15 +4,15 @@
 
 ## Table of Contents
 - [MangoSPA](#mangospa)
-	- [Table of Contents](#table-of-contents)
-	- [Getting Started](#getting-started)
-	- [Development](#development)
-		- [Development Server](#development-server)
-		- [Code Scaffolding](#code-scaffolding)
-	- [Building the Application](#building-the-application)
-	- [Testing with Docker Compose](#testing-with-docker-compose)
-		- [Rebuilding Containers](#rebuilding-containers)
-	- [Scripts Overview](#scripts-overview)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+  - [Development](#development)
+    - [Development Server](#development-server)
+    - [Code Scaffolding](#code-scaffolding)
+  - [Building the Application](#building-the-application)
+  - [Testing with Docker Compose](#testing-with-docker-compose)
+    - [Rebuilding Containers](#rebuilding-containers)
+  - [Scripts Overview](#scripts-overview)
 
 ---
 
@@ -81,7 +81,7 @@ To test the application in a production-like environment using Docker Compose:
 
 1. **Build the application locally from the `Client/` folder**:  
    ```bash
-   ng build
+   npx nx run mango:build
    ```
 2. **Serve the application with Docker Compose from the root directory**:  
    ```bash
@@ -90,7 +90,7 @@ To test the application in a production-like environment using Docker Compose:
 3. **Rebuild locally for  from the `Client/` folder**:  
    After making changes, rebuild using:
    ```bash
-   ng build
+   npx nx run mango:build
    ```
 
 ### Rebuilding Containers

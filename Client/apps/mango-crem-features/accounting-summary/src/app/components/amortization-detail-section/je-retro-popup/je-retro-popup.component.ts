@@ -68,6 +68,7 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.retrospectiveAdjustmentPopupData = null;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -162,6 +163,7 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
     this.jeRetroPopupClosedEvent.emit(copyOfJeProcessingPopupData);
     this.jeProcessingPopupData = null;
     this.activeTabIndex = 0;
+    this.retrospectiveAdjustmentPopupData = null;
   }
 
   onJeRetroPopupHidden() {

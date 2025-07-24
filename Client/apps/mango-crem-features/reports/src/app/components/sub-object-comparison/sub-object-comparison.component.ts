@@ -16,11 +16,17 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { interval, Subscription } from 'rxjs';
 import notify from 'devextreme/ui/notify';
 import { UtilitiesService } from '@mango/core-shared';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
+import { ToastState } from '@mango/data-models/lib-data-models';
+import { DataType } from 'libs/data-models/lib-data-models/src/lib/enums/index';
 
 @Component({
   selector: 'mango-sub-object-comparison',
   templateUrl: './sub-object-comparison.component.html',
-  styleUrls: ['./sub-object-comparison.component.scss'],
+  styleUrls: [
+    './sub-object-comparison.component.scss',
+    '../../../assets/styles/reports.scss',
+  ],
 })
 export class SubObjectComparisonComponent implements OnInit {
   public pageTitle = this.route.snapshot.data['pageTitle'];
@@ -44,6 +50,8 @@ export class SubObjectComparisonComponent implements OnInit {
   public subscriptionObject: { [key: string]: Subscription } = {};
   public valid = true;
   public widgetId: number;
+  public subObjectIds: number[] = [];
+  DataType = DataType;
 
   @ViewChild('DataGrid') dataGrid: DxDataGridComponent;
   @ViewChild('listMenuTrigger') listMenuTrigger: MatMenuTrigger;
@@ -56,7 +64,8 @@ export class SubObjectComparisonComponent implements OnInit {
     private datepipe: DatePipe,
     private currencyPipe: CurrencyPipe,
     private decimalPipe: DecimalPipe,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: CremToastService
   ) {
     this.widgetId = +this.route.snapshot.paramMap.get('widgetId');
   }
@@ -70,19 +79,38 @@ export class SubObjectComparisonComponent implements OnInit {
     this.parentObjectId = +this.route.snapshot.paramMap.get('parentObjectId');
     this.parentObjectTypeId =
       +this.route.snapshot.paramMap.get('parentObjectTypeId');
+    this.subObjectIds = this.route.snapshot.queryParamMap
+      .getAll('subObjectIds')
+      .map(Number)
+      .filter((x) => x !== 0);
 
-    this.sharedService.getUserPreferences().subscribe((result) => {
-      const userPreferences = result.data || {};
-      this.dateFormat = userPreferences?.dateFormat || 'MM/dd/yyyy';
-      this.projectGanttChartService
-        .getObjectNameAndType(this.parentObjectId, this.parentObjectTypeId)
-        .subscribe((projectType) => {
-          this.objectType = projectType.data.objectType;
-          this.pageTitle = projectType.data.objectName;
+    if (this.subObjectIds?.length) {
+      this.sharedService.getUserPreferences().subscribe((result) => {
+        const userPreferences = result.data || {};
+        this.dateFormat = userPreferences?.dateFormat || 'MM/dd/yyyy';
+        this.projectGanttChartService
+          .getObjectNameAndType(this.parentObjectId, this.parentObjectTypeId)
+          .subscribe((projectType) => {
+            this.objectType = projectType.data.objectType;
+            this.pageTitle = projectType.data.objectName;
 
-          this.getSubObjectComparisonData();
-        });
-    });
+            this.getSubObjectComparisonData();
+          });
+      });
+    } else {
+      this.toastService.show(
+        'Add at least one deal to compare.',
+        '',
+        ToastState.ERROR,
+        {
+          position: 'bottom right',
+          maxWidth: '350px',
+        }
+      );
+
+      this.valid = false;
+      this.loading = false;
+    }
   }
 
   public displayColumnChooser() {
@@ -110,29 +138,29 @@ export class SubObjectComparisonComponent implements OnInit {
         gridCell.column.dataField !== 'RowLabel' &&
         gridCell.value
       ) {
-        if (gridCell?.data?.DataTypeId === '7') {
+        if (gridCell?.data?.DataTypeId === DataType.DATE.toString()) {
           excelCell.value = this.datepipe.transform(
             gridCell.value,
             this.dateFormat
           );
         }
 
-        if (gridCell?.data?.DataTypeId === '6') {
+        if (gridCell?.data?.DataTypeId === DataType.CURRENCY.toString()) {
           excelCell.value = this.currencyPipe.transform(gridCell.value, 'USD');
         }
 
         if (
-          ((gridCell?.data?.DataTypeId === '5' ||
-            gridCell?.data?.DataTypeId === '206') &&
+          ((gridCell?.data?.DataTypeId === DataType.DOUBLE.toString() ||
+            gridCell?.data?.DataTypeId === DataType.PERCENT.toString()) &&
             gridCell?.data?.FormItemTypeId === '2') ||
-          (gridCell?.data.DataTypeId === '5' &&
+          (gridCell?.data.DataTypeId === DataType.DOUBLE.toString() &&
             gridCell?.data.FormItemTypeId === '9')
         ) {
           excelCell.value = this.decimalPipe.transform(gridCell.value, '1.2-2');
         }
 
         if (
-          gridCell?.data?.DataTypeId === '3' &&
+          gridCell?.data?.DataTypeId === DataType.INTEGER.toString() &&
           gridCell?.data?.FormItemTypeId === '2'
         ) {
           excelCell.value = this.decimalPipe.transform(gridCell.value, '1.0');
@@ -144,7 +172,7 @@ export class SubObjectComparisonComponent implements OnInit {
         }
 
         if (
-          gridCell?.data.DataTypeId === '200' &&
+          gridCell?.data.DataTypeId === DataType.CHAR.toString() &&
           gridCell?.data.FormItemTypeId === '9'
         ) {
           //add image?
@@ -328,7 +356,8 @@ export class SubObjectComparisonComponent implements OnInit {
       .getSubObjectsComparisonData(
         this.formId,
         this.childObjectTypeId,
-        this.widgetId
+        this.widgetId,
+        this.subObjectIds
       )
       .subscribe((result) => {
         const data = JSON.parse(result.data);
@@ -357,7 +386,7 @@ export class SubObjectComparisonComponent implements OnInit {
           if (item?.FormItemTypeId === '17' || item?.FormItemTypeId === '6') {
             item.RowLabel = 'Image';
           } else if (
-            item?.DataTypeId === '200' &&
+            item?.DataTypeId === DataType.CHAR.toString() &&
             item?.FormItemTypeId === '9'
           ) {
             item.RowLabel = 'Map';
@@ -489,7 +518,10 @@ export class SubObjectComparisonComponent implements OnInit {
               const checkImageInterval = interval(1000);
 
               const mapItem = this.data.find((item) => {
-                return item.DataTypeId === '200' && item.FormItemTypeId === '9';
+                return (
+                  item.DataTypeId === DataType.CHAR.toString() &&
+                  item.FormItemTypeId === '9'
+                );
               });
 
               if (mapItem?.[key]) {

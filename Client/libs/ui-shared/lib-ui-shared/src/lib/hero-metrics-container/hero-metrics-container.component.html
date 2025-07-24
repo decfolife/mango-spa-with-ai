@@ -1,10 +1,16 @@
 <div class="bounds" tabindex="0">
   <div class="fx-metrics-container" fxLayout="row" fxFlexFill>
-    <ng-container *ngFor="let metric of schemaMetrics" >
-      <div class="metric-container" *ngIf="metric.isActive" >
-        <ngx-skeleton-loader *ngIf="!metric.dispMetric" [theme]="{height: '80px', width: '168px'}"></ngx-skeleton-loader>
-        <crem-metric *ngIf="metric.dispMetric" [metric]="metric.metricDetail"></crem-metric>
+    <ng-container *ngFor="let metric of schemaMetrics">
+      <div class="metric-container" *ngIf="metric.isActive">
+        <ngx-skeleton-loader
+          *ngIf="!metric.dispMetric && !errorOccurred"
+          [theme]="{ height: '80px', width: '168px' }"
+        ></ngx-skeleton-loader>
+        <crem-metric
+          *ngIf="metric.dispMetric"
+          [metric]="metric.metricDetail"
+        ></crem-metric>
       </div>
     </ng-container>
   </div>
-</div> 
+</div>

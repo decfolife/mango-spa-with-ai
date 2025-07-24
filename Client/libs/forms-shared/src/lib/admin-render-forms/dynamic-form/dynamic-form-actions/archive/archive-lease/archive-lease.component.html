@@ -346,7 +346,10 @@
         [ngClass]="{ 'grid__text--error-black': hasScheduledCheckbox }"
       >
         Archive all selected leases anyway?
-        <dx-check-box [(value)]="hasScheduledCheckbox"></dx-check-box>
+        <dx-check-box
+          [(value)]="hasScheduledCheckbox"
+          id="df-confirmArchive"
+        ></dx-check-box>
       </div>
 
       <crem-button

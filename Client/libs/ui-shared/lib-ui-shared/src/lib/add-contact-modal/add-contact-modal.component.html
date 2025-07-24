@@ -96,7 +96,7 @@
           <crem-form-control>
             <crem-dropdown
               [id]="getId(componentName, 'isPublic', 'dropdown')"
-              #isPublicdropDown
+              #isPublicDropDown
               [dataSource]="[
                 { displayKey: 'Yes', valueKey: 'true' },
                 { displayKey: 'No', valueKey: 'false' }
@@ -116,36 +116,35 @@
           </crem-form-control>
         </crem-form-item>
       </div>
-
-      <crem-form-item [id]="getId(componentName, 'company', 'form-item')">
-        <crem-form-label
-          [id]="getId(componentName, 'name', 'label')"
-          [required]="true"
-          >Company
-        </crem-form-label>
-        <crem-form-control>
-          <crem-dropdown
-            [id]="getId(componentName, 'company', 'dropdown')"
-            [dataSource]="companyDataSource"
-            #companyDropdown
-            [showClearButton]="true"
+      <div class="layout-container">
+        <crem-form-item>
+          <crem-form-label
+            [id]="getId(componentName, 'company', 'label')"
             [required]="true"
-            [customRequireValidation]="false"
-            [showColumnHeader]="false"
-            displayExpr="companyName"
-            valueExpr="companyID"
-            [allowSearch]="true"
-            [searchTimeout]="searchTimeoutOption"
-            [useSelectBox]="true"
-            hoverText="Select company"
-            [showDefaultValidationTooltip]="true"
-            [containerized]="false"
-            formControlName="companyName"
-          >
-          </crem-dropdown>
-        </crem-form-control>
-      </crem-form-item>
-
+            >Company
+          </crem-form-label>
+          <crem-form-control>
+            <crem-dropdown
+              displayExpr="companyName"
+              valueExpr="companyID"
+              [id]="getId(componentName, 'company', 'dropdown')"
+              #companyDropDown
+              [dataSource]="companyDataSource"
+              [showClearButton]="true"
+              [required]="true"
+              [customRequireValidation]="false"
+              [showColumnHeader]="false"
+              [allowSearch]="true"
+              [useSelectBox]="true"
+              hoverText="Select Company"
+              [showDefaultValidationTooltip]="true"
+              [containerized]="false"
+              formControlName="companyName"
+            >
+            </crem-dropdown>
+          </crem-form-control>
+        </crem-form-item>
+      </div>
       <div class="layout-container">
         <crem-form-item>
           <crem-form-label
@@ -155,15 +154,15 @@
           </crem-form-label>
           <crem-form-control>
             <crem-dropdown
+              displayExpr="companyName"
+              valueExpr="companyID"
               [id]="getId(componentName, 'group', 'dropdown')"
               #groupDropDown
-              [dataSource]="contactGroupDropdownItem"
+              [dataSource]="contactGroupDropDownItem"
               [showClearButton]="true"
               [required]="true"
               [customRequireValidation]="false"
               [showColumnHeader]="false"
-              displayExpr="companyName"
-              valueExpr="companyID"
               [allowSearch]="true"
               [useSelectBox]="true"
               hoverText="Select Group"
@@ -187,9 +186,9 @@
               [id]="getId(componentName, 'Group-Right', 'dropdown')"
               #subGroupDropDown
               [dataSource]="[
-                { displayKey: 'View', valueKey: 2 },
-                { displayKey: 'Edit', valueKey: 4 },
-                { displayKey: 'Delete', valueKey: 5 }
+                { displayKey: 'View', valueKey: '2' },
+                { displayKey: 'Edit', valueKey: '4' },
+                { displayKey: 'Delete', valueKey: '5' }
               ]"
               [showClearButton]="true"
               [required]="true"

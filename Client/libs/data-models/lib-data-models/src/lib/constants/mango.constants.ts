@@ -39,6 +39,7 @@ export const EQUIPMENT_RENDER_SELECT_TEMPLATE_ID = 131;
 export const EQUIPMENT_RENDER_SELECT_SUPPLIER_ID = 133;
 export const EQUIPMENT_OTID = 4;
 export const EQUIPMENT_WIZARD_OTID = 174;
+export const EQUIPMENT_LEASE_TEMPLATE_ID = 402;
 export const EQUIPMENT_WIZARD_SAVE_SUCCESS =
   'Equipment Lease created successfully.';
 export const EQUIPMENT_WIZARD_SAVE_ERROR =
@@ -48,7 +49,8 @@ export const PORTFOLIO_DROPDOWN_ERROR =
 export const CURRENCY_DROPDOWN_ERROR =
   'An error occurred while getting currency data please contact the system administrator.';
 export const VALIDATION_ERROR = 'Please fill out the required fields.';
-
+export const VALIDATION_INPUT_ERROR =
+  'This field cannot contain letters, commas or spaces. Please try again.';
 //Constant for Add Premise
 export const PREMISE_WIZARD_OTID = 2;
 //Constant for Add Building

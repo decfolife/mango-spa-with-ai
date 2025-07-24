@@ -4,16 +4,23 @@
       class="section-clause-description"
       [ngClass]="{ 'add-bottom-margin': isEditMode }"
     >
-      <div class="clause-text-label-field">
+      <div class="clause-text-label-field field-content">
         <crem-input
           *ngIf="isEditMode"
+          class="df-clauseMainText"
+          [id]="
+            'df-textAreaId-' +
+            fieldData?.name?.clauseTypeID +
+            fieldData?.dataField
+          "
           [inputType]="'textarea'"
           [maxLengthField]="7000"
-          [allowScrolling]="true"
+          [required]="fieldData.name.formItemMandatory == '1' ? true : false"
           [formControlName]="fieldData?.dataField"
         >
         </crem-input>
         <crem-input-label
+          class="text-area-label"
           *ngIf="isViewMode"
           [label]="fieldData?.name?.formItemAnswer"
         >
@@ -71,7 +78,7 @@
     </div>
 
     <div
-      class="section-clause-details-label-field"
+      class="section-clause-details-label-field field-content"
       [ngClass]="{ 'df-clauseEditMode': isEditMode }"
     >
       <div
@@ -85,6 +92,7 @@
         ></crem-input-label>
         <crem-input
           class="df-clauseDocValue"
+          [id]="'df-inputDoc-' + fieldData?.dataField"
           *ngIf="showDocEdit"
           [inputType]="'text'"
           [maxLengthField]="100"
@@ -108,6 +116,7 @@
         ></crem-input-label>
         <crem-input
           class="df-clauseSecValue"
+          [id]="'df-inputSec-' + fieldData?.dataField"
           *ngIf="showSecEdit"
           [inputType]="'text'"
           [maxLengthField]="50"
@@ -131,6 +140,7 @@
         ></crem-input-label>
         <crem-input
           class="df-clausePageValue"
+          [id]="'df-inputPage-' + fieldData?.dataField"
           *ngIf="showPageEdit"
           [inputType]="'text'"
           [maxLengthField]="50"
@@ -154,6 +164,7 @@
         ></crem-input-label>
         <crem-date-picker
           class="df-clauseDateValue"
+          [id]="'df-inputDate-' + fieldData?.dataField"
           *ngIf="showDateEdit"
           use-dynamic-form-field-config
           [dateFormat]="dateFormat"

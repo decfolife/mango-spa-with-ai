@@ -2,14 +2,25 @@
 
 mat-card.mat-mdc-card {
   box-shadow: none !important;
-  padding: 0px !important;
-  margin-bottom: 24px;
   @include costar(border, gray04);
+  @include costar(margin-bottom, 4);
   @include costar(border-radius, medium);
 
-  mat-card-content.mat-card-content {
-    padding-top: 24px;
-    padding: 16px;
+  mat-card-header {
+    // Make the card header clickable if isSuperUser
+    cursor: default;
+    &.clickable {
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+
+  &:has(mat-card-header) {
+    // Only add separation line if title exists
+    mat-card-content {
+      @include costar(border-top, gray04);
+    }
   }
 }
 
@@ -77,17 +88,38 @@ mat-card.mat-mdc-card {
       .field-content {
         @include costar(font-weight, bold);
       }
+      .df-formSection-field a {
+        @include costar(font-weight, bold);
+        color: var(--costar-color-primary);
+      }
     }
   }
+
+  // Styles for view/edit mode
+  .view-mode {
+    .dx-item[role='option'] {
+      @include costar(transition, fast);
+      &:hover {
+        @include costar(background-color, primary-lightest);
+      }
+    }
+    .dx-item:has(mango-dynamic-form-widget) {
+      &:hover {
+        // Don't add hover effect to Dynamic Widgets
+        cursor: unset;
+        background-color: unset !important;
+      }
+    }
+  }
+  // .edit-mode{}
 }
 
 mat-card.mat-mdc-card mat-card-header.mat-mdc-card-header {
-  padding: 16px;
   box-sizing: border-box;
-  border-bottom: 1px solid #bfbfbf;
-  color: #000000;
   justify-content: space-between;
   align-items: center;
+  @include costar(padding, 4);
+  @include costar(color, dark);
 }
 
 .controls-right,
@@ -131,20 +163,11 @@ ngx-skeleton-loader[id^='skelDropdown'] {
 
 .field-container {
   display: flex;
-  align-items: center;
+  align-items: start;
 }
 
 .display-flex {
   display: flex;
-}
-
-.text-area {
-  flex: 2;
-  height: 50px;
-}
-
-::ng-deep .text-area-label {
-  white-space: pre-wrap;
 }
 
 .df-formSection-labelContainer {
@@ -156,6 +179,11 @@ ngx-skeleton-loader[id^='skelDropdown'] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  span[id^='df-accountingWorkFlow'],
+  span[id^='df-leaseVerification'] {
+    height: 24px;
+  }
 }
 
 .field-content {
@@ -179,16 +207,6 @@ crem-date-picker {
   display: flex;
 }
 
-.clause-section-item {
-  //Keep the label at the top but also centered
-  align-items: flex-start;
-  ::ng-deep {
-    crem-input-label.clause-section-item-label > label {
-      padding-top: calc(0.175rem + 5px);
-    }
-  }
-}
-
 .form-field-tooltip {
   position: relative;
   top: 5px;
@@ -199,21 +217,17 @@ crem-date-picker {
   align-items: center;
   border-top: none;
   cursor: default;
-  .df-infoHistoryData,
-  .df-infoHistoryData crem-field-history,
-  div.iconWrapper,
-  div.dx-field {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    span {
-      transform: translate(-8px, -4px);
-      display: inline-block;
-      svg {
-        width: 18px;
-        height: 18px;
-      }
-    }
+
+  .dx-field-value-static {
+    width: unset !important; // FIXME: Global styles are messing up the crem-icon within the .dx-field-value-static
+  }
+
+  .dx-field {
+    min-height: unset !important; // FIXME: dx.generic is globally overriding this value
+  }
+
+  .dx-template-wrapper {
+    align-items: start; // FIXME: `my-devextreme.scss` is messing the form's labels alignment.
   }
 }
 
@@ -262,12 +276,15 @@ fa-icon {
   }
 }
 
-.df-formSection-fieldLabel.df-superLabel {
-  color: $color-secondary;
-  &:hover {
-    color: $primary-light;
-    text-decoration: underline;
-    cursor: pointer !important;
+.df-formSection-fieldLabel {
+  word-break: break-word;
+  &.df-superLabel {
+    color: $color-secondary;
+    &:hover {
+      color: $primary-light;
+      text-decoration: underline;
+      cursor: pointer !important;
+    }
   }
 }
 
@@ -350,16 +367,35 @@ mango-dynamic-form-widget {
         white-space: normal;
         text-wrap: wrap;
         height: auto;
+
+        .df-formSection-fieldLabel.df-superLabel {
+          label span {
+            cursor: pointer;
+          }
+        }
       }
       .df-formSection-fieldContent {
         width: 56%;
+
+        div.input-container {
+          width: 100%;
+        }
+
+        &.text-area div.input-container {
+          height: unset;
+        }
       }
 
-      crem-input-label label span {
-        cursor: pointer;
-        white-space: normal;
-        text-wrap: wrap;
-        line-height: normal;
+      crem-input-label {
+        label span {
+          white-space: normal;
+          text-wrap: wrap;
+          line-height: normal;
+        }
+        &.text-area-label label span {
+          white-space: pre;
+          text-wrap: wrap;
+        }
       }
 
       &.df-clauseSection .df-formSection-labelContainer {
@@ -374,18 +410,26 @@ mango-dynamic-form-widget {
   .mat-mdc-icon-button .mat-mdc-button-ripple {
     @include costar(border-radius, round);
   }
+
+  text-area-label label span {
+    white-space: pre;
+    text-wrap: wrap;
+    word-break: break-all;
+  }
+
+  .text-area {
+    flex: 2;
+  }
 }
 
 // Mat-menu Styles
 ::ng-deep {
-  .mat-mdc-card-title:hover {
-    cursor: pointer;
-  }
-
   /* Don't show as a link to make it look consistent to the rest of the mat-menu dropdowns */
   .cdk-overlay-container .df-sectionLabelMenu {
     a {
       @include costar(color, gray01, $important: true);
+      height: 32px;
+      min-height: 32px;
     }
     a:hover {
       text-decoration: unset !important;
@@ -395,8 +439,20 @@ mango-dynamic-form-widget {
       margin: 0px !important;
     }
   }
+
+  .links {
+    a,
+    a > * {
+      color: var(--costar-color-primary);
+    }
+  }
 }
 
 .df-clauseElements {
   width: calc(100% - 150px);
+}
+
+#gotoPageBuilding,
+#gotoPagePremise {
+  cursor: pointer;
 }

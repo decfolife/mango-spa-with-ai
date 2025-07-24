@@ -1,5 +1,6 @@
 @use 'src/assets/styles/colors';
 
+// TODO: This is a global stylesheets, needs revision and add :host
 ::ng-deep {
   .dx-datagrid-content
     .dx-datagrid-table
@@ -41,12 +42,6 @@
 
     & > div {
       overflow: visible;
-    }
-  }
-  .dx-datagrid-header-panel {
-    .dx-toolbar {
-      margin: 0;
-      padding: 16px 16px 12px;
     }
   }
 

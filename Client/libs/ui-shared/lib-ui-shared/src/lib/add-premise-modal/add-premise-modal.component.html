@@ -4,6 +4,7 @@
   modalTitle="Add {{ premiseObjectName }}"
   closeIconVisible="true"
   [customFooter]="true"
+  [closeDialogResult]="savedAPremise"
   [loading]="{
 		type: 'form',
 		instances: 3,
@@ -20,7 +21,7 @@
         [formGroup]="addPremiseFormGroup"
         class="add-Premise-form"
       >
-        <crem-form-item id="aet-Portfolio-container">
+        <crem-form-item id="aet-Portfolio-container" *ngIf="showPortfolio">
           <crem-form-label [required]="true">Portfolio</crem-form-label>
           <crem-dropdown
             [autoSelect]="true"
@@ -50,7 +51,11 @@
           <crem-dropdown
             id="buildingId"
             #buildingId
-            [dataSource]="buildingsDataSource"
+            [dataSource]="
+              useBuildingDataSource
+                ? buildingsDataSource
+                : buildingDropdownItems
+            "
             [allowSearch]="true"
             [showClearButton]="true"
             [showColumnHeader]="false"
@@ -63,6 +68,7 @@
             formControlName="building"
             required="true"
             useSelectBox="true"
+            [autoSelect]="useAutoSelectBuilding"
           >
           </crem-dropdown>
         </crem-form-item>
@@ -99,6 +105,7 @@
             [isDisabled]="loading"
             required="true"
             formControlName="premiseType"
+            [autoSelect]="useAutoSelectPremise"
           ></crem-dropdown>
         </crem-form-item>
       </form>

@@ -71,6 +71,7 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { AddFormWizardModule } from '@micro-components/form-wizard/modal/add-form-wizard/add-form-wizard.module';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
+import { LeaseAlertsModule } from '@micro-components/lease-alerts/lease-alerts.module';
 import { TaskApprovalModule } from '@project-dashboard/components/modal/task-approval/task-approval.module';
 import { PaymentDetailsPopupComponent } from './listpage/payment-details/payment-details-popup.component';
 
@@ -130,6 +131,7 @@ import { PaymentDetailsPopupComponent } from './listpage/payment-details/payment
     MatTabsModule,
     ModalModule,
     AddFormWizardModule,
+    LeaseAlertsModule,
     NgbModule,
     FormsModule,
     ReactiveFormsModule,

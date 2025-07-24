@@ -1,9 +1,11 @@
 <crem-modal
+  #equipmentModal
   modalId="add_equipment_modal"
   modalTitleId="add_equipment_modal_modalTitleId"
   modalTitle="Add Equipment Lease"
   closeIconVisible="true"
   [customFooter]="true"
+  [closeDialogResult]="savedALease"
 >
   <div modalContent class="body-content">
     <form
@@ -12,10 +14,13 @@
       [formGroup]="equipmentForm"
       class="add-equipment-form"
     >
-      <crem-form-item [id]="getId(componentName, 'portfolio', 'form-item')">
+      <crem-form-item
+        [id]="getId(componentName, 'portfolio', 'form-item')"
+        *ngIf="!hasPassedSupplier"
+      >
         <crem-form-label
           [id]="getId(componentName, 'portfolio', 'label')"
-          [required]="true"
+          [required]="!hasPassedSupplier"
           >Portfolio
         </crem-form-label>
 
@@ -25,7 +30,7 @@
             [id]="getId(componentName, 'portfolio', 'dropdown')"
             [dataSource]="portfolioDropdownItem"
             [showClearButton]="true"
-            required="true"
+            required="!hasPassedSupplier"
             [customRequireValidation]="false"
             [showColumnHeader]="false"
             displayExpr="companyName"
@@ -62,6 +67,8 @@
             hoverText="Select Supplier"
             formControlName="supplierList"
             [containerized]="false"
+            [autoSelect]="true"
+            [useSelectBox]="hasPassedSupplier"
           >
           </crem-dropdown>
         </crem-form-control>
@@ -112,6 +119,8 @@
             [initialSelectedValue]="selectedTemplateID"
             formControlName="templateList"
             [containerized]="false"
+            [autoSelect]="true"
+            [useSelectBox]="hasPassedSupplier"
           >
           </crem-dropdown>
         </crem-form-control>
@@ -180,7 +189,7 @@
             valueExpr="exchangeRateID"
             [required]="true"
             [allowSearch]="true"
-            [initialSelectedValue]="selectedCurrency"
+            [initialSelectedValue]="defaultCurrency"
             hoverText="Select Currency Type"
             formControlName="currencyTypeList"
             [containerized]="false"

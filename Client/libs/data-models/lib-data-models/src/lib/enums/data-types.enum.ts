@@ -1,0 +1,17 @@
+export enum DataType {
+  SMALL_INT = 2,
+  INTEGER = 3,
+  SINGLE = 4,
+  DOUBLE = 5,
+  CURRENCY = 6,
+  DATE = 7,
+  IDISPATCH = 9,
+  BOOLEAN = 11,
+  DECIMAL = 14,
+  NUMERIC_9W = 131,
+  NUMERIC_10W = 139,
+  CHAR = 200,
+  LONG_CHAR = 201,
+  WCHAR = 202,
+  PERCENT = 206,
+}

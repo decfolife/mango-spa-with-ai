@@ -83,6 +83,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
   selectedCurrencyIndex: number = 0;
   selectedMeasurement: any;
   selectedMeasurementIndex: number = 0;
+  selectedLeaseTemplate: any;
   leaseType: any = null;
   beginDate: any = null;
   endDate: any = null;
@@ -98,6 +99,8 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
   dateFormat = '';
   isUserDatesEU: boolean;
+  hasPassedBuilding = this.data.objectId && this.data.objectName;
+  savedALease = false; // true when "save and new" used at lease once
 
   @Output() isLoading = new EventEmitter();
   @ViewChild('leasePortfolioId') leasePortfolioDropdown: DropdownComponent;
@@ -105,13 +108,13 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
   @ViewChild('premiseId') premiseDropdown: DropdownComponent;
   @ViewChild('newPremiseName') premiseNameTextBox: InputComponent;
   @ViewChild('premiseTypeId') premiseTypeDropdown: DropdownComponent;
-  @ViewChild('TenantName') tenantNameTextBox: InputComponent;
+  @ViewChild('tenantName') tenantNameTextBox: InputComponent;
   @ViewChild('leaseTemplateId') leaseTemplateDropdown: DropdownComponent;
   @ViewChild('beginDate') beginDateTextBox: InputComponent;
   @ViewChild('endDate') endDateTextBox: InputComponent;
   @ViewChild('accountingType') accountingTypeDropdown: DropdownComponent;
   @ViewChild('parentLease') leaseParentDropdown: DropdownComponent;
-  @ViewChild('currency') currencyDropdown: DropdownComponent;
+  @ViewChild('currencyDropdown') currencyDropdown: DropdownComponent;
   @ViewChild('measurement') measurementDropdown: DropdownComponent;
   @ViewChild('leasePortfolioId') portfolioDropdown: DropdownComponent;
 
@@ -127,6 +130,9 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
     public data: {
       objectTypeName: string;
       objectTypeId: number;
+      objectId: number;
+      objectName: string;
+      premiseId: number;
     }
   ) {
     this.initBuildingsDataSource();
@@ -155,6 +161,11 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    if (this.data.objectId) {
+      this.handleSelectedBuilding(this.data.objectId);
+    }
+
     this.getPortfolioDropdownData();
     this.getPremiseName();
     this.getLeaseName();
@@ -171,12 +182,10 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
           .subscribe((result) => {
             this.data.objectTypeName = result?.data?.[0]?.objectTypeName;
             this.buildModalTitle();
-            this.loading = false; // Makes sure doesn't show blank spaces while loading modal information
           })
       );
     } else {
       this.buildModalTitle();
-      this.loading = false;
     }
 
     const hidePremiseCall =
@@ -225,6 +234,17 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
 
   // Get Buildings
   initBuildingsDataSource() {
+    if (this.hasPassedBuilding) {
+      this.buildingsDataSource = [
+        {
+          buildingID: this.data.objectId,
+          buildingName: this.data.objectName,
+        },
+      ];
+
+      return;
+    }
+
     this.buildingsDataSource = new DataSource({
       load: async (loadOptions) => {
         try {
@@ -288,7 +308,10 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
 
   setupAddLeaseFormGroup() {
     this.addLeaseFormGroup = new FormGroup({
-      portfolio: new FormControl('', [Validators.required]),
+      portfolio: new FormControl(
+        '',
+        this.hasPassedBuilding ? null : [Validators.required]
+      ),
       building: new FormControl('', [Validators.required]),
       premise: new FormControl(''),
       newPremiseName: new FormControl(''),
@@ -303,6 +326,14 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
       beginDate: new FormControl(null),
       endDate: new FormControl(null),
     });
+
+    if (this.hasPassedBuilding) {
+      this.addLeaseFormGroup.get('building').disable();
+    }
+
+    if (this.data.premiseId) {
+      this.addLeaseFormGroup.get('premise').disable();
+    }
   }
 
   public getPortfolioDropdownData() {
@@ -374,6 +405,9 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
       .getRenderSelect(0, RENDER_SELECT_TEMPLATE_ID)
       .subscribe((result) => {
         this.leaseTemplateItems = result.data;
+        this.selectedLeaseTemplate = result.data.find(
+          (x) => x.objectTypeTypeName === 'Lease'
+        ).objectTypeTypeID;
       });
   }
 
@@ -424,23 +458,36 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  onBuildingChanged(e: any) {
-    if (e.length == 0) {
-      this.selectedBuilding = null;
-    } else {
-      this.selectedBuilding = e[0].buildingID;
-      this.formWizardService
-        .getRenderSelect(this.selectedBuilding, RENDER_SELECT_PREMISE_ID)
-        .subscribe((result) => {
+  handleSelectedBuilding(buildingId: number) {
+    this.selectedBuilding = buildingId;
+    this.formWizardService
+      .getRenderSelect(this.selectedBuilding, RENDER_SELECT_PREMISE_ID)
+      .subscribe((result) => {
+        if (this.hasPassedBuilding && this.data.premiseId) {
+          this.premiseDropdownItems = result.data.filter(
+            (x) => x.premiseID === this.data.premiseId
+          );
+        } else {
           this.premiseDropdownItems = result.data;
           this.premiseDropdownItems.unshift({
             premiseID: 0,
             premiseName: 'Add New',
           });
-          this.getLeaseTemplates();
-        });
-    }
+        }
+
+        this.getLeaseTemplates();
+      });
+
     this.loadParentLeases();
+  }
+
+  onBuildingChanged(e: any) {
+    if (e.length == 0) {
+      this.selectedBuilding = null;
+      this.loadParentLeases();
+    } else {
+      this.handleSelectedBuilding(e[0].buildingID);
+    }
   }
 
   onBeginDateChanged(e: any) {
@@ -526,7 +573,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
       this.selectedMeasurement = null;
     } else {
       this.selectedMeasurement = e[0].measureUnitsID;
-      this.portfolioDropdown.selectBox.instance.focus();
+      this.portfolioDropdown?.selectBox.instance.focus();
     }
   }
 
@@ -537,7 +584,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
 
   public close() {
     if (!this.newLeaseSaved) {
-      this.dialogRef.close();
+      this.dialogRef.close(this.savedALease);
     }
   }
 
@@ -596,7 +643,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
                   duration: 5000,
                 }
               );
-              this.dialogRef.close();
+              this.dialogRef.close(true);
               this.saveClicked = false;
             } else {
               this.toastService.show(
@@ -626,7 +673,6 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
       this.getPremiseId().then((resolve) => {
         const lease = this.getLeaseFromFormData();
         lease.PremiseID = resolve;
-        this.loading = true;
         this.subscriptions.add(
           this.formWizardService.addLease(lease).subscribe((result) => {
             if (result.success) {
@@ -640,6 +686,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
                 }
               );
               this.saveClicked = false;
+              this.savedALease = true;
               this.resetInputFields();
             } else {
               this.toastService.show(
@@ -664,19 +711,21 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
   }
 
   resetInputFields() {
-    this.addLeaseFormGroup.reset();
-    this.currencyDropdown.clearSelectBox();
-    this.buildingDropdown.clearSelectBox();
-    this.portfolioDropdown.clearSelectBox();
+    this.currencyDropdown.setDropdownvalue(this.selectedCurrencyIndex);
     this.leaseParentDropdown.clearSelectBox();
+
+    if (!this.hasPassedBuilding) {
+      this.portfolioDropdown.clearSelectBox();
+      this.buildingDropdown.clearSelectBox();
+      this.leaseTemplateDropdown.clearSelectBox();
+    }
     if (this.premiseTypeDropdown != undefined) {
       this.premiseTypeDropdown.clearSelectBox();
     }
-    if (this.premiseDropdown != undefined) {
+    if (this.premiseDropdown != undefined && !this.data.premiseId) {
       this.premiseDropdown.clearSelectBox();
     }
-    this.leaseTemplateDropdown.clearSelectBox();
-    this.measurementDropdown.clearSelectBox();
+    this.measurementDropdown.setDropdownvalue(this.selectedMeasurementIndex);
     this.addLeaseFormGroup.get('beginDate').setValue('');
     this.addLeaseFormGroup.get('endDate').setValue('');
     this.tenantNameTextBox.value = '';

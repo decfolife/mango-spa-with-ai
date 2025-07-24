@@ -148,6 +148,7 @@ export class EventsDetailSectionComponent
         }
       )
     );
+    localStorage.removeItem('minROUActionDate');
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -729,6 +730,7 @@ export class EventsDetailSectionComponent
           manualAssetAdjustment: e.row.data.manualAssetAdjustment,
           adjustment: e.row.data.adjustment,
           rouAssetPriorAmount: this.rouAssetPriorAmount,
+          minROUActionDate: this.detailsGridData[0].beginDate,
         };
 
         const dialogRef: MatDialogRef<any, any> = this.dialog.open(
@@ -895,7 +897,10 @@ export class EventsDetailSectionComponent
       } else {
         e.items.push(remeasure);
       }
-      e.items.push(editRouAsset);
+      //Temporarily Remove due to CoE concerns and existing bug
+      //Retro schedules do not currently regenerate properly on
+      //edit from summary page
+      //e.items.push(editRouAsset);
 
       if (
         this.userHasDeleteAccountingSchedulesModuleRight ||
@@ -930,6 +935,7 @@ export class EventsDetailSectionComponent
       },
       queryParams: queryParams,
     });
+    localStorage.setItem('minROUActionDate', this.detailsGridData[0].beginDate);
   }
 
   private setRights() {

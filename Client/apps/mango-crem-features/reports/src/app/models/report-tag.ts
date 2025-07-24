@@ -1,4 +1,3 @@
-
 export interface ReportTag {
   reportTagID: number;
   reportTag: string;

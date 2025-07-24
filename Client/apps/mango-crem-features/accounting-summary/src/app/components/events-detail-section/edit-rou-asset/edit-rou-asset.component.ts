@@ -50,6 +50,7 @@ import { DxTooltipModule } from 'devextreme-angular';
   styleUrls: ['./edit-rou-asset.component.scss'],
 })
 export class EditRouAssetComponent implements OnInit, OnDestroy {
+  minROUActionDate: any;
   componentName = 'edit-rou-asset';
   selectedROUMethod: number;
   editROUAssetForm: FormGroup;
@@ -131,6 +132,7 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
       .subscribe((ROUAssetObtainedDateValue) => {
         const beginDate = new Date(this.eventRoutAssetData.beginDate);
         const endDate = new Date(this.eventRoutAssetData.endDate);
+        const minDate = new Date(this.eventRoutAssetData.minROUActionDate);
         const measureEvent = this.eventRoutAssetData.measureEvent;
         const ROUAssetObtainedDate = new Date(ROUAssetObtainedDateValue);
         if (measureEvent === 'Initial' && ROUAssetObtainedDate > endDate) {
@@ -140,10 +142,10 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
           this.isObtainedDateValid = false;
         } else if (
           measureEvent !== 'Initial' &&
-          (ROUAssetObtainedDate < beginDate || ROUAssetObtainedDate > endDate)
+          (ROUAssetObtainedDate < minDate || ROUAssetObtainedDate > endDate)
         ) {
           this.disabledButtonReason =
-            'Obtained date cannot be less than begin date or greater than end date';
+            'Obtained date cannot be less than initial term begin date or greater than term end date';
           this.isSaveDisabled = true;
           this.isObtainedDateValid = false;
         } else {

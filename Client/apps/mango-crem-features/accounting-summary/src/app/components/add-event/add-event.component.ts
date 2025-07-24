@@ -93,6 +93,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   lastApprovedOrExportedDate: string;
   dateFormat = 'MM/dd/yyyy';
   effectiveRate: number;
+  minROUActionDate: any;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -112,6 +113,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   ngOnDestroy(): void {
+    localStorage.removeItem('minROUActionDate');
     this.subscription$.unsubscribe();
     this.addEventFormService.setCalculateValueResponse(null);
     this.addEventFormService.classificationFormData$.next(null);
@@ -140,6 +142,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
             this.addEditScheduleService.toShortDateString(isRetroDate);
         })
     );
+
+    this.minROUActionDate = localStorage.getItem('minROUActionDate');
   }
 
   initializeRouteData() {
@@ -263,7 +267,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
         this.addEventFormService.isSaveAllowed$,
         this.addEventFormService.effectiveRate$,
       ])
-        .pipe(debounceTime(this.debounceTime))
+        .pipe(debounceTime(50))
         .subscribe(
           ([
             scheduleDetails,
@@ -899,18 +903,26 @@ export class AddEventComponent implements OnDestroy, OnInit {
         localCurrencyID: this.scheduleCurrency.exchangeRateID,
         localCurrency: this.scheduleCurrency.targetCurrency,
         localCurrencyDecimalPrecision: this.scheduleCurrency.decimalPrecision,
-        functionalCurrencyID: this.portfolioSettings?.functionalCurrencyEnabled
+        functionalCurrencyID: [0, 1, 5].includes(this.classificationId)
+          ? this.scheduleCurrency.exchangeRateID
+          : this.portfolioSettings?.functionalCurrencyEnabled
           ? this.functionalCurrency.exchangeRateID
           : this.scheduleCurrency.exchangeRateID,
-        functionalCurrency: this.portfolioSettings?.functionalCurrencyEnabled
+        functionalCurrency: [0, 1, 5].includes(this.classificationId)
+          ? this.scheduleCurrency.targetCurrency
+          : this.portfolioSettings?.functionalCurrencyEnabled
           ? this.functionalCurrency.targetCurrency
           : this.scheduleCurrency.targetCurrency,
-        functionalCurrencyDecimalPrecision: this.portfolioSettings
-          ?.functionalCurrencyEnabled
+        functionalCurrencyDecimalPrecision: [0, 1, 5].includes(
+          this.classificationId
+        )
+          ? this.scheduleCurrency.decimalPrecision
+          : this.portfolioSettings?.functionalCurrencyEnabled
           ? this.functionalCurrency.decimalPrecision
           : this.scheduleCurrency.decimalPrecision,
-        functionalCurrencyRate: this.portfolioSettings
-          ?.functionalCurrencyEnabled
+        functionalCurrencyRate: [0, 1, 5].includes(this.classificationId)
+          ? 1
+          : this.portfolioSettings?.functionalCurrencyEnabled
           ? financialData?.currencyRate
           : 1,
         rouAssetMethodID: Array.isArray(financialData?.ROUMethod)

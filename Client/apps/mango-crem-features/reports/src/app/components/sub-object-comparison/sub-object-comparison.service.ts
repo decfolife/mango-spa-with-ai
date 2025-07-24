@@ -19,19 +19,21 @@ export class SubObjectComparisonService extends EndpointService {
     formId,
     childObjectTypeId,
     widgetId,
-    objectIds = 'NaN'
+    subObjectIds
   ): Observable<any> {
     // FormId = 221;
     // ObjectTypeId = 45;
     // FormSectionGRoupID = null;
     // ReturnFormat = 2;
     // ObjectIds = "3819,3856,3868";
+    const objectIdValue = subObjectIds?.join(',');
+
     const request: SubObjectComparisonDataRequest = {
       formId: formId,
       objectTypeId: childObjectTypeId,
-      formSectionGRoupID: null,
+      formSectionGroupID: null,
       returnFormat: 4,
-      objectIds: objectIds,
+      objectIds: objectIdValue,
       widgetId: widgetId,
     };
 

@@ -20,6 +20,7 @@
       </crem-form-label>
       <crem-dropdown
         #clauseTypesDropdown
+        [id]="'df-dropdown-clauseType' + clauseTypeId"
         [dataSource]="clauseTypes"
         [showClearButton]="true"
         required="true"
@@ -50,13 +51,13 @@
     <div id="df-clauseBankGrid-container">
       <dx-data-grid
         class="clause-bank-grid"
+        [id]="'df-clauseBankGrid' + clauseTypeId"
         #ClauseBankGrid
         [showColumnLines]="false"
         [showRowLines]="false"
         [showBorders]="false"
         [rowAlternationEnabled]="true"
         [allowColumnResizing]="true"
-        columnResizingMode="widget"
         [columnAutoWidth]="true"
         [dataSource]="clauseBanks"
         keyExpr="clauseBankID"
@@ -66,7 +67,6 @@
         [wordWrapEnabled]="true"
         [repaintChangesOnly]="true"
         [renderAsync]="true"
-        [columnAutoWidth]="true"
         [showScrollbar]="false"
         (onSelectionChanged)="onSelectionChanged($event)"
         (onRowClick)="onRowClick($event)"
@@ -97,6 +97,7 @@
         ></dxo-selection>
 
         <dxi-column
+          cssClass="df-clauseSelection"
           type="selection"
           [width]="40"
           [fixed]="true"
@@ -110,12 +111,14 @@
         </dxi-column>
         <dxi-column
           dataField="clauseName"
+          cssClass="df-cbClauseName"
           caption="Clause Name"
           sortOrder="asc"
           width="150px"
           [fixed]="true"
         ></dxi-column>
-        <dxi-column dataField="clause" cssClass="df-cbClause"></dxi-column>
+        <dxi-column dataField="clause" cssClass="df-cbClause" width="250px">
+        </dxi-column>
         <dxi-column type="buttons" caption="Actions">
           <dxi-button name="edit"></dxi-button>
           <dxi-button name="delete"></dxi-button>

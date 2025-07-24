@@ -27,6 +27,12 @@ export class FieldsControlService {
       // Array to hold the conditional validators based on the question properties
       const conditionalValidators: ValidatorFn[] = [];
 
+      if (field.formItemTypeID == '16') {
+        conditionalValidators.push(
+          Validators.pattern(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)
+        );
+      }
+
       // Check and add required validator if necessary
       if (field.formItemMandatory == '1') {
         conditionalValidators.push(Validators.required);

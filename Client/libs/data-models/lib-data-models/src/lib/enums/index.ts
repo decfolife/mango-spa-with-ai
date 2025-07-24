@@ -6,3 +6,4 @@ export * from './render-select-request-types.enum';
 export * from './security-types.enum';
 export * from './task-info';
 export * from './ui-shared-elements.enums';
+export * from './data-types.enum';

@@ -1,0 +1,15 @@
+export enum BehaviorType {
+  Addition = 1,
+  Difference = 2,
+  Multiplication = 3,
+  Division = 4,
+  Hide = 5,
+  Show = 6,
+  Enable = 7,
+  Disable = 8,
+  ChangeFieldType = 9,
+  SetCompletedDate = 10,
+  CallToogleTextList = 11,
+  DisplayNewItems = 12,
+  CalcDateDifference = 13,
+}

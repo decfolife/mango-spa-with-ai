@@ -1,119 +1,506 @@
 <div *ngIf="!isLoading && !errorLoading">
   <div *ngIf="selectWidget$ | async as widget">
-    <div actions class="controls-right">
-      <crem-button
-        *ngIf="widget.allowExcelExport && showDownloadButton"
-        color="secondary"
-        icon="faDownload"
-        iconPack="solid"
-        [btnStyle]="stroked"
-        className="send-to-excel"
-        ariaLabel="Download as an Excel file"
-        title="Download as an Excel file"
-        (buttonClick)="exportExcel()"
-      ></crem-button>
+    <!-- Controls -->
+    <div class="controls">
+      <div class="title">
+        <h4
+          *ngIf="
+            widget.widgetDisplayName && dynamicWidgetConfiguration.showTitle
+          "
+        >
+          {{ widget.widgetDisplayName }}
+        </h4>
+      </div>
 
-      <crem-button
-        class="action-buttons"
-        type="secondary"
-        *ngIf="
-          (widget.allowCreation && objTypeList.includes(widget.objectTypeID)) ||
-          (editMode && widget.allowCreation)
-        "
-        (click)="onAddWidget(widget)"
-        >Add</crem-button
-      >
-      <crem-button
-        class="action-buttons"
-        type="secondary"
-        *ngIf="editMode && widget.allowImport"
-        (click)="onImport()"
-        >Import
-      </crem-button>
-      <crem-button
-        class="action-buttons"
-        type="secondary"
-        *ngIf="editMode && widget.allowComparison"
-        (click)="onCompare()"
-        >Compare
-      </crem-button>
+      <div actions class="controls-right">
+        <!-- Compare -->
+        <crem-button
+          [dataId]="{
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+          class="action-buttons"
+          type="secondary"
+          *ngIf="widget.allowComparison"
+          (buttonClick)="onCompare(widget)"
+          >Compare</crem-button
+        >
+
+        <!-- Add -->
+        <crem-button
+          [dataId]="{
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+          class="action-buttons"
+          type="secondary"
+          *ngIf="
+            (widget.allowCreation &&
+              objTypeList.includes(widget.objectTypeID)) ||
+            (editMode && widget.allowCreation)
+          "
+          (click)="onAddWidget(widget)"
+          >Add</crem-button
+        >
+
+        <!-- Import -->
+        <crem-button
+          [dataId]="{
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+          class="action-buttons"
+          [id]="'df-widgetImport-' + (field.widgetID | widgetName)"
+          type="secondary"
+          *ngIf="editMode && widget.allowImport"
+          (click)="onImport()"
+          >Import</crem-button
+        >
+
+        <!-- Send To Excel -->
+        <crem-button
+          *ngIf="widget.allowExcelExport && showDownloadButton"
+          iconSize="lg"
+          color="secondary"
+          [btnStyle]="stroked"
+          [disabled]="isCreatingExport"
+          (buttonClick)="exportToExcel()"
+          [iconPack]="isCreatingExport ? 'solid' : 'crem'"
+          [iconAnimation]="isCreatingExport ? 'spin' : ''"
+          [icon]="isCreatingExport ? 'faSpinner' : 'cremExportToExcel'"
+          [text]="isCreatingExport ? 'Sending to Excel' : 'Send to Excel'"
+          className="send-to-excel"
+          title="Download as an Excel file"
+          ariaLabel="Download as an Excel file"
+          [dataId]="{
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+        ></crem-button>
+
+        <!-- History Button -->
+        <crem-field-history
+          [dataId]="{
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+          *ngIf="showFormWidgetHistory"
+          [visible]="false"
+          [showInfoTab]="false"
+          [columns]="historyGridColumns"
+          [displayIcon]="'infoHistoryIcon'"
+          [dataSource]="widgetHistoryData"
+          [dateFormat]="dateFormat ?? ' h:mm:ss a'"
+          (click)="getWidgetHistoryData(widget, objectId, objectTypeId)"
+          [popoverConf]="dynamicWidgetConfiguration.historyPopOverConf"
+          [historyGridConfiguration]="
+            dynamicWidgetConfiguration.historyGridConf
+          "
+          [attr.title]="'History Details ' + widget.widgetName"
+        ></crem-field-history>
+
+        <!-- Widget Preferences -->
+        <dx-drop-down-button
+          [cremDataId]="{
+            dataId: 'settings',
+            suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+          }"
+          crem-button
+          #widgetPreferences
+          *ngIf="isSuperUser"
+          class="icon-button"
+          icon="preferences"
+          [showArrowIcon]="false"
+          [items]="settingsDropDownOptions"
+          [dropDownOptions]="settingsDropDownConfig"
+          [keyExpr]="settingsDropDownConfig?.keyExpr"
+          [displayExpr]="settingsDropDownConfig?.displayExpr"
+          [elementAttr]="settingsDropDownConfig?.elementAttr"
+          (onItemClick)="onSettingsOptionClick($event)"
+        ></dx-drop-down-button>
+      </div>
     </div>
+    <!-- End Controls -->
+
+    <!-- Widget/Grid Export: Add in here configurations to excel export -->
+    <mango-dynamic-form-export-widget
+      [widget]="widget"
+      (exportDone)="exportDone()"
+      [gridMasterDetail]="gridMasterDetail"
+      [columnFormatMap]="columnFormatMap"
+      [selectWidget$]="selectWidget$"
+      [exportType]="dynamicWidgetConfiguration.gridView"
+      *ngIf="
+        shouldRenderExportGrid &&
+        dynamicWidgetConfiguration.gridView === 'dataGrid'
+      "
+    ></mango-dynamic-form-export-widget>
+    <!-- End Widget/Grid Export -->
+
+    <!-- Widget/Grid -->
     <dx-data-grid
-      *ngIf="widget"
+      (onContentReady)="SummaryRowTabs()"
       #widgetDataGrid
-      [showBorders]="true"
-      [rowAlternationEnabled]="true"
-      [noDataText]="isRenderForm ? 'No Data' : 'Data Here'"
+      [ngClass]="{
+        'grid-no-alt': !(gridMasterDetail.masterView | isObjectEmpty)
+      }"
+      *ngIf="widget && dynamicWidgetConfiguration.gridView === 'dataGrid'"
       [dataSource]="widget.renderFormWidgetData"
+      [noDataText]="isRenderForm && dynamicWidgetConfiguration.noDataText"
+      [showBorders]="dynamicWidgetConfiguration.dataGridConf?.showBorders"
+      [showRowLines]="dynamicWidgetConfiguration.dataGridConf?.showRowLines"
+      [columnAutoWidth]="
+        dynamicWidgetConfiguration.dataGridConf?.columnAutoWidth
+      "
+      [wordWrapEnabled]="
+        dynamicWidgetConfiguration.dataGridConf?.wordWrapEnabled
+      "
+      [showColumnLines]="
+        dynamicWidgetConfiguration.dataGridConf?.showColumnLines
+      "
+      [allowColumnResizing]="
+        dynamicWidgetConfiguration.dataGridConf?.allowColumnResizing
+      "
+      [rowAlternationEnabled]="
+        dynamicWidgetConfiguration.dataGridConf?.rowAlternationEnabled
+      "
+      [allowColumnReordering]="
+        dynamicWidgetConfiguration.dataGridConf?.allowColumnReordering
+      "
+      [ngStyle]="{
+        maxHeight: dynamicWidgetConfiguration.maxHeight + 'px',
+      }"
+      [grouping]="{
+        contextMenuEnabled:
+          dynamicWidgetConfiguration.dataGridConf?.grouping
+            ?.contextMenuEnabled ?? true
+      }"
+      [cremDataId]="{
+        dataId: 'grid',
+        suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+      }"
+      (onContentReady)="addTabIndex()"
     >
       <dxo-load-panel [enabled]="true"></dxo-load-panel>
-      <ng-container
-        *ngFor="let columnField of widget.columnGroup?.columnFields"
-      >
-        <ng-container *ngIf="columnField.showInListView">
-          <dxi-column
-            *ngIf="columnField.dataFieldDataType === DATE_COL_ID"
-            [alignment]="'left'"
-            [caption]="columnField.columnHeader"
-            [dataField]="columnField.dataFieldTableField.toLowerCase()"
-            [format]="dateFormat"
-          >
-          </dxi-column>
-          <dxi-column
-            *ngIf="columnField.dataFieldDataType !== DATE_COL_ID"
-            [alignment]="'left'"
-            [caption]="columnField.columnHeader"
-            [dataField]="columnField.dataFieldTableField.toLowerCase()"
-            [format]="columnField.dataTypeFormatString"
-          >
-          </dxi-column>
-        </ng-container>
+      <!-- Columns  -->
+      <ng-container *ngFor="let columnField of gridMasterDetail.columnFields">
+        <dxi-column
+          *ngIf="columnField.dataFieldDataType === DATE_COL_ID"
+          [alignment]="'left'"
+          [caption]="columnField.columnHeader"
+          [dataField]="columnField.dataFieldTableField | lowercase"
+          [format]="dateFormat"
+          [visible]="columnField.visible"
+        >
+        </dxi-column>
+        <dxi-column
+          *ngIf="columnField.dataFieldDataType !== DATE_COL_ID"
+          [alignment]="'left'"
+          [caption]="columnField.columnHeader"
+          [dataField]="columnField.dataFieldTableField | lowercase"
+          [format]="columnField.dataTypeFormatString"
+          [visible]="columnField.visible"
+        >
+        </dxi-column>
       </ng-container>
+      <!-- End Grid Columns -->
+
+      <!-- Actions Column -->
       <dxi-column
         caption="Actions"
-        type="buttons"
         *ngIf="showActionColumn"
         [visibleIndex]="widget.buttonAlignment === 'Left' ? 0 : ''"
+        cellTemplate="customActionsTemplate"
+        [width]="130"
+        [allowExporting]="false"
+      ></dxi-column>
+
+      <!-- Actions Column: Cell Template -->
+      <div
+        class="column-actions"
+        *dxTemplate="let data of 'customActionsTemplate'"
       >
-        <dxi-button
+        <!-- Open File Button -->
+        <crem-button
           *ngIf="showFileIcon"
-          hint="Open File"
-          icon="cremOpenFile"
-          [onClick]="onOpenFileClick.bind(this)"
-        ></dxi-button>
-        <dxi-button
+          size="small"
+          iconPack="crem"
+          btnStyle="basic"
+          color="secondary"
+          className="cremOpenFile"
+          ariaLabel="Open File"
+          [attr.title]="'Open File'"
+          (buttonClick)="onOpenFileClick(data)"
+          [cremDataId]="{
+              prefix: 'row',
+              suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),
+            }"
+        ></crem-button>
+
+        <!-- Edit Button -->
+        <crem-button
           *ngIf="editMode && widget.allowEdits"
-          hint="Edit"
-          [onClick]="onEditClick"
-          icon="cremEdit"
-        ></dxi-button>
-        <dxi-button
-          *ngIf="editMode"
-          hint="Delete"
-          icon="cremDelete"
-          [onClick]="onDeleteClick"
-        ></dxi-button>
-        <dxi-button
-          hint="Go"
-          icon="cremGoTo"
-          label="Go"
-          [onClick]="onGoClick"
-        ></dxi-button>
-        <dxi-button
-          hint="View History"
-          icon="cremHistory"
-          [onClick]="onHistoryClick"
-        ></dxi-button>
-      </dxi-column>
-      <dxo-sorting mode="none"></dxo-sorting>
-      <dxo-paging [enabled]="false"></dxo-paging>
-      <dxo-header-filter [visible]="false"></dxo-header-filter>
+          size="small"
+          iconPack="crem"
+          btnStyle="basic"
+          color="secondary"
+          className="cremEdit"
+          ariaLabel="Edit Row"
+          [attr.title]="'Edit'"
+          (buttonClick)="onEditClick(data, widget)"
+          [cremDataId]="{
+              prefix: 'row',
+              suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),
+            }"
+        ></crem-button>
+
+        <!-- Delete Button -->
+        <crem-button
+          *ngIf="
+            (widget.allowEdits &&
+              widget.relationshipDefinitionID &&
+              (editMode || data.row.securitytypeid > 3)) ||
+            widget.formWidgetTypeID === widgetSummary ||
+            widget.formWidgetTypeID === widgetSummaryDynamic
+          "
+          size="small"
+          iconPack="crem"
+          btnStyle="basic"
+          color="secondary"
+          className="cremDelete"
+          ariaLabel="Delete Row"
+          [attr.title]="'Delete'"
+          (buttonClick)="onDeleteClick(data, widget)"
+          [cremDataId]="{
+              prefix: 'row',
+              suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),
+            }"
+        ></crem-button>
+
+        <!-- Go Button -->
+        <crem-button
+          *ngIf="
+            widget.subObject ||
+            (widget.allowLinking &&
+              widget.formWidgetTypeID !== widgetSummary &&
+              widget.formWidgetTypeID !== widgetSummaryDynamic)
+          "
+          size="small"
+          iconPack="crem"
+          btnStyle="basic"
+          color="secondary"
+          className="cremGoTo"
+          ariaLabel="Go to Row"
+          (buttonClick)="onGoClick(data, widget)"
+          [cremDataId]="{
+              prefix: 'row',
+              suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),
+            }"
+        ></crem-button>
+
+        <!-- History Button -->
+        <crem-field-history
+          [visible]="false"
+          [showInfoTab]="false"
+          [columns]="historyGridColumns"
+          [displayIcon]="'infoHistoryIcon'"
+          [dataSource]="rowHistoryData"
+          [dateFormat]="dateFormat ?? ' h:mm:ss a'"
+          (click)="
+            getRowHistoryData(widget, data, objectId, objectTypeId, formId)
+          "
+          [popoverConf]="dynamicWidgetConfiguration.historyPopOverConf"
+          [historyGridConfiguration]="
+            dynamicWidgetConfiguration.historyGridConf
+          "
+          [attr.title]="'History Details ' + widget.widgetName"
+          [cremDataId]="{
+              prefix: 'row',
+              suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),
+            }"
+        ></crem-field-history
+        ><a></a>
+      </div>
+      <!-- End Actions Column -->
+
+      <!-- Column Chooser -->
+      <dxo-column-chooser
+        [enabled]="
+          dynamicWidgetConfiguration.dataGridConf?.columnChooser?.enabled
+        "
+        [mode]="dynamicWidgetConfiguration.dataGridConf?.columnChooser?.mode"
+        [allowSearch]="
+          dynamicWidgetConfiguration.dataGridConf?.columnChooser?.allowSearch
+        "
+        [title]="
+          dynamicWidgetConfiguration.dataGridConf?.columnChooser?.title ??
+          widget.widgetName
+        "
+        [width]="dynamicWidgetConfiguration.dataGridConf?.columnChooser?.width"
+      >
+        <dxo-search
+          [editorOptions]="
+            dynamicWidgetConfiguration.dataGridConf?.columnChooser
+              ?.searchEditorOptions
+          "
+          [timeout]="800"
+        ></dxo-search>
+      </dxo-column-chooser>
+
+      <!-- Grid Configuration -->
+      <dxo-sorting
+        [mode]="dynamicWidgetConfiguration.dataGridConf?.sortingMode"
+      ></dxo-sorting>
+
+      <dxo-header-filter
+        [visible]="
+          dynamicWidgetConfiguration.dataGridConf?.headerFilter?.visible
+        "
+      ></dxo-header-filter>
+
+      <dxo-scrolling
+        [mode]="dynamicWidgetConfiguration.dataGridConf?.scrolling?.mode"
+      ></dxo-scrolling>
+
+      <dxo-column-fixing
+        [enabled]="dynamicWidgetConfiguration.dataGridConf?.columnFixing"
+      ></dxo-column-fixing>
+
+      <!-- Grouping -->
+      <dxo-group-panel
+        [visible]="dynamicWidgetConfiguration.dataGridConf?.grouping?.visible"
+      ></dxo-group-panel>
+      <dxo-grouping
+        #expand
+        [autoExpandAll]="
+          dynamicWidgetConfiguration.dataGridConf?.grouping?.autoExpandAll
+        "
+      ></dxo-grouping>
+
+      <!-- Grid Conf: Pagination -->
+      <dxo-paging
+        [pageSize]="
+          dynamicWidgetConfiguration.dataGridConf?.paging?.allowedPageSizes[0]
+        "
+      ></dxo-paging>
+
+      <dxo-pager
+        [enabled]="true"
+        [visible]="dynamicWidgetConfiguration.dataGridConf?.paging?.visible"
+        [showInfo]="dynamicWidgetConfiguration.dataGridConf?.paging?.showInfo"
+        [infoText]="dynamicWidgetConfiguration.dataGridConf?.paging?.infoText"
+        [allowedPageSizes]="
+          dynamicWidgetConfiguration.dataGridConf?.paging?.allowedPageSizes
+        "
+        [showPageSizeSelector]="
+          dynamicWidgetConfiguration.dataGridConf?.paging?.showPageSizeSelector
+        "
+        [showNavigationButtons]="
+          dynamicWidgetConfiguration.dataGridConf?.paging?.showNavigationButtons
+        "
+      ></dxo-pager>
+
+      <!-- Master-Detail View -->
+      <ng-container *ngIf="!(gridMasterDetail.masterView | isObjectEmpty)">
+        <dxo-master-detail
+          [enabled]="
+            dynamicWidgetConfiguration.dataGridConf?.masterViewDetail?.enabled
+          "
+          [autoExpandAll]="
+            dynamicWidgetConfiguration.dataGridConf?.masterViewDetail
+              ?.autoExpandAll
+          "
+          template="details"
+        ></dxo-master-detail>
+      </ng-container>
+
+      <div *dxTemplate="let detail of 'details'">
+        <ng-container *ngIf="detail.data.oid">
+          <dl class="m-0">
+            <dt class="d-none">ID</dt>
+            <dd class="m-0 color-gray02" aria-label="ID" title="ID">
+              {{ detail.data.oid }}
+            </dd>
+          </dl>
+        </ng-container>
+
+        <ng-container
+          *ngFor="let row of gridMasterDetail.masterView | keyvalue"
+        >
+          <div class="detail-row">
+            <ng-container *ngFor="let col of row.value">
+              <dl
+                [title]="col.dataFieldName"
+                [ngClass]="
+                  'row-' +
+                  row.key +
+                  ' ' +
+                  'col-' +
+                  (col.columnColspan !== 0 ? col.columnColspan : 1) +
+                  '-' +
+                  col.columnSortOrder
+                "
+                [ngStyle]="{
+                  flex: col.columnColspan !== 0 ? col.columnColspan : 1
+                }"
+              >
+                <dt>{{ col.label }}</dt>
+                <dd>{{ detail.data[col.dataFieldTableField | lowercase] }}</dd>
+              </dl>
+            </ng-container>
+          </div>
+        </ng-container>
+      </div>
     </dx-data-grid>
+    <!-- End Widget/Grid -->
+
+    <!-- Widget Pivot -->
+    <dx-pivot-grid
+      #widgetPivotGrid
+      [ngClass]="{
+        'hide-field-selector': !isSuperUser,
+      }"
+      *ngIf="widget && dynamicWidgetConfiguration.gridView === 'pivotGrid'"
+      [dataSource]="pivotGridDataSource"
+      [texts]="dynamicWidgetConfiguration.dataPivotConf?.texts"
+      [showBorders]="
+        dynamicWidgetConfiguration.dataPivotConf?.showBorders ?? true
+      "
+      [showRowTotals]="
+        dynamicWidgetConfiguration.dataPivotConf?.showRowTotals ?? false
+      "
+      [allowFiltering]="
+        dynamicWidgetConfiguration.dataPivotConf?.allowFiltering ?? true
+      "
+      [showColumnTotals]="
+        dynamicWidgetConfiguration.dataPivotConf?.showColumnTotals ?? false
+      "
+      [showRowGrandTotals]="
+        dynamicWidgetConfiguration.dataPivotConf?.showRowGrandTotals ?? false
+      "
+      [showColumnGrandTotals]="
+        dynamicWidgetConfiguration.dataPivotConf?.showColumnGrandTotals ?? false
+      "
+      [allowSortingBySummary]="
+        dynamicWidgetConfiguration.dataPivotConf?.allowSortingBySummary ?? true
+      "
+      [cremDataId]="{
+        dataId: 'pivot',
+        suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
+      }"
+    >
+      <dxo-field-chooser
+        [visible]="true"
+        [enabled]="
+          dynamicWidgetConfiguration.dataPivotConf?.fieldChooser?.enabled ??
+          true
+        "
+      ></dxo-field-chooser>
+    </dx-pivot-grid>
+    <!-- End Widget Pivot -->
   </div>
 </div>
 
-<div *ngIf="isLoading" class="p-4">
-  <crem-skeleton [instances]="_skeletonInstances" type="form"></crem-skeleton>
+<div *ngIf="isLoading">
+  <crem-skeleton
+    [instances]="dynamicWidgetConfiguration?._skeletonInstances"
+    type="form"
+  ></crem-skeleton>
 </div>
 
 <div *ngIf="errorLoading">

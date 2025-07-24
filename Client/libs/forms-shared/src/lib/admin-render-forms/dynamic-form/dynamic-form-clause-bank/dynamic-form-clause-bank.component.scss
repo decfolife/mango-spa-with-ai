@@ -1,6 +1,10 @@
 @use 'styles' as *;
 
 ::ng-deep .df-clause-bank-component {
+  .modalContent .body-content {
+    height: 100%;
+  }
+
   .df-clause-bank-loader {
     margin: auto;
     position: relative;
@@ -41,19 +45,25 @@
 }
 
 ::ng-deep {
-  #df-clauseBankGrid-container .clause-bank-grid {
-    height: 300px;
-    .dx-scrollable-content {
-      width: inherit;
-    }
-    overflow: hidden;
-    td {
-      border-left: none;
-      border-right: none;
-      &.df-cbClause {
-        white-space: pre;
-        text-wrap: wrap;
-        word-wrap: break-word;
+  #df-clauseBankGrid-container {
+    height: 90%;
+
+    .clause-bank-grid {
+      .dx-scrollable-content {
+        width: inherit;
+      }
+      overflow: hidden;
+      td {
+        border-left: none;
+        border-right: none;
+        &.df-cbClauseName {
+          vertical-align: middle;
+        }
+        &.df-cbClause {
+          white-space: pre;
+          text-wrap: wrap;
+          word-wrap: break-word;
+        }
       }
     }
   }

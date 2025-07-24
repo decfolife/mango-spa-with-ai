@@ -55,18 +55,30 @@ export class RightsAuthGuard implements CanActivate {
       return of(true);
     }
 
-      this.subscriptions.push(
-        this.navigationService
-          .checkUserRights(urlParts[0], urlParts[1])
-          .subscribe(
-            (userHaveRights) => {
-              if (!userHaveRights) {
-                this.facade.showSubLeftNav(false);
-                this.router.navigate([
-                  '/crem/error-notification',
-                  { errorCode: 'Forbidden' },
-                ]);
-              }
+    let queryParams = urlParts[1].toLowerCase().split('&');
+    let objTypeId = queryParams
+      .find((qp) => qp.indexOf('otid') >= 0)
+      .split('=')[1];
+    let objTypeIdIndex = [1, 2, 3, 4, 5, 11, 161].findIndex(
+      (num) => num === Number(objTypeId)
+    );
+
+    if (objTypeIdIndex < 0) {
+      return of(true);
+    }
+
+    this.subscriptions.push(
+      this.navigationService
+        .checkUserRights(urlParts[0], urlParts[1])
+        .subscribe(
+          (userHaveRights) => {
+            if (!userHaveRights) {
+              this.facade.showSubLeftNav(false);
+              this.router.navigate([
+                '/crem/error-notification',
+                { errorCode: 'Forbidden' },
+              ]);
+            }
 
             return of(userHaveRights);
           },

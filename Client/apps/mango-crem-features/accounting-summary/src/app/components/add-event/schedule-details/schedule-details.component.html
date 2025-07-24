@@ -89,7 +89,7 @@
             [status]="jeProfileStatus"
             [statusMessage]="jeProfileStatusMessage"
             (blur)="
-              jeProfileBlur = journalEntryProfileList.length > 0 ? true : false
+              jeProfileBlur = journalEntryProfileList.length >= 0 ? true : false
             "
             [customRequireValidation]="!jeProfileBlur"
           >

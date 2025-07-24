@@ -183,6 +183,7 @@ export class ProjectTeamComponent implements OnInit, OnDestroy {
               panelClass: 'composeEmailModal',
               data: {
                 objectId: this.projectId,
+                objectTypeId: 1,
                 contacts: this.projectsEmailInfo.contacts,
                 noteTypes: this.projectsEmailInfo.noteTypes,
                 fileItems: this.projectsEmailInfo.fileItems,
@@ -403,19 +404,29 @@ export class ProjectTeamComponent implements OnInit, OnDestroy {
 
   makeProjectManager(contactId: number) {
     this.subs.push(
-      this.dashboardService
-        .saveProjectManager(this.projectId, contactId)
-        .subscribe(
-          (res: any) => {
-            if (!res || !res.success) {
-              this.displayMessage();
-            } else {
-              this.subs.push(this.getProjectTeam(this.projectId).subscribe());
-            }
-          },
-          (error: any) => this.displayMessage(),
-          () => {}
+      this.dialogService
+        .confirm(
+          'Make Team Manager',
+          `Are you sure you want to update the Team Manager?`,
+          'Confirm',
+          'Cancel'
         )
+        .pipe(
+          filter((confirmed) => !!confirmed),
+          switchMap((_) =>
+            this.dashboardService.saveProjectManager(this.projectId, contactId)
+          ),
+          switchMap((res) =>
+            !!res && !!res.success
+              ? this.getProjectTeam(this.projectId)
+              : this.dialogService.alert(
+                  'Make Team Manager',
+                  'We were not able to update Team Manager, please try again later.',
+                  'OK'
+                )
+          )
+        )
+        .subscribe()
     );
   }
 

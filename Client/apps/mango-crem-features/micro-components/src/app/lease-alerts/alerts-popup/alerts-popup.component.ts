@@ -58,6 +58,7 @@ export class AlertsPopupComponent implements OnInit {
     this.cachedDate = undefined;
 
     this.getAlertCountAndSeverityLevel();
+    document.getElementById('openLeaseAlertsPopupButton').focus();
   }
 
   getCachedDateString(): string {

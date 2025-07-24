@@ -188,7 +188,11 @@ export class DynamicFormFieldDocSecPageComponent implements OnInit, OnDestroy {
   private resetChangedControls() {
     let formControl = this.formGroup.get(this.fieldData?.dataField.toString());
 
-    if (formControl.value.hasOwnProperty("ClauseChanged") && formControl.value.ClauseChanged) {
+    if (
+      !!formControl.value &&
+      formControl.value.hasOwnProperty('ClauseChanged') &&
+      formControl.value.ClauseChanged
+    ) {
       formControl.reset(this.fieldData.name.formItemAnswer);
 
       this.clauseFieldsName.forEach((cfn) => {
@@ -209,16 +213,12 @@ export class DynamicFormFieldDocSecPageComponent implements OnInit, OnDestroy {
 
     if (!!this.formItemsParsed) {
       this.docFieldRequired =
-        this.isEditMode &&
         this.getVisibleValueFromParsedFormItems('document_required');
       this.secFieldRequired =
-        this.isEditMode &&
         this.getVisibleValueFromParsedFormItems('section_required');
       this.pageFieldRequired =
-        this.isEditMode &&
         this.getVisibleValueFromParsedFormItems('page_required');
       this.dateFieldRequired =
-        this.isEditMode &&
         this.getVisibleValueFromParsedFormItems('date_required');
 
       this.showDocView =
