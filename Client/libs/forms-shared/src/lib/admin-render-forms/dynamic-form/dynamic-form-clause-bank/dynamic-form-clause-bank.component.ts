@@ -186,7 +186,7 @@ export class DynamicFormClauseBankComponent implements OnInit, OnDestroy {
     this.rowKeys = dataGrid.getSelectedRowKeys();
 
     if (
-      this.cellKeys.toString() === this.selectedRowKeys.toString() &&
+      (this.selectionChangedRaised && this.cellKeys.toString() === this.selectedRowKeys.toString()) &&
       this.rowKeys.toString() === this.selectedRowKeys.toString()
     ) {
       dataGrid.deselectRows(this.rowKeys);
