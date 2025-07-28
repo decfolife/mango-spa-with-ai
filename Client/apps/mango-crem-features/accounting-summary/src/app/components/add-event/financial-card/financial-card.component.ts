@@ -102,7 +102,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   @Input() measureEvent: string;
   @Input() currencyList: Currency[];
   @Input() rouAssetMethodsList: ROUAssetMethod[];
-  @Input() minROUActionDate: string;
+  @Input() minROUActionDate: Date;
   @ViewChild('rouActionDatePicker') rouDatePicker: DatePickerComponent;
 
   functionalCurrencyRateLookup: FunctionalCurrencyRateLookupResponse;
@@ -252,7 +252,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
 
       this.getDiscountRateOptions();
 
-      this.validateROUActionDate();
       //When editing a schedule the ROUAsset action date has to be set to the value saved in the database.  This if statement keeps
       //the value from being overwritten when the page is loading.
       let prevValueTermBegin =
@@ -1037,6 +1036,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.updateFinancialCardValidity(true, true);
       }
     }
+    this.validateROUActionDate();
   }
 
   private financialCardCalculateValidation() {
@@ -1115,7 +1115,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private validateROUActionDate() {
-    const rouActionDate = this.financialForm.get('ROUActionDate').value;
+    const rouActionDate = new Date(
+      this.financialForm.get('ROUActionDate').value
+    );
     if (!rouActionDate) {
       this.rouDateStatus = 'error';
       this.rouDateStatusMessage = 'Required';
@@ -1132,38 +1134,53 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       }
     }
 
+    const rouDateValidationMessage = `The action date must occur between ${
+      this.measureEvent === 'Initial'
+        ? this.datePipe.transform(this.termBegin, this.dateFormat)
+        : this.datePipe.transform(this.minROUActionDate, this.dateFormat)
+    } 
+      and ${this.datePipe.transform(this.termEnd, this.dateFormat)}.`;
+
     if (
       this.termEnd &&
       this.termBegin &&
       [2, 3, 4].includes(this.classificationId)
     ) {
-      if (this.measureEvent === 'Initial' && rouActionDate > this.termEnd) {
-        this.addEditScheduleService.showToast(
-          'ROU Asset Obtained Action Date',
-          'The action date has to come before the accounting term end date.'
-        );
-        this.rouDateStatus = 'error';
-        this.rouDateStatusMessage =
-          'The action date has to come before the accounting term end date.';
-        this.updateFinancialCardValidity(true, false);
-      } else if (
-        this.measureEvent !== 'Initial' &&
-        rouActionDate < new Date(this.minROUActionDate)
+      if (
+        this.measureEvent === 'Initial' &&
+        (rouActionDate > this.termEnd || rouActionDate < this.termBegin)
       ) {
         this.addEditScheduleService.showToast(
           'ROU Asset Obtained Action Date',
-          'The action date has to be within the calendar range.'
+          rouDateValidationMessage
         );
         this.rouDateStatus = 'error';
-        this.rouDateStatusMessage =
-          'The action date has to be within the calendar range.';
+        this.rouDateStatusMessage = rouDateValidationMessage;
+        this.ROUCompositeDropdownValidation = 'error';
+
         this.updateFinancialCardValidity(true, false);
+        return;
+      } else if (
+        this.measureEvent !== 'Initial' &&
+        (rouActionDate < new Date(this.minROUActionDate) ||
+          rouActionDate > this.termEnd)
+      ) {
+        this.addEditScheduleService.showToast(
+          'ROU Asset Obtained Action Date',
+          rouDateValidationMessage
+        );
+        this.rouDateStatus = 'error';
+        this.rouDateStatusMessage = rouDateValidationMessage;
+        this.ROUCompositeDropdownValidation = 'error';
+        this.updateFinancialCardValidity(true, false);
+        return;
       } else {
         this.addEditScheduleService.clearToastBySummary(
           'ROU Asset Obtained Action Date'
         );
         this.rouDateStatus = 'default';
         this.rouDateStatusMessage = '';
+        this.ROUCompositeDropdownValidation = 'default';
         this.updateFinancialCardValidity(true, true);
       }
       this.rouDatePicker?.validate();
@@ -1181,7 +1198,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.financialForm.get('ROUAmount').value,
       this.financialForm.get('ROUActionDate').value
     );
-    this.validateROUActionDate();
   }
 
   loadDataForEditRemeasure() {

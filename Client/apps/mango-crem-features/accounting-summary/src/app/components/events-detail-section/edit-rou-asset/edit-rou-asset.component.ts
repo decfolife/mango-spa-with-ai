@@ -27,7 +27,7 @@ import { ROUAssetMethod } from '@accounting-summary/models/common-dropdowns.mode
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { takeUntil } from 'rxjs/operators';
 import { DxTooltipModule } from 'devextreme-angular';
-
+import { DatePipe } from '@angular/common';
 @Component({
   selector: 'mango-edit-rou-asset',
   standalone: true,
@@ -71,7 +71,8 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
     public addEditScheduleService: AddEditScheduleService,
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public accountingEventROUAssetData: any,
-    private toastService: CremToastService
+    private toastService: CremToastService,
+    private datePipe: DatePipe
   ) {
     this.getROUAssetMethods();
   }
@@ -135,17 +136,26 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
         const minDate = new Date(this.eventRoutAssetData.minROUActionDate);
         const measureEvent = this.eventRoutAssetData.measureEvent;
         const ROUAssetObtainedDate = new Date(ROUAssetObtainedDateValue);
-        if (measureEvent === 'Initial' && ROUAssetObtainedDate > endDate) {
-          this.disabledButtonReason =
-            'Obtained date must be less than or equal to end date';
+
+        const rouDateValidationMessage = `The action date must occur between ${
+          measureEvent === 'Initial'
+            ? this.datePipe.transform(beginDate, this.dateFormat)
+            : this.datePipe.transform(minDate, this.dateFormat)
+        } 
+      and ${this.datePipe.transform(endDate, this.dateFormat)}.`;
+
+        if (
+          measureEvent === 'Initial' &&
+          (ROUAssetObtainedDate < beginDate || ROUAssetObtainedDate > endDate)
+        ) {
+          this.disabledButtonReason = rouDateValidationMessage;
           this.isSaveDisabled = true;
           this.isObtainedDateValid = false;
         } else if (
           measureEvent !== 'Initial' &&
           (ROUAssetObtainedDate < minDate || ROUAssetObtainedDate > endDate)
         ) {
-          this.disabledButtonReason =
-            'Obtained date cannot be less than initial term begin date or greater than term end date';
+          this.disabledButtonReason = rouDateValidationMessage;
           this.isSaveDisabled = true;
           this.isObtainedDateValid = false;
         } else {

@@ -684,6 +684,13 @@ export class EventsDetailSectionComponent
       value: e?.row?.data?.leaseRecognitionScheduleID,
 
       onItemClick: () => {
+        if (this.detailsGridData.length > 1) {
+          localStorage.setItem(
+            'minROUActionDate',
+            this.detailsGridData[0].beginDate
+          );
+        }
+
         const queryParams = {
           otid: this.queryParamObj['otid'],
           oid: this.queryParamObj['oid'],
@@ -897,10 +904,10 @@ export class EventsDetailSectionComponent
       } else {
         e.items.push(remeasure);
       }
-      //Temporarily Remove due to CoE concerns and existing bug
-      //Retro schedules do not currently regenerate properly on
-      //edit from summary page
-      //e.items.push(editRouAsset);
+      // Temporarily Remove due to CoE concerns and existing bug
+      // Retro schedules do not currently regenerate properly on
+      // edit from summary page
+      // e.items.push(editRouAsset);
 
       if (
         this.userHasDeleteAccountingSchedulesModuleRight ||
