@@ -165,6 +165,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
     if (this.data.objectId) {
       this.handleSelectedBuilding(this.data.objectId);
     }
+    if (this.data.premiseId) this.selectedPremise = this.data.premiseId;
 
     this.getPortfolioDropdownData();
     this.getPremiseName();
