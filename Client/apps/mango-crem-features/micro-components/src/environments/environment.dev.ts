@@ -19,7 +19,7 @@ class EnvironmentsCrem {
     objectActions: '/v06/WebServices/Mango/ObjectActions/ObjectActions.asmx/',
     header: 'http://service2.dev.corp.virtualpremise.com:8090/Header/api/',
   };
-  CAUrl = 'https://login.dev.corp.virtualpremise.com:30443';
+  CAUrl = 'http://login.dev.corp.virtualpremise.com:30080';
   mangoSpaUrl = 'http://api.dev.corp.virtualpremise.com:30080';
 }
 
