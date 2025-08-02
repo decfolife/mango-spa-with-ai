@@ -4,8 +4,8 @@ class EnvironmentsCrem implements Environment {
   production = false;
   name = 'OPS';
   showPayload = true;
-  cremBaseUrl = 'http://[CLIENT].ops.corp.virtualpremise.com';
-  CAUrl = 'http://login.ops.corp.virtualpremise.com:30080';
+  cremBaseUrl = 'https://[CLIENT].ops.corp.virtualpremise.com';
+  CAUrl = 'https://login.ops.corp.virtualpremise.com:30443';
   // Only needed for localhost. Otherwise use `${window.location.origin}/api`
   baseApiUrl = 'http://api.ops.corp.virtualpremise.com:30080/';
   logRocketAppId = '';
