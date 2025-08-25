@@ -7,7 +7,7 @@ class EnvironmentsCrem implements Environment {
   cremBaseUrl = 'retaildemo.local';
   CAUrl = 'http://localhost:5000';
   // Only needed for localhost. Otherwise use `${window.location.origin}/api`
-  baseApiUrl = 'http://api.dev.corp.virtualpremise.com:30080/';
+  baseApiUrl = 'https://api.dev.corp.virtualpremise.com:30443/';
   logRocketAppId = '';
 }
 
