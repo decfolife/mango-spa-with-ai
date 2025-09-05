@@ -559,7 +559,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
 
         this.isGLEvent = this.checkGLEvent(this.objectTypeId);
         this.service
-          .getAddWizards(this.objectTypeId, this.urlOTTID)
+          .getAddWizards(this.objectTypeId, this.urlOTTID, this.urlNavPageId)
           .subscribe((result) => {
             let tempEditPages = [];
             if (result.data && result.data.addWizards) {
@@ -2333,7 +2333,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
   }
 
   editSelectedCharges() {
-    let editChargeUrl: string = `/v06/financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLGroup=&IsIncome=&Mode=Edit&paramFinView=Status`;
+    let editChargeUrl: string = `/v06/financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLGroup=&IsIncome=&Mode=Edit&paramFinView=Status&NavPageId=${this.urlNavPageId}`;
     let scheduledCharges = this.dataGrid.selectedRowKeys.filter(
       (srk) => srk.IsActive === 'Active'
     );
@@ -2433,7 +2433,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
   }
 
   terminateLeaseCharges() {
-    let terminateLeaseChargesUrl: string = `/v06/financials/TerminateLease.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=&paramFinView=Status`;
+    let terminateLeaseChargesUrl: string = `/v06/financials/TerminateLease.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=&paramFinView=Status&NavPageId=${this.urlNavPageId}`;
     terminateLeaseChargesUrl = this.replaceQueryParamsInLeasePaymentUrl(
       terminateLeaseChargesUrl,
       null
@@ -2443,13 +2443,13 @@ export class ListPageComponent implements OnInit, OnDestroy {
   }
 
   changeVendorOrCustomer() {
-    let changeUrl = `/v06/financials/ChangeVendor.aspx?OID=${this.urlOID}&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=${this.isIncomeValue}&paramFinView=Status`;
+    let changeUrl = `/v06/financials/ChangeVendor.aspx?OID=${this.urlOID}&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=${this.isIncomeValue}&paramFinView=Status&NavPageId=${this.urlNavPageId}`;
     this.isChargeAction = true;
     this.router.navigateByUrl(changeUrl);
   }
 
   changeDefaultVendorOrCustomer() {
-    let changeDefaultVendorOrCustomerUrl: string = `javascript:loadDefaultVendor('/v06/financials/ChangeDefaultVendor.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=&paramFinView=Status');`;
+    let changeDefaultVendorOrCustomerUrl: string = `javascript:loadDefaultVendor('/v06/financials/ChangeDefaultVendor.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&Mode=Edit&IsIncome=&paramFinView=Status&NavPageId=${this.urlNavPageId}');`;
     changeDefaultVendorOrCustomerUrl = this.replaceQueryParamsInLeasePaymentUrl(
       changeDefaultVendorOrCustomerUrl,
       null
@@ -2471,7 +2471,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
     }
 
     this.isChargeAction = true;
-    let stopChargeUrl: string = `/v06/financials/Stop${taxStr}Charge.aspx?OID=&OTID=4&GLEID=&OTTID=${this.urlOTTID}&IsIncome=&status=In%20Process${parentChargeStr}`;
+    let stopChargeUrl: string = `/v06/financials/Stop${taxStr}Charge.aspx?OID=&OTID=4&GLEID=&OTTID=${this.urlOTTID}&IsIncome=&status=In%20Process${parentChargeStr}&NavPageId=${this.urlNavPageId}`;
     stopChargeUrl = this.replaceQueryParamsInLeasePaymentUrl(stopChargeUrl, [
       leaseCharge.GLEventID,
     ]);
@@ -2479,7 +2479,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
   }
 
   editLeasePaymentCharge(leaseCharge) {
-    let editChargeUrl: string = `/v06/financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLEID=&GLGroup=&IsIncome=&Mode=Edit`;
+    let editChargeUrl: string = `/v06/financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLEID=&GLGroup=&IsIncome=&Mode=Edit&NavPageId=${this.urlNavPageId}`;
     editChargeUrl = this.replaceQueryParamsInLeasePaymentUrl(editChargeUrl, [
       leaseCharge.GLEventID,
     ]);
@@ -2495,7 +2495,7 @@ export class ListPageComponent implements OnInit, OnDestroy {
       this.service.copyCharge(leaseCharge.GLEventID).subscribe((res) => {
         if (res.success) {
           //If copy charge is successful use the GLEventId return to build the string
-          let copyChargeUrl: string = `/v06/Financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLEID=&GLGroup=&IsIncome=&mode=edit&copy=1`;
+          let copyChargeUrl: string = `/v06/Financials/EditCharge.aspx?OID=&OTID=4&OTTID=${this.urlOTTID}&GLEID=&GLGroup=&IsIncome=&mode=edit&copy=1&NavPageId=${this.urlNavPageId}`;
           let newGLEventId: number = res.data; //Set to the one returned from the API
           copyChargeUrl = this.replaceQueryParamsInLeasePaymentUrl(
             copyChargeUrl,

@@ -94,10 +94,11 @@ export class ListPageService extends EndpointService {
 
   getAddWizards(
     objectTypeId: number,
-    objectTypeTypeId: number
+    objectTypeTypeId: number,
+    navPageId: number
   ): Observable<ApiResponse> {
     return this.callHttpGet(
-      `${this.listpages}listpage/addWizards/${objectTypeId}/${objectTypeTypeId}`,
+      `${this.listpages}listpage/addWizards/${objectTypeId}/${objectTypeTypeId}/${navPageId}`,
       'getAddWizards'
     );
   }
