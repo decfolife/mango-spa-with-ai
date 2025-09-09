@@ -75,8 +75,16 @@ export class ExportHistoryComponent implements OnInit, OnDestroy {
     this.getUserprefs();
     this.getExportHistory(this.integrationType);
     this.pageName = this.formatPageName(this.integrationType);
+
+    const historyType = window.location.toString().split('/').pop();
     this.exportHistoryColumns =
-      this.exportHistoryColumnsService.getExportHistoryColumns(this.dateFormat);
+      this.exportHistoryColumnsService.getExportHistoryColumns(
+        this.dateFormat,
+        historyType == null
+          ? ''
+          : historyType.toLocaleUpperCase().substring(0, 2)
+      );
+
     this.filter = this.exportHistoryColumnsService.getFilter();
     this.gridFilterValue = this.filter;
     this.showFilterBuilderPopUp = false;

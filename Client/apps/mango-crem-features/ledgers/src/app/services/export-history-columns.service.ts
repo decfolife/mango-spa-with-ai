@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { UtilitiesService } from '@mango/core-shared';
+import { environment } from '@mangoSpa/src/environments/environment.local';
 
 export type Condition = Condition[] | string | number;
 
@@ -8,7 +10,7 @@ export type Condition = Condition[] | string | number;
 export class ExportHistoryColumnsService {
   constructor() {}
 
-  getExportHistoryColumns(dateFormat: string) {
+  getExportHistoryColumns(dateFormat: string, historytype: any) {
     const columns = [
       {
         caption: 'ID',
@@ -60,9 +62,14 @@ export class ExportHistoryColumnsService {
         dataField: 'vpDocumentsPath',
         allowFiltering: true,
         cellTemplate: (cellElement: any, cellInfo: any) => {
+          const clientKey = UtilitiesService.getClientKeyFromUrl();
           const filePath = cellInfo.value;
-          const fullFilePath = `/V06/viewfile.aspx?file=${filePath}`;
           const fileName = filePath.split('/').pop();
+
+          const fullFilePath = `${environment.cremBaseUrl.replace(
+            '[CLIENT]',
+            clientKey
+          )}/V06/Admin/DocumentsStore/DocumentStoreDownload.aspx?Op=openfile&action=downloadDocStore${historytype}&name=${fileName}`;
           cellElement.innerHTML = `<a href="${fullFilePath}" rel="noopener" target="_blank" download="${fileName}">${fileName}</a>`;
         },
       },
