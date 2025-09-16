@@ -78,7 +78,10 @@
       (onOptionChanged)="handleFilterValuePropertyChange($event)"
     >
       <dxo-load-panel [enabled]="true"></dxo-load-panel>
-      <dxo-selection mode="multiple"></dxo-selection>
+      <dxo-selection
+        showCheckBoxesMode="always"
+        mode="multiple"
+      ></dxo-selection>
       <dxo-column-fixing [enabled]="true"></dxo-column-fixing>
       <dxo-column-chooser>
         <dxo-search [enabled]="true"> </dxo-search>

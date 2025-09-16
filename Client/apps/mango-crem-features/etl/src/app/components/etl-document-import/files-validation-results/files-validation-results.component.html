@@ -1,38 +1,57 @@
 <div>
-    <div class="step-content" *ngIf="!fileValidationCompleted">
-        <div class="load-file-header">Validating files...</div>
-        <div>
-            <div class="label-small"> This will take some time, please check back later.</div>
-            <div class="label-small"> Additionally, you will be notified via email when this is complete.</div>
-        </div>
+  <div class="step-content" *ngIf="!fileValidationCompleted">
+    <div class="load-file-header">Validating files...</div>
+    <div>
+      <div class="label-small">
+        This will take some time, please check back later.
+      </div>
+      <div class="label-small">
+        Additionally, you will be notified via email when this is complete.
+      </div>
+      <div class="label-small font-weight-bold">
+        Refresh your browser after you receive email
+      </div>
     </div>
-    <div class="validation-result-container" *ngIf="fileValidationCompleted">
-        <div class="step-title label-normal">Validation Results</div>
-        <div class="validation-grid-container">
-            <div class="label-normal">Total Number of Files Loaded:</div>
-            <div class="r1">{{ filesValidationResults?.TotalNumberofFilesLoaded }}</div>
-            <div></div>
-            <div class="label-normal">Total Number of Invalid Files:</div>
-            <div class="r1">{{ filesValidationResults?.TotalNumberofInvalidFiles }}</div>
-            <div></div>
-            <div class="invalid-details-container">
-                <div class="invalid-details-grid-container">
-                <div class="l2">Invalid File Type:</div>
-                <div class="r2">{{ filesValidationResults?.InvalidFileType }}</div>
-                <div class="l2">File Name Too Long:</div>
-                <div class="r2">{{ filesValidationResults?.FileNameTooLong }}</div>
-                <div class="l2">No File Type:</div>
-                <div class="r2">{{ filesValidationResults?.NoFileType }}</div>
-                <div class="l2">Zero File Size:</div>
-                <div class="r2">{{ filesValidationResults?.ZeroFileSize }}</div>
-                <div class="l2">File Name Contains Invalid Characters:</div>
-                <div class="r2">{{filesValidationResults?.FileNameContainsInvalidCharacters}}</div>
-            </div>
+  </div>
+  <div class="validation-result-container" *ngIf="fileValidationCompleted">
+    <div class="step-title label-normal">Validation Results</div>
+    <div class="validation-grid-container">
+      <div class="label-normal">Total Number of Files Loaded:</div>
+      <div class="r1">
+        {{ filesValidationResults?.TotalNumberofFilesLoaded }}
+      </div>
+      <div></div>
+      <div class="label-normal">Total Number of Invalid Files:</div>
+      <div class="r1">
+        {{ filesValidationResults?.TotalNumberofInvalidFiles }}
+      </div>
+      <div></div>
+      <div class="invalid-details-container">
+        <div class="invalid-details-grid-container">
+          <div class="l2">Invalid File Type:</div>
+          <div class="r2">{{ filesValidationResults?.InvalidFileType }}</div>
+          <div class="l2">File Name Too Long:</div>
+          <div class="r2">{{ filesValidationResults?.FileNameTooLong }}</div>
+          <div class="l2">No File Type:</div>
+          <div class="r2">{{ filesValidationResults?.NoFileType }}</div>
+          <div class="l2">Zero File Size:</div>
+          <div class="r2">{{ filesValidationResults?.ZeroFileSize }}</div>
+          <div class="l2">File Name Contains Invalid Characters:</div>
+          <div class="r2">
+            {{ filesValidationResults?.FileNameContainsInvalidCharacters }}
+          </div>
         </div>
+      </div>
     </div>
     <div class="validation-footer"></div>
     <div class="validation-grid-container">
-        <div class="label-normal">Total Number of Files to be Loaded</div>
-        <div class="r1">{{filesValidationResults?.TotalNumberofFilesLoaded - filesValidationResults?.TotalNumberofInvalidFiles}}</div>
+      <div class="label-normal">Total Number of Files to be Loaded</div>
+      <div class="r1">
+        {{
+          filesValidationResults?.TotalNumberofFilesLoaded -
+            filesValidationResults?.TotalNumberofInvalidFiles
+        }}
+      </div>
     </div>
+  </div>
 </div>

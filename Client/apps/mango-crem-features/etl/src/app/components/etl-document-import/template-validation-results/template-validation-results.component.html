@@ -1,169 +1,156 @@
 <div>
-    <section
-        *ngIf="!templateValidationCompleted && templateValidating"
-        class="step-content"
-    >
+  <section
+    *ngIf="!templateValidationCompleted && templateValidating"
+    class="step-content"
+  >
     <div class="load-file-header">Validating Template...</div>
     <div>
-        <div class="label-small">This may take up to 5 minutes.</div>
+      <div class="label-small">
+        This may take up some time, you will be notified via email.
+      </div>
     </div>
-    </section>
-    <div *ngIf="!templateValidationCompleted && !templateValidating">
+  </section>
+  <div *ngIf="!templateValidationCompleted && !templateValidating">
     <section class="step-content text-align-left">
-        <div class="label-normal">Document Mapping Template</div>
-        <div class="drag-drop-zone">
+      <div class="label-normal">Document Mapping Template</div>
+      <div class="drag-drop-zone">
         <div class="drag-drop-zone-content">
-            <input
-                id="hdn-template"
-                name="file"
-                type="file"
-                #hdnFileInput
-                hidden
-                (change)="selectFile($event)"
-            />
-            <crem-button
-                class="button-label"
-                [id]="select - mapping - template"
-                text="Import Document Mapping Template"
-                color="primary"
-                (buttonClick)="triggerSelectInputFile()"
-            >
-            </crem-button>
-            <div class="label-small-gray">
-            {{ templateFileName }}
-            </div>
-        </div>
-        </div>
-    </section>
-    </div>
-    <div
-    *ngIf="templateValidationCompleted"
-    class="validation-result-container"
-    >
-    <div class="step-title label-normal">Validation Results</div>
-    <div class="validation-grid-container">
-        <div class="label-normal">Total Number of Records:</div>
-        <div class="r1">
-        {{ templateValidationResults?.TotalNumberofRecords }}
-        </div>
-        <div></div>
-        <div class="label-normal">
-        Total Number of Invalid Records:
-        </div>
-        <div class="r1">
-        {{ templateValidationResults?.TotalNumberofInvalidRecords }}
-        </div>
-        <div></div>
-        <div class="label-normal">
-        Total Number of Validation Exceptions:
-        </div>
-        <div class="r1">
-        {{
-            templateValidationResults?.TotalNumberofValidationExceptions
-        }}
-        </div>
-        <div class="r1">
-        <input
-            id="hdn-template-2"
+          <input
+            id="hdn-template"
             name="file"
             type="file"
             #hdnFileInput
             hidden
             (change)="selectFile($event)"
-        />
-        <crem-button
+          />
+          <crem-button
             class="button-label"
             [id]="select - mapping - template"
             text="Import Document Mapping Template"
             color="primary"
             (buttonClick)="triggerSelectInputFile()"
+          >
+          </crem-button>
+          <div class="label-small-gray">
+            {{ templateFileName }}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div *ngIf="templateValidationCompleted" class="validation-result-container">
+    <div class="step-title label-normal">Validation Results</div>
+    <div class="validation-grid-container">
+      <div class="label-normal">Total Number of Records:</div>
+      <div class="r1">
+        {{ templateValidationResults?.TotalNumberofRecords }}
+      </div>
+      <div></div>
+      <div class="label-normal">Total Number of Invalid Records:</div>
+      <div class="r1">
+        {{ templateValidationResults?.TotalNumberofInvalidRecords }}
+      </div>
+      <div></div>
+      <div class="label-normal">Total Number of Validation Exceptions:</div>
+      <div class="r1">
+        {{ templateValidationResults?.TotalNumberofValidationExceptions }}
+      </div>
+      <div class="r1">
+        <input
+          id="hdn-template-2"
+          name="file"
+          type="file"
+          #hdnFileInput
+          hidden
+          (change)="selectFile($event)"
+        />
+        <crem-button
+          class="button-label"
+          [id]="select - mapping - template"
+          text="Import Document Mapping Template"
+          color="primary"
+          (buttonClick)="triggerSelectInputFile()"
         >
         </crem-button>
-        </div>
-        <div class="invalid-details-container">
+      </div>
+      <div class="invalid-details-container">
         <div class="invalid-details-grid-container">
-            <div class="l2">No Key Field:</div>
-            <div class="r2">
+          <div class="l2">No Key Field:</div>
+          <div class="r2">
             {{ templateValidationResults?.NoKeyField }}
-            </div>
-            <div class="l2">Duplicate Key Field:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">Duplicate Key Field:</div>
+          <div class="r2">
             {{ templateValidationResults?.DuplicateSourceImportId }}
-            </div>
-            <div class="l2">No Parent Key Value:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">No Parent Key Value:</div>
+          <div class="r2">
             {{ templateValidationResults?.NoParentKeyField }}
-            </div>
-            <div class="l2">No Matching Files in Template:</div>
-            <div class="r2">
-            {{
-                templateValidationResults?.NoMatchingFilesinTemplate
-            }}
-            </div>
-            <div class="l2">No Matching Files in Zip:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">No Matching Files in Template:</div>
+          <div class="r2">
+            {{ templateValidationResults?.NoMatchingFilesinTemplate }}
+          </div>
+          <div class="l2">No Matching Files in Zip:</div>
+          <div class="r2">
             {{ templateValidationResults?.NoMatchingFilesinZip }}
-            </div>
-            <div class="l2">No Matching Object:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">No Matching Object:</div>
+          <div class="r2">
             {{ templateValidationResults?.NoMatchingObject }}
-            </div>
-            <div class="l2">Folder > 600 Characters:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">Folder > 600 Characters:</div>
+          <div class="r2">
             {{ templateValidationResults?.FolderMoreThan600Characters }}
-            </div>
-            <div class="l2">File Name > 150 Characters:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">File Name > 150 Characters:</div>
+          <div class="r2">
             {{ templateValidationResults?.FileNameMoreThan150Characters }}
-            </div>
-            <div class="l2">CoStar Folder > 600 characters:</div>
-            <div class="r2">
+          </div>
+          <div class="l2">CoStar Folder > 600 characters:</div>
+          <div class="r2">
             {{ templateValidationResults?.CoStarFolderMoreThan600Characters }}
-            </div>                      
+          </div>
         </div>
-        </div>
+      </div>
     </div>
     <div class="step-title label-normal">Warnings</div>
     <div class="validation-grid-container">
-        <div class="label-normal">
+      <div class="label-normal">
         Identifier > 75 Characters (Truncation Warning):
-        </div>
-        <div class="r1">
-        {{
-            templateValidationResults?.IdentifierMoreThan75Characters
-        }}
-        </div>
-        <div></div>
-        <div class="label-normal">
+      </div>
+      <div class="r1">
+        {{ templateValidationResults?.IdentifierMoreThan75Characters }}
+      </div>
+      <div></div>
+      <div class="label-normal">
         Description > 100 Characters (Truncation Warning):
-        </div>
-        <div class="r1">
-        {{
-            templateValidationResults?.DescriptionMoreThan100Characters
-        }}
-        </div>
-        <div></div>
-        <div class="label-normal">
+      </div>
+      <div class="r1">
+        {{ templateValidationResults?.DescriptionMoreThan100Characters }}
+      </div>
+      <div></div>
+      <div class="label-normal">
         Comment > 300 Characters (Truncation Warning):
-        </div>
-        <div class="r1">
+      </div>
+      <div class="r1">
         {{ templateValidationResults?.CommentMoreThan300Characters }}
-        </div>
-        <div></div>
-        <div class="label-normal">
+      </div>
+      <div></div>
+      <div class="label-normal">
         CoStar File Name > 150 characters (Truncation Warning):
-        </div>
-        <div class="r1">
+      </div>
+      <div class="r1">
         {{ templateValidationResults?.CoStarFileNameMoreThan150Characters }}
-        </div>
-        <div></div>
-        <div class="label-normal">
+      </div>
+      <div></div>
+      <div class="label-normal">
         Folder(s) does not exist. The folder(s) will be created:
-        </div>
-        <div class="r1">
+      </div>
+      <div class="r1">
         {{ templateValidationResults?.FolderNotExist }}
-        </div>                
-        <div></div>
+      </div>
+      <div></div>
     </div>
-    </div>
+  </div>
 </div>

@@ -238,8 +238,46 @@ export class ObjectReactivationComponent {
       }
       return val;
     });
-    return reactivationdata;
+    const reactivationSortedData =
+      this.sortReactivationObjectsByTwoDatesDescIfExist(
+        reactivationdata,
+        'Archived Date',
+        'Expiration Date'
+      );
+    return reactivationSortedData;
   }
+
+  private sortReactivationObjectsByTwoDatesDescIfExist = (
+    arr: any[],
+    column1: string,
+    column2: string
+  ): any[] => {
+    return arr.sort((a, b) => {
+      const a1 = a[column1];
+      const b1 = b[column1];
+      const a2 = a[column2];
+      const b2 = b[column2];
+
+      if (a1 && b1) {
+        const diff = new Date(b1).getTime() - new Date(a1).getTime();
+        if (diff !== 0) return diff;
+      } else if (a1) {
+        return -1;
+      } else if (b1) {
+        return 1;
+      }
+
+      if (a2 && b2) {
+        return new Date(b2).getTime() - new Date(a2).getTime();
+      } else if (a2) {
+        return -1;
+      } else if (b2) {
+        return 1;
+      }
+
+      return 0;
+    });
+  };
 
   private getUserPreferedDateFormat(curDateVal: any): string {
     let curDate = new Date(curDateVal);
@@ -297,11 +335,33 @@ export class ObjectReactivationComponent {
       this.selectedFilter?.objectTypeID === 3 ||
       this.selectedFilter?.objectTypeID === 4
     ) { */
+
     this.reactivationDataGrid.instance.columnOption(
       'BuildingMasterGroupID',
       'visible',
       false
     );
+
+    let visibleColumns =
+      this.reactivationDataGrid?.instance.getVisibleColumns();
+    visibleColumns.forEach((element) => {
+      //console.log(element.dataField);
+      if (element.dataField == 'Archived Date') {
+        this.reactivationDataGrid.instance.columnOption(
+          'Archived Date',
+          'dataType',
+          'date'
+        );
+      }
+      if (element.dataField == 'Expiration Date') {
+        this.reactivationDataGrid.instance.columnOption(
+          'Expiration Date',
+          'dataType',
+          'date'
+        );
+      }
+    });
+
     // }
   }
 
