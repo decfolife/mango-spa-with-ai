@@ -3,6 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { PreviousAccountingEvent } from '@accounting-summary/models/previous-accounting-event.model';
 import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
+import { TermDateOption } from '@accounting-summary/models/interfaces/schedule-details-form-interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -88,7 +89,10 @@ export class AddEventFormService {
   public calculateValuesClicked = new BehaviorSubject<boolean>(false);
   public validateCalculateComponents$ = new BehaviorSubject<boolean>(false);
   public operatingClassifications: number[] = [0, 5];
-
+  public isOtherChargesSaved = new BehaviorSubject<{
+    isOtherChargesSaved: boolean;
+    glEventIDs: number[];
+  }>({ isOtherChargesSaved: false, glEventIDs: [] });
   financialFormData$ = this.financialForm$;
   scheduleDetailsFormData$ = this.scheduleDetailsForm$;
   classificationFormData$ = this.classificationForm$;
@@ -113,7 +117,11 @@ export class AddEventFormService {
     this.calculateValuesClicked.next(true);
   }
 
-  setScheduleDetailsFormData(data: any, termBegin: Date, termEnd: Date) {
+  setScheduleDetailsFormData(
+    data: any,
+    termBegin: TermDateOption,
+    termEnd: TermDateOption
+  ) {
     this.scheduleDetailsForm$.next({ ...data, termBegin, termEnd });
   }
 

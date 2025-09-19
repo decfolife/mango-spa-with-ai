@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   Input,
@@ -23,18 +24,27 @@ import { PreviousAccountingEvent } from '@accounting-summary/models/previous-acc
 import { EventDateOptions } from '@accounting-summary/models/interfaces/event-date-options.interfaces';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
-import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
 import {
-  DatePickerComponent,
-  DropdownComponent,
-} from '@mango/ui-shared/lib-ui-elements';
+  Classification,
+  CommonDropdowns,
+  JournalEntryProfile,
+  LookupOption,
+} from '@accounting-summary/models/common-dropdowns.model';
+import { DropdownComponent } from '@mango/ui-shared/lib-ui-elements';
+import {
+  AccountingTerms,
+  ScheduleDetailsTermsInformation,
+  TermDateOption,
+} from '@accounting-summary/models/interfaces/schedule-details-form-interfaces';
 
 @Component({
   selector: 'mango-schedule-details',
   templateUrl: './schedule-details.component.html',
   styleUrls: ['./schedule-details.component.scss'],
 })
-export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
+export class ScheduleDetailsComponent
+  implements OnInit, OnChanges, OnDestroy, AfterViewInit
+{
   @Input() eventsGridData: PreviousAccountingEvent;
   @Input() commonDropdowns: CommonDropdowns;
   @Input() measureEvent: string;
@@ -42,31 +52,33 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() eventDateOptions: EventDateOptions[];
   @Input() classificationSettings: classificationSettingResponse[];
   @Input() accountingEventsData: PreviousAccountingEvent;
-  @Output() classificationChanged: EventEmitter<any> = new EventEmitter();
-  @Output() scheduleDetailsData: EventEmitter<any> = new EventEmitter();
+  @Output() classificationChanged: EventEmitter<number> = new EventEmitter();
+  @Output() scheduleDetailsData: EventEmitter<ScheduleDetailsTermsInformation> =
+    new EventEmitter();
   @ViewChild('jeProfileDD') jeProfileDD: DropdownComponent;
+  @ViewChild('ClassificationDD') classificationDD: DropdownComponent;
 
   title = 'Accounting Event Details ';
   subtitle = '';
   componentName = 'details';
   isEuroDateFormat = false;
-  classificationTypeList: any[];
-  journalEntryProfileList: any[];
-  defaultClassificationConfigurations: any;
+  classificationTypeList: Classification[];
+  journalEntryProfileList: JournalEntryProfile[];
+  defaultClassificationConfigurations: classificationSettingResponse[] = [];
   isClassificationDisabled = false;
   selectedClassificationID: number;
-  selectedjournalEntryProfileID: number;
+  selectedJournalEntryProfileID: number;
   journalEntryProfileRequired: boolean;
   termEndDate: Date;
   termBeginDate: Date;
   selectedBeginDateID: number;
   selectedEndDateID: number;
-  beginDateOptionsForEvents: any[];
-  endDateOptionsForEvents: any[];
+  beginDateOptionsForEvents: TermDateOption[];
+  endDateOptionsForEvents: TermDateOption[];
   termsValidationFailed = false;
-  termCalculations: any;
+  termCalculations: AccountingTerms;
   scheduleDetailsForm: FormGroup;
-  reportingExceptionsList: any[];
+  reportingExceptionsList: LookupOption[];
   reportingExceptions: string;
   selectedExceptionId = 0;
   showReportExceptionComment = false;
@@ -77,12 +89,12 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
   termInDays: number;
   termInYear: number;
   loading: boolean;
-  defaultClassificationFilterByMeasureEvent: any;
+  defaultClassificationFilterByMeasureEvent: classificationSettingResponse;
   setMeasureEvent: string;
   isTermBeginDirectEntry = false;
   isTermEnDirectEntry = false;
-  termBeginDateObj: any;
-  termEndDateObj: any;
+  termBeginDateObj: TermDateOption;
+  termEndDateObj: TermDateOption;
   portfolioSettings: PortfolioSettingsResponse;
   scheduleDetailsformData: any;
   private subscription = new Subscription();
@@ -140,6 +152,16 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      if (!this.classificationDD.isDisabled) {
+        this.classificationDD.focusDropdown();
+      } else {
+        this.jeProfileDD.focusDropdown();
+      }
+    }, 300);
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (
       (this.commonDropdowns !== undefined || this.commonDropdowns === null) &&
@@ -163,8 +185,8 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
               classificationID: this.selectedClassificationID
                 ? this.selectedClassificationID
                 : this.accountingEventsData?.classificationID,
-              journalEntryProfileId: this.selectedjournalEntryProfileID
-                ? this.selectedjournalEntryProfileID
+              journalEntryProfileId: this.selectedJournalEntryProfileID
+                ? this.selectedJournalEntryProfileID
                 : this.accountingEventsData.journalEntryProfileID,
             },
           ]);
@@ -214,7 +236,7 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
       this.accountingEventsData?.measureEvent;
     this.scheduleDetailsForm.controls['classificationId']?.disable();
     this.selectedClassificationID = this.accountingEventsData?.classificationID;
-    this.selectedjournalEntryProfileID =
+    this.selectedJournalEntryProfileID =
       this.accountingEventsData?.journalEntryProfileID;
     this.scheduleDetailsForm
       .get('isImpaired')
@@ -675,7 +697,6 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
         this.eventDateOptions
       );
       this.endDateOptionsForEvents = this.getTermEndDate(this.eventDateOptions);
-
       this.selectedBeginDateID =
         this.defaultClassificationFilterByMeasureEvent?.beginDateOptionID === 1
           ? this.defaultClassificationFilterByMeasureEvent?.beginDateFormItemID
@@ -738,10 +759,10 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
           this.defaultClassificationFilterByMeasureEvent.journalEntryOption ===
           'Prior Value'
         ) {
-          this.selectedjournalEntryProfileID =
+          this.selectedJournalEntryProfileID =
             this.accountingEventsData?.journalEntryProfileID;
         } else {
-          this.selectedjournalEntryProfileID =
+          this.selectedJournalEntryProfileID =
             this.defaultClassificationFilterByMeasureEvent.journalEntryProfileID;
         }
 
@@ -767,6 +788,7 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
       id: 0,
       name: 'No Exception',
       isActive: true,
+      sortOrder: 0,
     });
     return updateReportingException;
   }
@@ -1008,7 +1030,6 @@ export class ScheduleDetailsComponent implements OnInit, OnChanges, OnDestroy {
             this.termInMonths = response.data.termInMonths;
             this.termInDays = response.data.termInDays;
             this.termInYear = response.data.termInYears;
-
             if (response.data.termInYears >= 100) {
               this.addEditScheduleService.showToast(
                 'Accounting Terms',

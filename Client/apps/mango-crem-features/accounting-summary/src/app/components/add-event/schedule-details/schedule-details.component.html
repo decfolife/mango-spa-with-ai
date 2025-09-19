@@ -22,6 +22,7 @@
         </div>
         <div class="controls-container">
           <crem-dropdown
+            #ClassificationDD
             [id]="
               accountingSummaryService.getId(
                 componentName,
@@ -82,7 +83,7 @@
             value="profileID"
             valueExpr="profileID"
             [showClearButton]="!journalEntryProfileRequired"
-            [initialSelectedValue]="selectedjournalEntryProfileID"
+            [initialSelectedValue]="selectedJournalEntryProfileID"
             (selectedItems)="onJournalEntryProfileValueChanged($event)"
             formControlName="journalEntryProfile"
             [containerized]="true"

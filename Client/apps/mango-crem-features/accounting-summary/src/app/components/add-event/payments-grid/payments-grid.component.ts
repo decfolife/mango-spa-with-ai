@@ -13,13 +13,14 @@ import { FormattingService } from '@accounting-summary/services/formatting.servi
 import { DevExtremeModule, DxDataGridComponent } from 'devextreme-angular';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { SchedulePayment } from '@accounting-summary/models/schedule-payment-model';
-import { debounceTime, filter, takeUntil } from 'rxjs/operators';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { RemeasureType } from '@accounting-summary/shared/enums/remeasure-type.enum';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { ScheduleTransactionsPopupComponent } from './schedule-transactions-popup/schedule-transactions-popup.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddEditOtherChargeModalComponent } from './add-edit-other-charge-modal/add-edit-other-charge-modal.component';
 import { SelectedPayments } from '@accounting-summary/models/interfaces/selected-payments.interfaces';
+import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
 
 @Component({
   selector: 'mango-payments-grid',
@@ -84,7 +85,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
   manualAmortizationProfileName: string;
   glEventIDs: number[] = [];
 
-  private commonDropdownsData: any;
+  private commonDropdownsData: CommonDropdowns;
   private subscription$ = new Subject<void>();
   private subs: Subscription[] = [];
 
@@ -130,6 +131,15 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
 
         if (commonDropdownsData) {
           this.commonDropdownsData = commonDropdownsData;
+        }
+      });
+
+    this.addEventFormService.isOtherChargesSaved
+      .pipe(debounceTime(300), takeUntil(this.subscription$))
+      .subscribe((isOtherChargeSaved) => {
+        if (isOtherChargeSaved.isOtherChargesSaved) {
+          this.glEventIDs = [...isOtherChargeSaved.glEventIDs];
+          this.getSchedulePayments();
         }
       });
   }
@@ -332,22 +342,19 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
     });
 
     this.subs.push(
-      openDialogRef
-        .afterClosed()
-        .pipe(filter((res) => !!res))
-        .subscribe((saveRes) => {
-          if (saveRes.chargeSaved) {
-            this.glEventIDs = [...saveRes.glEventIDs];
-            if (saveRes.showSaveMsg) {
-              this.toastService.show(
-                'The other charge was saved successfully.',
-                'Save Other Charge',
-                ToastState.SUCCESS
-              );
-            }
-            this.getSchedulePayments();
+      openDialogRef.afterClosed().subscribe((saveRes) => {
+        if (saveRes?.chargeSaved) {
+          this.glEventIDs = [...saveRes.glEventIDs];
+          if (saveRes.showSaveMsg) {
+            this.toastService.show(
+              'The other charge was saved successfully.',
+              'Other Charge Saved',
+              ToastState.SUCCESS
+            );
           }
-        })
+          this.getSchedulePayments();
+        }
+      })
     );
   }
 
@@ -374,28 +381,25 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
           disableClose: true,
         });
         this.subs.push(
-          editDialogRef
-            .afterClosed()
-            .pipe(filter((res) => !!res))
-            .subscribe((saveRes) => {
-              if (saveRes.chargeSaved || saveRes.chargeDeleted) {
-                if (saveRes.showSaveMsg) {
-                  this.toastService.show(
-                    'The other charge was saved successfully.',
-                    'Save Other Charge',
-                    ToastState.SUCCESS
-                  );
-                }
-                if (saveRes.showDeleteMsg) {
-                  this.toastService.show(
-                    'Delete charge successful.',
-                    'SUCCESS',
-                    ToastState.SUCCESS
-                  );
-                }
-                this.getSchedulePayments();
+          editDialogRef.afterClosed().subscribe((saveRes) => {
+            if (saveRes?.chargeSaved || saveRes?.chargeDeleted) {
+              if (saveRes.showSaveMsg) {
+                this.toastService.show(
+                  'The other charge was saved successfully.',
+                  'Other Charge Saved',
+                  ToastState.SUCCESS
+                );
               }
-            })
+              if (saveRes.showDeleteMsg) {
+                this.toastService.show(
+                  'Delete charge successful.',
+                  'Other Charge Deleted',
+                  ToastState.SUCCESS
+                );
+              }
+              this.getSchedulePayments();
+            }
+          })
         );
       });
   }

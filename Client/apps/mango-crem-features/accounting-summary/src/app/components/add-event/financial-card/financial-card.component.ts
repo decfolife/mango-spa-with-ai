@@ -591,25 +591,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           this.currencyRateValidationMessage = '';
           this.currencyCompositeDropdownValidation = 'default';
         }
-
-        // Check if currencyRate has more than 10 decimal places
-        const isValidDecimal = !(
-          currencyRate.toString().split('.')[1]?.length > 10
-        );
-
-        if (!isValidDecimal) {
-          this.addEditScheduleService.showToast(
-            'Functional Currency Rate',
-            'The Functional Currency Rate has greater than 10 decimal places and can cause unexpected failure'
-          );
-          this.updateFinancialCardValidity(false, false);
-          return;
-        } else {
-          this.addEditScheduleService.clearToastBySummary(
-            'Functional Currency Rate'
-          );
-          this.updateFinancialCardValidity(true, true);
-        }
       });
 
     this.financialForm

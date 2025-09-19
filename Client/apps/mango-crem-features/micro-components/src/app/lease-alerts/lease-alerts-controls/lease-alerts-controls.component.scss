@@ -118,15 +118,19 @@
     .dx-switch-wrapper {
       .dx-switch-container {
         height: 100%;
+
         .dx-switch-inner {
           .dx-switch-on {
             line-height: 28px;
             font-size: 14px;
           }
+
           .dx-switch-off {
             line-height: 28px;
             font-size: 14px;
+            color: #666;
           }
+
           .dx-switch-handle {
             height: 85%;
           }
@@ -140,6 +144,7 @@
 
     div.mat-mdc-menu-content {
       padding: 4px;
+
       button.mat-mdc-menu-item {
         margin: 0px;
       }

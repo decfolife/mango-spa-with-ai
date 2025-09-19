@@ -236,55 +236,57 @@
       </ng-template>
 
       <ng-template #testResults>
-        <div class="ct-testResults-horizontal-line"></div>
-        <div class="ct-testResults-div">
-          <div class="results-text-div">Test Result</div>
-          <div
-            class="result-match-div"
-            [ngClass]="{
-              'match-incomplete': isResultsIncomplete,
-              'match-success': isClassificationMatched,
-              'match-fail': !isResultsIncomplete && !isClassificationMatched
-            }"
-          >
-            <crem-icon
-              class="result-match-success-icon"
-              *ngIf="isClassificationMatched"
-              [id]="
-                accountingSummaryService.getId(
-                  componentName,
-                  'match-success',
-                  'icon'
-                )
-              "
-              pack="solid"
-              size="lg"
-              icon="faCircleCheck"
+        <li>
+          <div class="ct-testResults-horizontal-line"></div>
+          <div class="ct-testResults-div">
+            <div class="results-text-div">Test Result</div>
+            <div
+              class="result-match-div"
+              [ngClass]="{
+                'match-incomplete': isResultsIncomplete,
+                'match-success': isClassificationMatched,
+                'match-fail': !isResultsIncomplete && !isClassificationMatched
+              }"
             >
-            </crem-icon>
-            <crem-icon
-              class="result-match-fail-icon"
-              *ngIf="!isResultsIncomplete && !isClassificationMatched"
-              [id]="
-                accountingSummaryService.getId(
-                  componentName,
-                  'match-fail',
-                  'icon'
-                )
-              "
-              pack="solid"
-              size="lg"
-              icon="faCircleExclamation"
-            >
-            </crem-icon>
-            <span class="ct-bold-text">{{ classificationResult }}</span>
+              <crem-icon
+                class="result-match-success-icon"
+                *ngIf="isClassificationMatched"
+                [id]="
+                  accountingSummaryService.getId(
+                    componentName,
+                    'match-success',
+                    'icon'
+                  )
+                "
+                pack="solid"
+                size="lg"
+                icon="faCircleCheck"
+              >
+              </crem-icon>
+              <crem-icon
+                class="result-match-fail-icon"
+                *ngIf="!isResultsIncomplete && !isClassificationMatched"
+                [id]="
+                  accountingSummaryService.getId(
+                    componentName,
+                    'match-fail',
+                    'icon'
+                  )
+                "
+                pack="solid"
+                size="lg"
+                icon="faCircleExclamation"
+              >
+              </crem-icon>
+              <span class="ct-bold-text">{{ classificationResult }}</span>
+            </div>
           </div>
-        </div>
-        <div class="results-reason-text-div">
-          <span class="ct-sub-text"
-            >Test Result Reason: {{ classificationResultReason }}</span
-          >
-        </div>
+          <div class="results-reason-text-div">
+            <span class="ct-sub-text"
+              >Test Result Reason: {{ classificationResultReason }}</span
+            >
+          </div>
+        </li>
       </ng-template>
     </div>
 

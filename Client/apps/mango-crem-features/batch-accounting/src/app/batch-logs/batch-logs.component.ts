@@ -478,6 +478,15 @@ export class BatchLogsComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
 
+    // Add an ARIA label to the DevExtreme boolean checkbox
+    // so that screen readers announce the column name and its current value
+    if (evt.rowType === 'data' && evt.column.dataField === 'isAutoProcess') {
+      const divCheckbox = evt.cellElement.querySelector('.dx-checkbox');
+      if (divCheckbox) {
+        divCheckbox.ariaLabel = `Is Auto Process: ${evt.data.isAutoProcess}`;
+      }
+    }
+
     if (evt.rowType !== 'header' || evt.column.type === 'buttons') {
       return;
     }

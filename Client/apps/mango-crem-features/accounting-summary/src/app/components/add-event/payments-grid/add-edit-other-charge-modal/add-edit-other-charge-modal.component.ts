@@ -27,6 +27,19 @@ import { OtherCharge } from '@accounting-summary/models/other-charge.model';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { DxNumberBoxComponent, DxNumberBoxModule } from 'devextreme-angular';
+import {
+  AddEditOtherChargeResult,
+  CustomPeriodFrequencyType,
+  DeleteOtherCharges,
+  FrequencyType,
+  ProrationType,
+  SaveOtherCharges,
+} from '@accounting-summary/models/interfaces/payments-grid.interfaces';
+import {
+  CommonDropdowns,
+  Currency,
+} from '@accounting-summary/models/common-dropdowns.model';
+import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
 
 @Component({
   selector: 'mango-add-edit-other-charge-modal',
@@ -59,7 +72,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   componentName = 'add-edit-other-charge-modal';
   modalTitle = 'Add Other Charge';
   modalId: string = this.componentName + '-id';
-  addEditOtherChargeResult: any;
+  addEditOtherChargeResult: AddEditOtherChargeResult;
   amount: number;
   frequencyTypeId: number;
   firstAmount: number;
@@ -93,18 +106,18 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   periodStartHasError = false;
   periodEndHasError = false;
   otherChargeErrors = '';
-  prorationTypesList: any[];
-  originalProrationTypesList: any[] = null;
-  currencyTypeList: any[];
-  originalCurrencyTypeList: any[];
-  frequencyTypesList: any[] = [];
-  originalFrequencyTypesList: any[] = [];
+  prorationTypesList: ProrationType[];
+  originalProrationTypesList: ProrationType[] = null;
+  currencyTypeList: Currency[];
+  originalCurrencyTypeList: Currency[];
+  frequencyTypesList: FrequencyType[] = [];
+  originalFrequencyTypesList: FrequencyType[] = [];
   otherCharge: OtherCharge;
   glEventIDs: number[] = [];
   currencyFormat: string;
-  private commonDropdownsData: any;
+  private commonDropdownsData: CommonDropdowns;
   private subs: Subscription[] = [];
-  private customPeriodFrequencyTypeList: any[] = [
+  private customPeriodFrequencyTypeList: CustomPeriodFrequencyType[] = [
     {
       frequencyTypeId: 7,
       frequencyType: 'Traditional English Quarters',
@@ -133,7 +146,8 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     public dialogRef: MatDialogRef<AddEditOtherChargeModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     public addEditScheduleService: AddEditScheduleService,
-    public accountingSummaryService: AccountingSummaryService
+    public accountingSummaryService: AccountingSummaryService,
+    public addEditFormServices: AddEventFormService
   ) {
     this.isEdit = data.isEdit;
     this.dateFormat = data.dateFormat;
@@ -182,22 +196,26 @@ export class AddEditOtherChargeModalComponent implements OnInit {
       this.determineFrequencyTypeIsCustomPeriod(this.frequencyTypeId);
   }
 
-  close(e) {
+  close() {
     this.showSaveMsg = false;
     this.closeModal();
   }
 
-  save(e) {
+  save() {
     this.showSaveMsg = true;
     this.saveOtherCharge(false);
   }
 
-  saveAndNew(e) {
+  saveAndNew() {
     this.showSaveMsg = false;
     this.saveOtherCharge(true);
+    this.addEditFormServices.isOtherChargesSaved.next({
+      isOtherChargesSaved: true,
+      glEventIDs: this.glEventIDs,
+    });
   }
 
-  delete(e) {
+  delete() {
     this.showDeleteMsg = true;
     this.deleteOtherCharge();
   }
@@ -243,6 +261,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
 
   isProratedChanged(e) {
     this.isProrated = e.value;
+    this.updateProrationAmounts();
   }
 
   onDatePickerChange(e, componentName) {
@@ -256,8 +275,10 @@ export class AddEditOtherChargeModalComponent implements OnInit {
         this.updateProrationAmounts();
         break;
       case 'firstRecurringDatePicker':
-        this.firstRecurringDate = e.value;
-        this.updateProrationAmounts(true);
+        if (this.firstRecurringDate !== e.value) {
+          this.firstRecurringDate = e.value;
+          this.updateProrationAmounts(true);
+        }
         break;
     }
   }
@@ -292,12 +313,12 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     this.dialogRef.close(this.addEditOtherChargeResult);
   }
 
-  updateProrationAmounts(useFirstRecurringDate: boolean = false) {
+  updateProrationAmounts(useFirstRecurringDate = false) {
     if (this.prorationTypeId === 5) {
       /*
       If prorationTypeId is 5, this means the user has picked
       manual from the proration type dropdown and will be keying
-      a first and last amount manually. In this case we shouldnt
+      a first and last amount manually. In this case we shouldn't
       call the proration engine as it will return 0 and overwrite
       the user input.
       */
@@ -316,13 +337,12 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     };
 
     if (
-      prorationData.amount === 0 ||
+      !this.isProrated ||
+      !prorationData.amount ||
+      !this.frequencyTypeId ||
+      !this.prorationTypeId ||
       prorationData.startDate <= new Date(0) ||
-      prorationData.endDate <= new Date(0) ||
-      this.frequencyTypeId <= 0 ||
-      this.prorationTypeId <= 0 ||
-      this.frequencyTypeId === undefined ||
-      this.prorationTypeId === undefined
+      prorationData.endDate <= new Date(0)
     ) {
       return;
     }
@@ -397,7 +417,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
   private filterProrationTypesForFrequency() {
     if (this.frequencyTypeIsCustomPeriod) {
       this.prorationTypesList = this.originalProrationTypesList.filter(
-        (x: any) =>
+        (x: ProrationType) =>
           x.id === 1 || // Actual Days In Period
           x.id === 3 || // 365 Day Year
           x.id === 5 // Manual
@@ -563,13 +583,18 @@ export class AddEditOtherChargeModalComponent implements OnInit {
       this.subs.push(
         this.addEditScheduleService
           .saveOtherCharge(this.otherCharge)
-          .subscribe((res: any) => {
+          .subscribe((res: SaveOtherCharges) => {
             if (res && res.success) {
               this.glEventIDs.push(res.data);
               this.otherChargeSaved = true;
               this.otherChargeDeleted = false;
               if (keepModalOpen) {
                 this.resetModalValues();
+                this.toastService.show(
+                  'The other charge was saved successfully.',
+                  'Charge Saved',
+                  ToastState.SUCCESS
+                );
               } else {
                 this.closeModal();
               }
@@ -592,7 +617,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
     this.subs.push(
       this.addEditScheduleService
         .deleteOtherCharge(this.eventId)
-        .subscribe((res: any) => {
+        .subscribe((res: DeleteOtherCharges) => {
           if (res && res.success) {
             this.otherChargeSaved = false;
             this.otherChargeDeleted = true;

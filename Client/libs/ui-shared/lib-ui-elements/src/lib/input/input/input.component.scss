@@ -17,6 +17,20 @@
       align-items: flex-start;
       justify-content: flex-start;
       @include costar(gap, base);
+
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+        -webkit-text-fill-color: #000;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+
+      input:-moz-autofill {
+        box-shadow: 0 0 0px 1000px transparent inset;
+        -moz-text-fill-color: #000;
+      }
     }
 
     &.left-inline {
@@ -49,6 +63,7 @@
     @include costar(border, gray05);
     @include costar(transition, fast);
     @include costar(border-radius, medium);
+
     &:focus {
       @include costar(color, dark);
       @include costar(border, primary-lightest);
@@ -66,6 +81,7 @@
     &.read-only {
       @include costar(border, gray06);
       @include costar(background-color, gray06);
+
       &:focus {
         border: none;
         box-shadow: unset;
@@ -76,6 +92,7 @@
 
     &.warning {
       @include costar(border, warning);
+
       &:focus {
         @include costar(box-shadow, warning);
       }
@@ -84,6 +101,7 @@
     &.error,
     &.noFormErrorStatus {
       @include costar(border, danger);
+
       &:focus {
         @include costar(box-shadow, danger);
       }
@@ -91,6 +109,7 @@
 
     &.success {
       @include costar(border, success);
+
       &:focus {
         @include costar(box-shadow, success);
       }

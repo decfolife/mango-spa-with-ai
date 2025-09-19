@@ -16,24 +16,29 @@
   &:has([aria-invalid='true']) {
     @include costar(border, danger);
   }
-
-  ;
 }
 
 :host ::ng-deep .search-input-container .dx-texteditor.dx-editor-outlined {
   border: none !important;
 }
 
+:host ::ng-deep .search-input-container input {
+  @include costar(padding-left, 1, !important, true);
+}
+
 .search-button {
+  @include costar(padding, 0);
   background: none;
   border: none;
-  padding: 0px;
+  height: 32px;
+  width: 32px;
 }
 
 ::ng-deep {
   .search-input-container crem-input {
     input {
       border: 0px !important;
+
       &:focus {
         box-shadow: none !important;
       }

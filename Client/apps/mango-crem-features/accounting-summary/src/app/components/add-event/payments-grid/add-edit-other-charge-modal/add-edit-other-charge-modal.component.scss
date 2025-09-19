@@ -14,6 +14,7 @@
     display: flex;
     margin-left: auto;
     align-items: center;
+
     crem-button {
       padding: 8px 0px 8px 8px;
     }
@@ -27,11 +28,6 @@
 
     .ac-tooltip-div {
       width: 0px;
-    }
-
-    //for some reason the isDirect cost checkbox top line is getting removed if this padding is not added
-    &.ac-last-amount {
-      padding-bottom: 1px;
     }
   }
 
@@ -48,10 +44,13 @@
     padding-left: 75px;
     @include costar(padding-bottom, 4);
 
-    //for some reason the isDirect cost checkbox top line is getting removed if this padding is not added
     &.ac-is-prorated {
-      padding-bottom: 1px;
       @include costar(padding-bottom, 4);
+    }
+
+    &.ac-is-direct-cost {
+      @include costar(padding-bottom, 4);
+      height: 40px;
     }
 
     crem-form-control {
@@ -65,6 +64,7 @@
 
   .ac-first-recurring-date-row {
     width: 100%;
+
     crem-form-control {
       width: 51%;
       padding-right: 0px;

@@ -72,6 +72,7 @@ crem-icon {
 .wfs-history-btn {
   padding-top: 6px;
 }
+
 .popup-body {
   @include costar(padding-top, 4);
 }
@@ -83,4 +84,5 @@ crem-icon {
   padding: 8px;
   scrollbar-width: thin;
   text-wrap: auto;
+  scroll-behavior: smooth;
 }

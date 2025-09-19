@@ -48,6 +48,8 @@
         size="1x"
         [attr.aria-label]="'clear-search'"
         (click)="handleClear()"
+        (keydown)="onKeyDown($event)"
+        tabindex="0"
       ></crem-icon>
     </div>
   </div>
