@@ -182,7 +182,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   private nullDateString = new Date(null).toDateString();
   rouMethodStatus = 'valid';
   rouDateStatus = 'default';
-  rouDateStatusMessage: string = '';
+  rouDateStatusMessage = '';
+  isROUActionDateRangeValid = true;
   rouDateTouched = false;
   rouMethodTouched = false;
   rouAmountTouched = false;
@@ -392,7 +393,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       functionalCurrency: new FormControl({ value: '', disabled: true }, [
         Validators.required,
       ]),
-      isCurrencyDirecEntry: new FormControl({ value: '', disabled: true }),
       financialCurrencyDirectEntry: new FormControl({
         value: false,
         disabled: true,
@@ -420,18 +420,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         disabled: false,
       }),
       assetBalanceManualAdjustment: new FormControl({
-        value: '',
-        disabled: false,
-      }),
-      presentValueCompoundFrequency: new FormControl({
-        value: '',
-        disabled: false,
-      }),
-      presentValuePaymentTiming: new FormControl({
-        value: '',
-        disabled: false,
-      }),
-      adjustmentManualAdjustment: new FormControl({
         value: '',
         disabled: false,
       }),
@@ -763,11 +751,13 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   getUserInfo() {
-    this.facade.contactRecord$.subscribe((contact) => {
-      this.dateFormat = contact.preferences.contactDatesEU
-        ? 'dd.MM.yyyy'
-        : 'MM/dd/yyyy';
-    });
+    this.subscription.add(
+      this.facade.contactRecord$.subscribe((contact) => {
+        this.dateFormat = contact.preferences.contactDatesEU
+          ? 'dd.MM.yyyy'
+          : 'MM/dd/yyyy';
+      })
+    );
   }
 
   formatCurrencyInput() {
@@ -1063,21 +1053,17 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.rouAmountStatus = 'valid';
       }
 
-      if (ROUActionDate == null && this.rouDateTouched) {
+      if (
+        (ROUActionDate === null || !this.isROUActionDateRangeValid) &&
+        this.rouDateTouched
+      ) {
         this.rouDateStatus = 'error';
-        this.rouDateStatusMessage = 'Required';
+        this.rouDateStatusMessage =
+          ROUActionDate === null ? 'Required' : this.rouDateStatusMessage;
         this.rouDatePicker.validate();
       } else {
         this.rouDateStatus = 'default';
         this.rouDateStatusMessage = '';
-      }
-      if (ROUActionDate == null && this.rouDateTouched) {
-        this.rouDateStatus = 'error';
-        this.rouDateStatusMessage = 'Required';
-        this.rouDatePicker.validate();
-      } else {
-        this.validateROUActionDate();
-        this.rouDatePicker.validate();
       }
 
       if (
@@ -1136,9 +1122,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           rouDateValidationMessage
         );
         this.rouDateStatus = 'error';
-        this.rouDateStatusMessage = rouDateValidationMessage;
         this.ROUCompositeDropdownValidation = 'error';
-
+        this.rouDateStatusMessage = rouDateValidationMessage;
+        this.isROUActionDateRangeValid = false;
         this.updateFinancialCardValidity(true, false);
         return;
       } else if (
@@ -1153,6 +1139,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.rouDateStatus = 'error';
         this.rouDateStatusMessage = rouDateValidationMessage;
         this.ROUCompositeDropdownValidation = 'error';
+        this.isROUActionDateRangeValid = false;
         this.updateFinancialCardValidity(true, false);
         return;
       } else {
@@ -1162,6 +1149,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.rouDateStatus = 'default';
         this.rouDateStatusMessage = '';
         this.ROUCompositeDropdownValidation = 'default';
+        this.isROUActionDateRangeValid = true;
         this.updateFinancialCardValidity(true, true);
       }
       this.rouDatePicker?.validate();

@@ -2,13 +2,7 @@ import { AccountingSummaryService } from '@accounting-summary/services/accountin
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { classificationSettingResponse } from '@accounting-summary/models/classification-settings-response.modal';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
-import {
-  Component,
-  OnDestroy,
-  ViewChild,
-  OnInit,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DatePipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
@@ -34,6 +28,8 @@ import {
 } from '@accounting-summary/models/interfaces/calculate-values-response.interfaces';
 import { environment } from '@mangoSpa/src/environments/environment.local';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
+import { checkSaveValidity } from '@accounting-summary/utils/validation.util';
+
 @Component({
   selector: 'mango-add-event',
   templateUrl: './add-event.component.html',
@@ -83,7 +79,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   calculateValuesLoading: boolean;
   isApplyClicked: boolean;
   debounceTime = 300;
-  private subscription$ = new Subscription();
+  private subscription = new Subscription();
   isCalculateClicked: boolean;
   isFunctionalRate1: boolean;
   calculateWithFunctionalRate1: boolean;
@@ -114,7 +110,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
 
   ngOnDestroy(): void {
     localStorage.removeItem('minROUActionDate');
-    this.subscription$.unsubscribe();
+    this.subscription.unsubscribe();
     this.addEventFormService.setCalculateValueResponse(null);
     this.addEventFormService.classificationFormData$.next(null);
   }
@@ -133,7 +129,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
     this.addEventFormService.pageMode$.next(this.pageMode);
     this.addEventFormService.measureEvent$.next(this.measureEvent);
 
-    this.subscription$.add(
+    this.subscription.add(
       this.accountingSummaryService.lastApprovedOrExportedDate$
         .pipe(debounceTime(this.debounceTime))
         .subscribe((isRetro) => {
@@ -147,13 +143,13 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   initializeRouteData() {
-    this.subscription$.add(
+    this.subscription.add(
       this.activatedRoute.data.subscribe((navigatedFrom) => {
         this.pageMode = navigatedFrom.breadCrumb.label;
       })
     );
 
-    this.subscription$.add(
+    this.subscription.add(
       this.activatedRoute.queryParams.subscribe((params) => {
         this.queryParams = params;
       })
@@ -191,7 +187,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   populateChargeDateRangeOptions() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEditScheduleService.chargeMinAndMaxDateOptionPopulated.subscribe(
         (data) => {
           let dateChanged = false;
@@ -228,15 +224,17 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   getUserInfo() {
-    this.facade.contactRecord$.subscribe((contact) => {
-      this.dateFormat = contact.preferences.contactDatesEU
-        ? 'dd.MM.yyyy'
-        : 'MM/dd/yyyy';
-    });
+    this.subscription.add(
+      this.facade.contactRecord$.subscribe((contact) => {
+        this.dateFormat = contact.preferences.contactDatesEU
+          ? 'dd.MM.yyyy'
+          : 'MM/dd/yyyy';
+      })
+    );
   }
 
   getCalculateValueData() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEventFormService.calculateValuesResponseData$
         .pipe(debounceTime(this.debounceTime))
         .subscribe((calculateValuesResponseData) => {
@@ -253,7 +251,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   getFormsData() {
-    this.subscription$.add(
+    this.subscription.add(
       combineLatest([
         this.addEventFormService.scheduleDetailsFormData$,
         this.addEventFormService.classificationFormData$,
@@ -349,6 +347,12 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   calculateValues() {
+    const isValidToSave = checkSaveValidity(
+      this.financialData.financialFormData,
+      this.scheduleDetails,
+      this.portfolioSettings,
+      this.classificationId
+    );
     this.addEventFormService.validateCalculateComponents$.next(true);
     if (!this.calculateValidations() && !this.calculateWithFunctionalRate1) {
       return;
@@ -357,7 +361,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
       this.buildPresentValueExportPayload(addEditSchedulePayload);
       this.addEventFormService.presentValueEnabled$.next(true);
       this.calculateValuesLoading = true;
-      this.subscription$.add(
+      this.subscription.add(
         this.addEditScheduleService
           .calculateValues(addEditSchedulePayload)
           .subscribe((response) => {
@@ -382,10 +386,10 @@ export class AddEventComponent implements OnDestroy, OnInit {
                 this.isSaveAllowed = false;
                 this.isCalculateValuesAllowed = true;
               } else {
-                if (this.isCalculateClicked) {
+                if (this.isCalculateClicked && isValidToSave) {
                   this.isSaveAllowed = true;
                   this.isApplyAllowed = true;
-                } else if (!this.isCalculateClicked) {
+                } else if (!this.isCalculateClicked || !isValidToSave) {
                   this.isSaveAllowed = false;
                   this.isApplyAllowed = false;
                 }
@@ -1183,7 +1187,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   private getCommonDropDowns() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEditScheduleService
         .getCommonDropdowns()
         .subscribe((response: any) => {
@@ -1211,7 +1215,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
    */
   navigateToAccountingSummaryPage(): void {
     this.addEditScheduleService.clearAllToastMessages();
-    this.subscription$.add(
+    this.subscription.add(
       this.accountingSummaryService.getLeaseInfo().subscribe(
         (res) => {
           if (res.success) {
@@ -1236,7 +1240,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   private getClassificationSettings() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEditScheduleService
         .getClassificationSettings()
         .subscribe((response: any) => {
@@ -1254,7 +1258,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   private getAccountingEventsData() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEditScheduleService
         .getAccountingEventData(this.scheduleId)
         .subscribe((response: any) => {
@@ -1275,7 +1279,7 @@ export class AddEventComponent implements OnDestroy, OnInit {
   }
 
   private getEventDateOptions() {
-    this.subscription$.add(
+    this.subscription.add(
       this.addEditScheduleService
         .getDateOptions()
         .subscribe((response: any) => {
