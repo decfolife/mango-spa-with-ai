@@ -503,8 +503,11 @@ export class ReportsHomeComponent implements OnInit, OnDestroy {
           if (item.data.sameWindow) {
             document.location = item.data.reportUrl;
           } else {
+            const fullReportUrl = this.router.serializeUrl(
+              this.router.createUrlTree([item.data.reportUrl])
+            );
             window.open(
-              item.data.reportUrl,
+              fullReportUrl,
               'Report',
               'toolbar=no,scrollbars=yes,location=no,statusbar=no,menubar=yes,resizable=yes'
             );
