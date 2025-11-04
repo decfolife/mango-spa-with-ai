@@ -298,9 +298,20 @@ export class AccountingSummaryService extends EndpointService {
       : `${componentName}-${uniqueName}-${elementType}`;
   }
 
+  sanitizeExcelName(name: string): string {
+    // eslint-disable-next-line no-useless-escape
+    return name.replace(/[\\/:*?"<>|\[\]]/g, '_');
+  }
+
   exportToExcel(component: any, filename: string, worksheetName: string): void {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(worksheetName);
+
+    const sanitizedWorkSheetName = this.sanitizeExcelName(
+      worksheetName || 'Sheet1'
+    );
+    const sanitizedFileName = this.sanitizeExcelName(filename || 'Export.xlsx');
+
+    const worksheet = workbook.addWorksheet(sanitizedWorkSheetName);
 
     exportDataGrid({
       component: component,
@@ -315,7 +326,7 @@ export class AccountingSummaryService extends EndpointService {
       workbook.xlsx.writeBuffer().then((buffer: BlobPart) => {
         saveAs(
           new Blob([buffer], { type: 'application/octet-stream' }),
-          filename
+          sanitizedFileName
         );
       });
     });
