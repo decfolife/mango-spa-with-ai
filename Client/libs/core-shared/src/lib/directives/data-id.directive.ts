@@ -127,10 +127,10 @@ export class CremDataIdDirective implements AfterViewInit {
         takeUntilDestroyed(this.destroyRef),
         // take(1),
         catchError((error) => {
-          console.error(
-            'Breadcrumbs for data-id tagging could not be generated. Please ensure they are being provided correctly.',
-            error
-          );
+          // console.error(
+          //   'Breadcrumbs for data-id tagging could not be generated. Please ensure they are being provided correctly.',
+          //   error
+          // );
           return of([]);
         })
       )

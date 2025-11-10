@@ -1,9 +1,10 @@
+import { DataIdService } from './../../../../mango/src/app/services/data-id.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { CurrentObjectService, StorageService } from '@mango/core-shared';
+import { CurrentObjectService, DataIdBreadcrumbProviderService, StorageService } from '@mango/core-shared';
 import {
   Environment,
   IDLE_TIMOUT_DELAY_SECONDS,
@@ -35,6 +36,7 @@ import { AppEffects } from './+state/effects/app.effects';
 import { HttpEffects } from './+state/effects/http.effects';
 import { RoleGuard } from './guards/role.guard';
 import { ServiceAccountService } from './services/service-account.service';
+import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 
 const DEV_MODULES = [];
 
@@ -133,6 +135,7 @@ if (!environment.production) {
   providers: [
     { provide: Environment, useValue: environment },
     { provide: IS_CA_STANDALONE_APP, useValue: true },
+    { provide: DataIdBreadcrumbProviderService, useClass: DataIdService },
     provideUserIdleConfig({
       idle: 1,
       timeout: IDLE_TIMOUT_DELAY_SECONDS,
@@ -146,6 +149,7 @@ if (!environment.production) {
     JwtService,
     CurrentObjectService,
     CentralAuthFacade,
+    MangoAppFacade
   ],
   bootstrap: [AppComponent],
 })
