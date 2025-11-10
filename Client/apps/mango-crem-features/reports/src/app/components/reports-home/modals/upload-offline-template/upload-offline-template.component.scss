@@ -1,0 +1,48 @@
+.progress-container {
+  margin: 10px 0;
+}
+
+.error-container {
+  margin: 10px 0;
+  justify-content: center;
+  display: flex;
+}
+
+::ng-deep #fileuploader-container {
+  border: 1px solid #807f7f;
+  margin: 10px 10px 0 10px;
+  text-align: center;
+
+  .dx-button-content {
+    background-color: var(--costar-color-primary-light, #0559b3);
+    color: var(--costar-color-light, #ffffff);
+    padding: 5px !important;
+    width: 120px;
+    width: max-content;
+    display: table-row;
+  }
+  div.dx-button.dx-button-mode-contained {
+    background-color: var(--costar-color-info-lightest, #dce8f4);
+    display: grid;
+    justify-content: center;
+  }
+  .dx-fileuploader-input-wrapper {
+    padding: 7px 0;
+    border: 3px dashed transparent;
+    flex: auto;
+    display: grid;
+    width: 100%;
+    justify-content: center;
+  }
+  .dx-fileuploader-input-container {
+    height: 100%;
+    width: 100% !important;
+    position: relative;
+    overflow: hidden;
+    display: table-row;
+  }
+
+  .dx-fileuploader-button {
+    background-color: var(--costar-color-primary-light, #0559b3) !important;
+  }
+}

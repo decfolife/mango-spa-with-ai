@@ -7,15 +7,21 @@ import {
   ButtonModule,
   LoaderModule,
   IconModule,
+  ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
 import { MatIconModule } from '@angular/material/icon';
-import { DxDataGridModule } from 'devextreme-angular';
+import { DxDataGridModule, DxFileUploaderModule } from 'devextreme-angular';
 import { MatMenuModule } from '@angular/material/menu';
 import { ShareReportComponent } from './modals/share-report/share-report.component';
-import { ModalModule } from '@mango/ui-shared/lib-ui-elements';
+import { UploadOfflineTemplateComponent } from './modals/upload-offline-template/upload-offline-template.component';
+import { DxProgressBarModule } from 'devextreme-angular';
 
 @NgModule({
-  declarations: [ReportsHomeComponent, ShareReportComponent],
+  declarations: [
+    ReportsHomeComponent,
+    ShareReportComponent,
+    UploadOfflineTemplateComponent,
+  ],
   imports: [
     CommonModule,
     SearchModule,
@@ -23,10 +29,12 @@ import { ModalModule } from '@mango/ui-shared/lib-ui-elements';
     ButtonModule,
     MatIconModule,
     DxDataGridModule,
+    DxFileUploaderModule,
     MatMenuModule,
     LoaderModule,
     IconModule,
     ModalModule,
+    DxProgressBarModule,
   ],
   exports: [ReportsHomeComponent],
 })

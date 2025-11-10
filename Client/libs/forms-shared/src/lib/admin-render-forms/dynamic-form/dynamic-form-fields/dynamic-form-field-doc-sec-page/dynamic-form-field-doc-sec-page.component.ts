@@ -271,6 +271,10 @@ export class DynamicFormFieldDocSecPageComponent implements OnInit, OnDestroy {
               formControlValidators.push(Validators.required);
             }
 
+            formControlValidators.push(
+              Validators.pattern(/^(?!.*(<.*|javascript:|eval\(|alert\(|document\.|window\.)).*$/)
+            );
+
             let formControl = this.fcs.createFormControl(
               this.fieldData.name[cfn.sourceField],
               formControlValidators

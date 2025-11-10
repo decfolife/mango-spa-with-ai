@@ -134,7 +134,7 @@ export const dynamicFormLoadAvailableSectionsFailure = createAction(
 //Dynamic Form Sections (on form)
 export const dynamicFormLoadSections = createAction(
   LOAD_SECTIONS,
-  props<{ formId: number; groupId: number }>()
+  props<{ formId: number; groupId: number; objectId: number }>()
 );
 export const dynamicFormLoadSectionsSuccess = createAction(
   LOAD_SECTIONS_SUCCESS,
@@ -250,7 +250,7 @@ export const dynamicFormLoadWidgetByWidgetIdSuccessWithStatus = createAction(
 );
 export const dynamicFormLoadWidgetByWidgetId = createAction(
   '[DynamicForm] Load Form Widget By Widget Id',
-  props<{ widgetId: number }>()
+  props<{ widgetId: number; objectId: number }>()
 );
 //export const dynamicFormLoadWidgetByWidgetIdSuccess = createAction('[DynamicForm] Load Form Widget By Widget Id Success', props<{ widget: Widget }>());
 export const dynamicFormLoadWidgetByWidgetIdFailure = createAction(

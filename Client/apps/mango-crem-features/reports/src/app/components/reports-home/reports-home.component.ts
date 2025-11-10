@@ -11,9 +11,10 @@ import { ShareReportComponent } from './modals/share-report/share-report.compone
 import { Router } from '@angular/router';
 import { ManageTagsComponent } from '../modal/manage-tags/manage-tags.component';
 import { AssignTagsComponent } from '../modal/assign-tags/assign-tags.component';
-
-// Magic to access objects declared outside Angular
-declare var launchUploadFileWizard;
+import { UploadOfflineTemplateComponent } from './modals/upload-offline-template/upload-offline-template.component';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
+import { ToastState } from '@mango/data-models/lib-data-models';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'reports-home',
@@ -49,16 +50,19 @@ export class ReportsHomeComponent implements OnInit, OnDestroy {
 
   navigationButtonsObserver: MutationObserver;
   pagingButtonsObserver: MutationObserver;
+  offlineTemplateClosed$: Subscription = undefined;
 
   constructor(
     private reportsService: ReportsService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private toastService: CremToastService
   ) {}
 
   ngOnDestroy() {
     this.navigationButtonsObserver.disconnect();
     this.pagingButtonsObserver.disconnect();
+    this.offlineTemplateClosed$?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -306,7 +310,30 @@ export class ReportsHomeComponent implements OnInit, OnDestroy {
   }
 
   launchUploadOfflineTemplateModal() {
-    launchUploadFileWizard();
+    const offlineTemplateDialog = this.dialog.open(
+      UploadOfflineTemplateComponent,
+      {
+        width: '520px',
+        disableClose: true,
+        panelClass: 'crem-modal-dialog',
+      }
+    );
+
+    this.offlineTemplateClosed$ = offlineTemplateDialog
+      .afterClosed()
+      .subscribe((result) => {
+        if (!result) return;
+
+        this.toastService.show(
+          result?.message,
+          '',
+          result.successMsg ? ToastState.SUCCESS : ToastState.ERROR,
+          {
+            position: 'bottom right',
+            maxWidth: '350px',
+          }
+        );
+      });
   }
 
   public createReport() {

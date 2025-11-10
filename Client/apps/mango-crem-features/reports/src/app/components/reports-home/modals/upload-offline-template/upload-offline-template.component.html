@@ -1,0 +1,54 @@
+<crem-modal
+  modalTitle="Upload Offline Template"
+  [closeIconVisible]="true"
+  [customFooter]="true"
+>
+  <div modalContent>
+    <p>
+      Select an offline report template (Excel .xlsx or .xls format) to stage it
+      for upload.
+    </p>
+    <div id="fileuploader-container" class="fileuploader-container">
+      <dx-file-uploader
+        #fileUploader
+        uploadMode="useForm"
+        [multiple]="false"
+        [showFileList]="true"
+        [allowedFileExtensions]="allowedExtensions"
+        [maxFileSize]="maxFileSizeBytes"
+        accept=".xlsx,.xls"
+        selectButtonText="Select a File"
+        (onValueChanged)="handleValueChanged($event)"
+      ></dx-file-uploader>
+    </div>
+    <div class="progress-container">
+      <dx-progress-bar
+        *ngIf="uploadProgress !== undefined"
+        [min]="0"
+        [max]="100"
+        [value]="uploadProgress"
+      >
+      </dx-progress-bar>
+    </div>
+
+    <div *ngIf="uploadError" role="alert" class="error-container">
+      {{ uploadError }}
+    </div>
+  </div>
+
+  <div modalFooter>
+    <div footerLeftControls></div>
+    <div footerRightControls>
+      <crem-button type="secondary" (click)="dismiss()">Cancel</crem-button>
+      <crem-button
+        type="primary"
+        (click)="uploadTemplate()"
+        [disabled]="
+          !selectedFile || !isFileValid || uploadProgress !== undefined
+        "
+      >
+        Upload
+      </crem-button>
+    </div>
+  </div>
+</crem-modal>

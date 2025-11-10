@@ -31,6 +31,11 @@ import {
 } from '@forms/model/behaviors.interface';
 import { Subscription } from 'rxjs';
 import { filter, switchMap, tap } from 'rxjs/operators';
+import { BehaviorType as BehaviorTypeEnum } from '@forms/model/enums/behaviors.enums';
+import {
+  FormWizardDataTypeID,
+  FormWizardTypeID,
+} from '@forms/model/dynamic-forms.interface';
 
 @Component({
   selector: 'mango-dynamic-form-behaviors',
@@ -78,6 +83,7 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
   continueToEdit: boolean;
   doesOutputExist: boolean;
   isInitialLoad = true;
+  formData: any;
 
   constructor(
     public dialogRef: MatDialogRef<DynamicFormBehaviorsComponent>,
@@ -90,6 +96,9 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
       renderFormData: any;
       formID: number;
       formSectionID: number;
+      objectID: number;
+      objectTypeID: number;
+      formSectionName: string;
     }
   ) {}
 
@@ -116,7 +125,17 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
     });
   }
 
-  populateDropdowns() {
+  async populateDropdowns() {
+    this.formData = await this.dynamicFormService
+      .getRenderFormData(
+        this.data.formID,
+        this.data.objectID,
+        this.data.objectTypeID,
+        0,
+        0,
+        true
+      )
+      .toPromise();
     this.formItemInputsLookup = this.data?.renderFormData.map((item) => ({
       formItemID: +item.formItemID,
       formItemTypeID: +item.formItemTypeID,
@@ -198,21 +217,53 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
     this.isInitialLoad = false;
 
     // Filters the Output dropdown to show only date values when "SetCompletedDate" behavior is selected.
-    if (behaviorType === 10) {
+    if (behaviorType === BehaviorTypeEnum.RbtnHideFormSection) {
+      this.filteredFormItemInputsLookup1 = this.formItemInputsLookup.filter(
+        (itm) =>
+          itm.displayName.indexOf('Is Vendor') > -1 ||
+          itm.displayName.indexOf('Is Customer') > -1 ||
+          itm.displayName.indexOf('Subscribe to Reminders') > -1
+      );
+      let widgetData = this.formData?.data.filter(
+        (frmData) => frmData.iFrameName !== null
+      );
+
+      this.formItemOutputLookup = widgetData?.map((item) => ({
+        formItemID: +item.formItemID,
+        formItemTypeID: +item.formItemTypeID,
+        dataTypeID: +item.dataTypeID,
+        displayName: `${item.formItemLabel.replace(
+          '_',
+          ' '
+        )} - ${this.getDataTypeDisplayName(item.dataTypeID)}`,
+      }));
+    } else if (behaviorType === BehaviorTypeEnum.SetCompletedDate) {
       this.filteredFormItemInputsLookup1 = this.formItemInputsLookup.filter(
         (formItem) => formItem.formItemID == 50457
       );
       this.formItemOutputLookup = this.formItemInputsLookup?.filter(
-        (item) => item.dataTypeID === 7
+        (item) => item.dataTypeID === FormWizardDataTypeID.DATE
       );
-    } else if (behaviorType == 13) {
+    } else if (behaviorType == BehaviorTypeEnum.CalcDateDifference) {
       this.filteredFormItemInputsLookup1 = this.formItemInputsLookup?.filter(
-        (item) => item.dataTypeID === 7
+        (item) => item.dataTypeID === FormWizardDataTypeID.DATE
       );
       this.filteredFormItemInputsLookup2 = this.filteredFormItemInputsLookup1;
       this.formItemOutputLookup = this.formItemInputsLookup?.filter(
         (item) =>
-          item.formItemTypeID === 2 && [200, 201, 202].includes(item.dataTypeID)
+          item.formItemTypeID === FormWizardTypeID.TEXT_FIELD &&
+          [
+            FormWizardDataTypeID.CHAR,
+            FormWizardDataTypeID.EMAIL,
+            FormWizardDataTypeID.W_CHAR,
+          ].includes(item.dataTypeID)
+      );
+    } else if (behaviorType === BehaviorTypeEnum.ToggleChild) {
+      this.filteredFormItemInputsLookup1 = this.formItemInputsLookup?.filter(
+        (item) => item.formItemTypeID === FormWizardTypeID.RADIO_BUTTON
+      );
+      this.formItemOutputLookup = this.formItemInputsLookup?.filter(
+        (item) => item.formItemTypeID !== FormWizardTypeID.RADIO_BUTTON
       );
     } else {
       this.filteredFormItemInputsLookup1 = this.formItemInputsLookup;
@@ -262,15 +313,36 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
         showOutput: true,
         validators: { input1: true, input2: true, requestType: false },
       },
+      // ToggleChild
+      14: {
+        showInput1: true,
+        showInput2: false,
+        showRequestType: false,
+        showOutput: true,
+        validators: { input1: false, input2: false, requestType: false },
+      },
+      // HideFormSection
+      15: {
+        showInput1: true,
+        showInput2: false,
+        showRequestType: false,
+        showOutput: true,
+        validators: { input1: false, input2: false, requestType: false },
+      },
     };
 
     // Default config if no behavior matches
     const config = behaviorConfig[behaviorType] || {
-      showInput1: false,
+      showInput1: true,
       showInput2: false,
       showRequestType: false,
-      showOutput: false,
-      validators: { input1: false, input2: false, requestType: false },
+      showOutput: true,
+      validators: {
+        input1: false,
+        input2: false,
+        output: false,
+        requestType: false,
+      },
     };
 
     // Reset form and apply visibility settings
@@ -339,7 +411,20 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
           this.behaviorTypes = response.data.behaviorTypes
             .filter((behaviorType) => behaviorType.isActive)
             .sort((a, b) => a.behavior.localeCompare(b.behavior));
-
+          if (
+            this.data.formSectionName !== 'Company Setup' &&
+            this.data.formSectionName !== 'Reminder Subscription' &&
+            this.behaviorTypes.findIndex(
+              (s) => s.behavior === 'rbtnHideFormSection'
+            )
+          ) {
+            this.behaviorTypes.splice(
+              this.behaviorTypes.findIndex(
+                (s) => s.behavior === 'rbtnHideFormSection'
+              ),
+              1
+            );
+          }
           this.behaviorLookups = response.data.behaviorLookups
             .filter((requestType) => requestType.isActive)
             .sort((a, b) => a.requestTypeName.localeCompare(b.requestTypeName));
@@ -400,6 +485,19 @@ export class DynamicFormBehaviorsComponent implements OnInit, OnDestroy {
       FormItemOutputID: this.getDropdownValue(
         this.behaviorsFormGroup?.value.formItemOutput
       ),
+      BehaviorFormSectionID:
+        this.getDropdownValue(this.behaviorsFormGroup?.value.behaviorType) ==
+        BehaviorTypeEnum.RbtnHideFormSection
+          ? Number(
+              this.formData?.data?.find(
+                (itm) =>
+                  +itm.formItemID ===
+                  this.getDropdownValue(
+                    this.behaviorsFormGroup?.value.formItemOutput
+                  )
+              )?.formSectionID
+            )
+          : 0,
     };
 
     this.doesOutputExist = this.behaviorsGridData.some(

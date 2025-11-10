@@ -13,8 +13,7 @@
         [attr.title]="'Click to view help text and history'"
         [attr.aria-label]="'Click to view help text and history'"
         (click)="toggleVisible()"
-        (keydown.enter)="toggleVisible()"
-        (keydown.space)="toggleVisible(); $event.preventDefault()"
+        (keydown)="toggleFieldHistory($event)"
       ></button>
     </ng-container>
 

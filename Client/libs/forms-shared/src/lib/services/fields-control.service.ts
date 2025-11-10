@@ -33,6 +33,13 @@ export class FieldsControlService {
         );
       }
 
+      if ((['2','3','10','11','14','15','16',].some((typeId) => field.formItemTypeID === typeId))
+      ) {
+        conditionalValidators.push(
+          Validators.pattern(/^(?!.*(<.*|javascript:|eval\(|alert\(|document\.|window\.)).*$/)
+        );
+      }
+
       // Check and add required validator if necessary
       if (field.formItemMandatory == '1') {
         conditionalValidators.push(Validators.required);

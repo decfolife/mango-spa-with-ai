@@ -79,7 +79,40 @@
                       "
                     ></crem-dropdown>
                   </ng-container>
-
+                  <ng-container *ngSwitchCase="'MULTI_SELECT'">
+                    <crem-dropdown
+                      *ngIf="!isDropdownValuesLoading"
+                      [id]="'df-dropdown' + d.formItemID && '-' + d.formItemID"
+                      [dataSource]="dropdownData[d.formItemID]"
+                      [displayExpr]="'display'"
+                      [valueExpr]="'value'"
+                      [required]="
+                        d.formItemSectionDetail?.formItemMandatory
+                          | isFieldRequired
+                      "
+                      [containerized]="false"
+                      [readOnlyStyle]="'text-only'"
+                      [formControlName]="d.formItemFriendlyName"
+                      [showClearButton]="true"
+                      [showColumnHeader]="true"
+                      showCheckBoxesMode="always"
+                      selectMode="multiple"
+                      useArrayOfKeys="true"
+                      getWholeObject="true"
+                      dropDownContainerCustomClass="dynamicFormDropDown"
+                      [initialSelectedValue]="
+                        getDropdownInitialValue(d.formItemID)
+                      "
+                      (selectedItems)="
+                        onDropdownValueChanged(
+                          $event,
+                          d.formItemSectionDetail.formItemJavaScript,
+                          d,
+                          false
+                        )
+                      "
+                    ></crem-dropdown>
+                  </ng-container>
                   <!-- Textarea Input -->
                   <ng-container *ngSwitchCase="'COMMENT_AREA'">
                     <crem-input

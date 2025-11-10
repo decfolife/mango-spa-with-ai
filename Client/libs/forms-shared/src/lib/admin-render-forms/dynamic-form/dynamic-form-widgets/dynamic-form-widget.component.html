@@ -120,15 +120,18 @@
     <!-- Widget/Grid Export: Add in here configurations to excel export -->
     <mango-dynamic-form-export-widget
       [widget]="widget"
-      (exportDone)="exportDone()"
+      (exportDone)="exportDone($event)"
       [gridMasterDetail]="gridMasterDetail"
       [columnFormatMap]="columnFormatMap"
       [selectWidget$]="selectWidget$"
       [exportType]="dynamicWidgetConfiguration.gridView"
-      *ngIf="
-        shouldRenderExportGrid &&
+      [dataPivotConf]="dynamicWidgetConfiguration.dataPivotConf"
+      [gridDataSource]="
         dynamicWidgetConfiguration.gridView === 'dataGrid'
+          ? widget.renderFormWidgetData
+          : pivotGridDataSource
       "
+      *ngIf="shouldRenderExportGrid"
     ></mango-dynamic-form-export-widget>
     <!-- End Widget/Grid Export -->
 
@@ -410,7 +413,7 @@
       </ng-container>
 
       <div *dxTemplate="let detail of 'details'">
-        <ng-container *ngIf="detail.data.oid">
+        <ng-container *ngIf="!env.production && detail.data.oid">
           <dl class="m-0">
             <dt class="d-none">ID</dt>
             <dd class="m-0 color-gray02" aria-label="ID" title="ID">
@@ -440,7 +443,15 @@
                 }"
               >
                 <dt>{{ col.label }}</dt>
-                <dd>{{ detail.data[col.dataFieldTableField | lowercase] }}</dd>
+                <dd>
+                  {{
+                    detail.data[col.dataFieldTableField | lowercase]
+                      | masterDetailFormat
+                        : col.dataFieldDataType
+                        : dateFormat
+                        : col.dataTypeFormatString
+                  }}
+                </dd>
               </dl>
             </ng-container>
           </div>

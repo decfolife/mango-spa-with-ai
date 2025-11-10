@@ -96,6 +96,8 @@ import {
   DataType,
 } from 'libs/data-models/lib-data-models/src/lib/enums/index';
 import { ListPageService } from 'apps/mango-crem-features/list-pages/src/app/components/listpage/core/services/listpage.service';
+import { MasterDetailFormatPipe } from '../pipes/master-detail-format.pipe';
+import { environment } from '@mangoSpa/src/environments/environment.local';
 
 type redirectToLeaseOption = (params: {
   oid: number;
@@ -140,6 +142,7 @@ type EditButtonFunctionMap = {
     WidgetNamePipe,
     IsObjectEmptyPipe,
     CremDataIdDirective,
+    MasterDetailFormatPipe,
   ],
   providers: [
     DynamicFormsService,
@@ -290,6 +293,8 @@ export class DynamicFormWidgetComponent
   ottid: number;
   fid: number;
 
+  public env = environment; // expose for template
+
   constructor(
     private dynamicFormsFacade: DynamicFormsFacade,
     private dialog: MatDialog,
@@ -406,7 +411,10 @@ export class DynamicFormWidgetComponent
   }
 
   private loadWidget(): Observable<void> {
-    this.dynamicFormsFacade.loadWidgetByWidgetId(this.field.widgetID);
+    this.dynamicFormsFacade.loadWidgetByWidgetId(
+      this.field.widgetID,
+      this.field.formObjectId ?? this.objectId
+    );
 
     return this.dynamicFormsFacade
       .selectFormItemWidgetsApiResponseByWidgetId(this.field.widgetID)
@@ -614,7 +622,10 @@ export class DynamicFormWidgetComponent
       for (let j = 0; j < dateFields.length; j++) {
         if (
           columnRowData[i][dateFields[j]] &&
-          !Number.isNaN(Date.parse(columnRowData[i][dateFields[j]]))
+          !Number.isNaN(Date.parse(columnRowData[i][dateFields[j]])) &&
+          // We need at least 6 chars to have a proper date (YYYYMMDD)
+          // otherwise, leave it as a string
+          columnRowData[i][dateFields[j]].length > 6
         ) {
           columnRowData[i][dateFields[j]] = new Date(
             columnRowData[i][dateFields[j]]
@@ -979,18 +990,21 @@ export class DynamicFormWidgetComponent
       });
   }
 
-  async exportToExcel() {
+  exportToExcel() {
     this.isCreatingExport = true;
     this.shouldRenderExportGrid = true;
   }
 
-  exportDone() {
+  exportDone(success: boolean) {
     this.isCreatingExport = false;
-    this.shouldRenderExportGrid = true;
+    this.shouldRenderExportGrid = false;
+
     this.toastService.show(
-      'Exported to Excel successfully!',
+      success
+        ? 'Exported to Excel successfully!'
+        : 'An error has occurred. Please try again.',
       '',
-      ToastState.SUCCESS,
+      success ? ToastState.SUCCESS : ToastState.ERROR,
       {
         position: 'bottom right',
         maxWidth: '350px',
@@ -1247,32 +1261,31 @@ export class DynamicFormWidgetComponent
       rowData.key?.linkedobjecttypetypeid ?? rowData.key.objecttypetypeid;
 
     let launch_fid;
-
+    queryParams = {
+      oid: launch_oid,
+      otid: launch_otid,
+      ottid: launch_ottid,
+      roid: this.field.formObjectId ?? this.objectId,
+      rotid: this.field.objectTypeID ?? this.objectTypeId,
+      poid: this.objectId,
+      potid: this.objectTypeId,
+    };
     if (rowData.key.keyeditformid > 0) {
       launch_fid = rowData.key.keyeditformid;
-
-      queryParams = {
-        fid: launch_fid,
-        pgmode: pgMode,
-        oid: launch_oid,
-        otid: launch_otid,
-        ottid: launch_ottid,
-        roid: this.objectId,
-        rotid: this.objectTypeId,
-        rdid: widget.relationshipDefinitionID,
-        poid: this.objectId,
-        potid: this.objectTypeId,
-        parentfid: this.fid,
-      };
-
+      (queryParams.rdid = widget.relationshipDefinitionID),
+        (queryParams.fid = launch_fid);
+      queryParams.pgmode = pgMode;
+      queryParams.parentfid = this.fid;
       this.router.navigate(['/crem/forms/render-form'], { queryParams });
     } else if (widget.UseSecurity) {
       //logic to do
     } else {
+      let navUrl = '';
       this.formWizardService
         .getRedirectorLink(launch_otid, launch_ottid)
         .subscribe((result) => {
           if (result.success && result.data?.length > 0) {
+            navUrl = result.data[0].basePageUrl;
             launch_fid = parseInt(
               this.router
                 .parseUrl(result.data[0].basePageUrl)
@@ -1281,24 +1294,19 @@ export class DynamicFormWidgetComponent
                   .parseUrl(result.data[0].basePageUrl)
                   .queryParamMap.get('fid')
             );
-
-            queryParams = {
-              fid: launch_fid,
-              pgmode: pgMode,
-              oid: launch_oid,
-              otid: launch_otid,
-              ottid: launch_ottid,
-              roid: this.objectId,
-              rotid: this.objectTypeId,
-              rdid: widget.relationshipDefinitionID,
-              poid: this.objectId,
-              potid: this.objectTypeId,
-              parentfid: this.fid,
-            };
-
-            this.router.navigate(['/crem/forms/render-form'], {
-              queryParams,
-            });
+            if (Number.isNaN(launch_fid)) {
+              queryParams.navpageid = rowData.key?.keyeditnavpageid;
+              this.router.navigate([navUrl], {
+                queryParams,
+              });
+            } else {
+              queryParams.fid = launch_fid;
+              queryParams.pgmode = pgMode;
+              queryParams.parentfid = this.fid;
+              this.router.navigate(['/crem/forms/render-form'], {
+                queryParams,
+              });
+            }
           }
         });
     }

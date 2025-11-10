@@ -12,4 +12,6 @@ export enum BehaviorType {
   CallToogleTextList = 11,
   DisplayNewItems = 12,
   CalcDateDifference = 13,
+  ToggleChild = 14,
+  RbtnHideFormSection = 15,
 }

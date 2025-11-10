@@ -24,6 +24,7 @@ export class ISection {
   formSectionSortOrder: number;
   formsectionSystemName: string;
   vpDictionaryFormSectionDesc: string;
+  sectionVisibility: null;
 }
 
 export class IFields {
@@ -108,9 +109,12 @@ export class IFields {
   formItemInput1ID: number;
   formItemInput2ID: number;
   formItemOutputID: number;
+  formItemOutputIDs: Array<number>;
   behaviorTypeID: number;
   formItemSectionDetail: IFieldDetails;
   formItemType: FormItemTypes;
+  formItemAnswer?: any;
+  formObjectId: number;
 }
 
 export class IFieldDetails {
@@ -423,6 +427,7 @@ export interface DeleteSubObjectRequest {
  *
  * Mapped from `formItemType.formItemTypeID` in the data model.
  * Examples: dropdown, input, text-area, date.
+ * Note: Use tblFormItemType as a reference
  *
  * @export
  * @enum {number}
@@ -431,7 +436,10 @@ export enum FormWizardTypeID {
   LIST_BOX = 1, // Dropdown or list selection
   TEXT_FIELD = 2, // Single-line text input
   COMMENT_AREA = 3, // Multi-line text area
+  RADIO_BUTTON = 5,
+  WIDGET = 8,
   CALCULATED = 9,
+  MULTI_SELECT = 13,
 }
 export type FormWizardTypeIDType = keyof typeof FormWizardTypeID;
 
@@ -441,6 +449,7 @@ export type FormWizardTypeIDType = keyof typeof FormWizardTypeID;
  *
  * Mapped from `formItemSectionDetail.dataTypeID` in the data model.
  * Examples: currency, double, percent, date, etc.
+ * Note: Use tblDataTypes as a reference
  *
  * @export
  * @enum {number}
@@ -452,7 +461,9 @@ export enum FormWizardDataTypeID {
   CURRENCY = 6,
   DATE = 7,
   NUMBER = 131,
+  CHAR = 200,
   EMAIL = 201,
+  W_CHAR = 202,
   PERCENT = 206,
 }
 export type FormWizardDataTypeIDType = keyof typeof FormWizardDataTypeID;

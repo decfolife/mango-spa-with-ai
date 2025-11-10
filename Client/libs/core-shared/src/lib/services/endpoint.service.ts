@@ -1,4 +1,9 @@
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEvent,
+  HttpHeaders,
+  HttpResponse,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { Observable, of } from 'rxjs';
@@ -285,6 +290,17 @@ export abstract class EndpointService {
     return this.http.get<Blob>(url, {
       observe: 'response',
       responseType: 'blob' as 'json',
+    });
+  }
+
+  protected uploadFileChunk(
+    url: string,
+    formData: FormData
+  ): Observable<HttpEvent<unknown>> {
+    return this.http.post<unknown>(url, formData, {
+      headers: new HttpHeaders({ enctype: 'multipart/form-data' }),
+      reportProgress: true,
+      observe: 'events',
     });
   }
 }

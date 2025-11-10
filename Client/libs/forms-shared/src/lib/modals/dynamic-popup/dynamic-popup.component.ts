@@ -51,6 +51,7 @@ import { deepFreeze } from 'libs/core-shared/src/lib/utilities/utils';
 const RENDER_LOOKUP_SQL = 998;
 const FORM_ITEM_LIST_BOX_ID = 1;
 const FORM_ITEM_LIST_BOX = 'List Box';
+const FORM_ITEM_MULTI_LIST_BOX_ID = 13;
 const FORM_ITEM_TEXT_FIELD_ID = 2;
 const FORM_ITEM_TEXT_FIELD = 'Text Field';
 const FORM_ITEM_TEXT_AREA_FIELD_ID = 3;
@@ -236,7 +237,9 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
         }
 
         this.dynamicForm.addControl(
-          this.popupData[index].formItemFriendlyName,
+          this.popupData[index].formItemSectionDetail.formItemDisplayLabel
+            .replace(/:/g, '')
+            .trim(),
           new FormControl('', validators)
         );
 
@@ -284,12 +287,21 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
                 .display,
               null
             );
-          else
-            this.updateDynamicFormValues(
-              this.popupData[index],
+          else {
+            if (
               this.widgetDetails[1].data[this.popupData[index].formItemID]
-                .selectedValue
-            );
+                .selectedValue == '0' &&
+              this.widgetDetails[1].data[this.popupData[index].formItemID][0]
+                .display === ''
+            )
+              this.updateDynamicFormValues(this.popupData[index], null);
+            else
+              this.updateDynamicFormValues(
+                this.popupData[index],
+                this.widgetDetails[1].data[this.popupData[index].formItemID]
+                  .selectedValue
+              );
+          }
         } else {
           if (
             this.popupData[index] != null &&
@@ -312,7 +324,6 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
   //Populate Widget data in edit mode
   async populateWidgetData() {
     const widgetDataToPopulate = this.widgetDetails[2];
-
     if (widgetDataToPopulate && widgetDataToPopulate.data?.length > 0) {
       for (let index = 0; index < widgetDataToPopulate.data.length; index++) {
         const element = widgetDataToPopulate.data[index];
@@ -337,7 +348,10 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
         if (+element.dataTypeID == FORM_ITEM_DATE_FIELD) {
           this.dateInputList[element.formItemID] = element.formItemAnswer;
         }
-        if (element.formItemTypeID == FORM_ITEM_LIST_BOX_ID) {
+        if (
+          element.formItemTypeID == FORM_ITEM_LIST_BOX_ID ||
+          element.formItemTypeID == FORM_ITEM_MULTI_LIST_BOX_ID
+        ) {
           const value = element.formItemAnswer;
           await this.onDropdownValueChanged(
             value,
@@ -397,18 +411,38 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
   ) {
     if (e != null) {
       let isRole = false;
-      const selectedValue = isEdit
-        ? e.toString()
-        : e[0]
-        ? e[0].value.toString()
-        : e.toString();
+      let selectedValue: any;
+      // Normalize selectedValue for edit mode (incoming value may be a comma-separated string)
+      if (isEdit) {
+        // If this is a list box / multi-select, convert to an array of strings
+        if (formItem.formItemTypeID === FORM_ITEM_MULTI_LIST_BOX_ID) {
+          if (Array.isArray(e)) {
+            selectedValue = e.map((v: any) => v?.toString());
+          } else if (typeof e === 'string') {
+            selectedValue = e === '' ? [] : e.split(',').map((s) => s.trim());
+          } else if (e == null) {
+            selectedValue = [];
+          } else {
+            selectedValue = [e.toString()];
+          }
+        } else {
+          selectedValue = e.toString();
+        }
+      } else {
+        selectedValue =
+          e.length == 1 && e[0]
+            ? e[0].value.toString()
+            : e.length > 1
+            ? e.map((v: any) => v?.value.toString())
+            : e.toString();
+      }
       if (
         selectedValue &&
         selectedValue !== '0' &&
         selectedValue !== '-1' &&
         this.isEditMode &&
         this.dropdownData[formItem.formItemID]?.selectedValue?.toString() ===
-          selectedValue
+          selectedValue?.toString()
       ) {
         console.warn('Duplicate Call, please return');
         return;
@@ -421,13 +455,14 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
         isRole = true;
       if (selectedValue && selectedValue !== '0' && selectedValue !== '-1') {
         if (isRole) {
-          const displayRole = e[0]?.display?.toString()
-            ? e[0].display.toString()
-            : await this.dynamicPopupUtilities.getRoleDropDownDisplayData(
-                this.widgetDetails,
-                formItem.formItemID,
-                selectedValue
-              );
+          const displayRole =
+            Array.isArray(e) && e[0]?.display
+              ? e[0].display.toString()
+              : await this.dynamicPopupUtilities.getRoleDropDownDisplayData(
+                  this.widgetDetails,
+                  formItem.formItemID,
+                  selectedValue
+                );
           this.updateDynamicFormValues(formItem, displayRole);
         } else this.updateDynamicFormValues(formItem, selectedValue);
         if (formItemJavaScript != null && formItemJavaScript.length > 0) {
@@ -477,6 +512,8 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
               ? e[0]?.display?.toString()
               : selectedValue === -1 && e[0]?.display.indexOf('[') >= 0
               ? ''
+              : selectedValue === '0' && e[0]?.display === ''
+              ? null
               : selectedValue
           );
         }
@@ -505,8 +542,21 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
     formItemValue: any,
     oldValue: any = ''
   ) {
-    this.dynamicForm.get(formItem.formItemFriendlyName).setValue(formItemValue);
-
+    this.dynamicForm
+      .get(
+        formItem.formItemSectionDetail.formItemDisplayLabel
+          .replace(/:/g, '')
+          .trim()
+      )
+      .setValue(formItemValue);
+    if (Array.isArray(formItemValue)) {
+      formItemValue = formItemValue
+        .map((v: any) => (v ?? '').toString())
+        .join(',');
+    }
+    if (Array.isArray(oldValue)) {
+      oldValue = oldValue.map((v: any) => (v ?? '').toString()).join(',');
+    }
     this.updateFormItem(formItem, formItemValue, oldValue);
   }
 
@@ -769,8 +819,10 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
           ) > -1;
 
         if (
-          itmArray.length == 0 &&
-          formControl.formItemTypeID === FORM_ITEM_LIST_BOX_ID
+          (itmArray.length == 0 &&
+            formControl.formItemTypeID === FORM_ITEM_LIST_BOX_ID) ||
+          (itmArray.length == 0 &&
+            formControl.formItemTypeID === FORM_ITEM_MULTI_LIST_BOX_ID)
         ) {
           if (isControlExist)
             this.dropdownDtlList.find(
@@ -869,8 +921,25 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
             }
             this.widgetDetails[1].data[formControl.formItemID] =
               dropdownDataList;
-            this.widgetDetails[1].data[formControl.formItemID].selectedValue =
-              isEdit ? selectedValue : dropdownDataList[0].value;
+
+            // Normalize selectedValue for list-box controls to arrays
+            if (formControl.formItemTypeID === FORM_ITEM_MULTI_LIST_BOX_ID) {
+              let normalized: any = isEdit
+                ? selectedValue
+                : dropdownDataList[0].value;
+              if (typeof normalized === 'string') {
+                normalized = normalized === '' ? [] : normalized.split(',');
+              } else if (normalized == null) {
+                normalized = [];
+              } else if (!Array.isArray(normalized)) {
+                normalized = [normalized];
+              }
+              this.widgetDetails[1].data[formControl.formItemID].selectedValue =
+                normalized;
+            } else {
+              this.widgetDetails[1].data[formControl.formItemID].selectedValue =
+                isEdit ? selectedValue : dropdownDataList[0].value;
+            }
           } else {
             this.textInputList[formControl.formItemID] = this.controlValue;
             this.updateDynamicFormValues(formControl, this.controlValue);
@@ -934,7 +1003,13 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
       this.resetDropdownComponents(formItem, originalSelection);
 
       this.widgetDetails[1].data[formItemId].selectedValue = originalSelection;
-      this.updateDynamicFormValues(formItem, originalSelection);
+      if (
+        originalSelection == '0' &&
+        this.widgetDetails[1].data[formItemId][0].display === ''
+      )
+        this.updateDynamicFormValues(formItem, null);
+      else this.updateDynamicFormValues(formItem, originalSelection);
+
       this.dynamicForm.valueChanges.subscribe();
     }
 
@@ -955,7 +1030,7 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
    * @param e
    */
   async save(saveAndNew = false as boolean) {
-    if (this.changedFormItemKeys.length === 0) {
+    if (this.changedFormItemKeys.length === 0 && this.dynamicForm.valid) {
       this.showToast('Saved successfully!', '', ToastState.SUCCESS);
       this.dialogRef.close(true);
       return;
@@ -996,6 +1071,15 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
         this.popupData
       ),
     ];
+
+    if (this._debug) {
+      console.debug({
+        formItems: this.changedFormItemKeys,
+        popupData: this.popupData,
+        unMaskedFields: saveFormData.formItems,
+        saveFormData: saveFormData,
+      });
+    }
 
     if (this._debug) {
       console.debug({
@@ -1304,9 +1388,32 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
   }
 
   getDropdownInitialValue(formItemID: number): any {
-    return this.dropdownData[formItemID]?.length > 0
-      ? this.dropdownData[formItemID]?.selectedValue
-      : null;
+    const val = this.dropdownData?.[formItemID]?.selectedValue;
+    const formItem = this.popupData?.find(
+      (p: any) => p.formItemID == formItemID
+    );
+    const isListBox = formItem?.formItemTypeID === FORM_ITEM_MULTI_LIST_BOX_ID;
+
+    if (isListBox) {
+      // Always return an array for multi-select/list-box controls
+      if (val == null) return [];
+      if (Array.isArray(val))
+        return val.map((v) => (v == null ? v : v.toString()));
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (trimmed === '') return [];
+        return trimmed.indexOf(',') > -1
+          ? trimmed.split(',').map((s) => s.trim())
+          : [trimmed];
+      }
+      // numbers or other single values -> wrap in array
+      return [val];
+    }
+
+    // Single-select dropdowns: return single primitive or null
+    if (val == null) return null;
+    if (Array.isArray(val)) return val.length > 0 ? val[0] : null;
+    return val;
   }
 
   /**

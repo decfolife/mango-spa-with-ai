@@ -181,6 +181,13 @@ export class FieldHistoryComponent extends PendoDataId implements OnInit {
     }
   }
 
+  toggleFieldHistory(event){
+    if(event.code === 'Enter' || event.code === ' ') {
+      event.preventDefault();
+      this.toggleVisible();
+    }
+  }
+
   onTabChanged(e) {
     this.activeTabIndex = e;
     if (this.activeTabIndex == this._historyTabIndex && !this.getDataFlag) {

@@ -38,6 +38,9 @@ export class GetFieldTypePipe implements PipeTransform {
       case 'LIST_BOX': {
         return itemTypeName;
       }
+      case 'MULTI_SELECT': {
+        return itemTypeName;
+      }
       case 'COMMENT_AREA': {
         return itemTypeName;
       }

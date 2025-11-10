@@ -270,193 +270,121 @@
                     >
                     </dxo-item-dragging>-->
                     <ng-container *ngFor="let field of item.listOfFields">
-                      <dxi-item
-                        class="df-formSection-columnItem"
-                        [dataField]="field.formItemID"
-                        [name]="field"
-                        [colSpan]="
-                          field.widgetID !== null && field.widgetID > 0
-                            ? '2'
-                            : '1'
-                        "
-                        [template]="field.formItemType.formItemType"
+                      <ng-container
+                        *ngIf="!formItemsToHide.has(field.formItemID)"
                       >
-                      </dxi-item>
-                      <div
-                        *dxTemplate="let data of 'Text Field'"
-                        class="field-container df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
+                        <dxi-item
+                          class="df-formSection-columnItem"
+                          [dataField]="field.formItemID"
+                          [name]="field"
+                          [colSpan]="
+                            field.widgetID !== null && field.widgetID > 0
+                              ? '2'
+                              : '1'
                           "
-                        ></ng-container>
-                        <div class="field-content df-formSection-fieldContent">
-                          <div *ngIf="isRenderForm">
-                            <div [ngSwitch]="data?.name?.dataTypeID">
-                              <ng-container *ngSwitchCase="7">
-                                <crem-date-picker
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  use-dynamic-form-field-config
-                                  [useFieldConfig]="data"
-                                  [formControlName]="data?.dataField"
-                                  [dateFormat]="dateFormatPreference$ | async"
-                                  [useMaskBehavior]="false"
-                                  [id]="
-                                    'df-datePicker-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  (initialized)="
-                                    data?.name?.formItemInput1ID ===
-                                      data?.dataField ||
-                                    data?.name?.formItemInput2ID ===
-                                      data?.dataField
-                                      ? handleBehavior(
-                                          data?.name?.requestTypeID,
-                                          data?.name?.formItemInput1ID,
-                                          data?.name?.formItemInput2ID,
-                                          data?.name?.formItemOutputID,
-                                          data?.name?.behaviorTypeID,
-                                          $event
-                                        )
-                                      : ''
-                                  "
-                                  (changeEvent)="
-                                    data?.name?.formItemInput1ID ===
-                                      data?.dataField ||
-                                    data?.name?.formItemInput2ID ===
-                                      data?.dataField
-                                      ? handleBehavior(
-                                          data?.name?.requestTypeID,
-                                          data?.name?.formItemInput1ID,
-                                          data?.name?.formItemInput2ID,
-                                          data?.name?.formItemOutputID,
-                                          data?.name?.behaviorTypeID,
-                                          $event
-                                        )
-                                      : ''
-                                  "
-                                >
-                                </crem-date-picker>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [label]="data.name.formItemAnswerViewMode"
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchCase="3">
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'number'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                  (onBlurChange)="
-                                    onDecimalValueChanged(
-                                      $event,
-                                      data?.name?.numDecimals,
-                                      data?.dataField
-                                    )
-                                  "
-                                ></crem-input>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [label]="
-                                    (data.name.formItemAnswer | isNumericUI)
-                                      ? (data.name.formItemAnswer
-                                        | number
-                                          : '1.' +
-                                              (isTruthy(data.name.numDecimals)
-                                                ? data.name.numDecimals
-                                                : '0') +
-                                              '-' +
-                                              (isTruthy(data.name.numDecimals)
-                                                ? data.name.numDecimals
-                                                : '0'))
-                                      : data.name.formItemAnswer
-                                  "
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchCase="5">
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'number'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                  (onBlurChange)="
-                                    onDecimalValueChanged(
-                                      $event,
-                                      data?.name?.numDecimals,
-                                      data?.dataField
-                                    )
-                                  "
-                                ></crem-input>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [label]="
-                                    data.name.formItemAnswer
-                                      | number
-                                        : '1.' +
-                                            (isTruthy(data.name.numDecimals)
-                                              ? data.name.numDecimals
-                                              : '0') +
-                                            '-' +
-                                            (isTruthy(data.name.numDecimals)
-                                              ? data.name.numDecimals
-                                              : '0')
-                                  "
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchCase="6">
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'number'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                  (onBlurChange)="
-                                    onDecimalValueChanged(
-                                      $event,
-                                      data?.name?.numDecimals,
-                                      data?.dataField
-                                    )
-                                  "
-                                ></crem-input>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [label]="
-                                    data.name.formItemAnswer
-                                      ? '$' +
-                                        (data.name.formItemAnswer
+                          [template]="field.formItemType.formItemType"
+                        >
+                        </dxi-item>
+                        <div
+                          *dxTemplate="let data of 'Text Field'"
+                          class="field-container df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content df-formSection-fieldContent"
+                          >
+                            <div *ngIf="isRenderForm">
+                              <div [ngSwitch]="data?.name?.dataTypeID">
+                                <ng-container *ngSwitchCase="7">
+                                  <crem-date-picker
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    use-dynamic-form-field-config
+                                    [useFieldConfig]="data"
+                                    [formControlName]="data?.dataField"
+                                    [dateFormat]="dateFormatPreference$ | async"
+                                    [useMaskBehavior]="false"
+                                    [id]="
+                                      'df-datePicker-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    (initialized)="
+                                      data?.name?.formItemInput1ID ===
+                                        data?.dataField ||
+                                      data?.name?.formItemInput2ID ===
+                                        data?.dataField
+                                        ? handleBehavior(
+                                            data?.name?.requestTypeID,
+                                            data?.name?.formItemInput1ID,
+                                            data?.name?.formItemInput2ID,
+                                            data?.name?.formItemOutputID,
+                                            data?.name?.behaviorTypeID,
+                                            $event
+                                          )
+                                        : ''
+                                    "
+                                    (changeEvent)="
+                                      data?.name?.formItemInput1ID ===
+                                        data?.dataField ||
+                                      data?.name?.formItemInput2ID ===
+                                        data?.dataField
+                                        ? handleBehavior(
+                                            data?.name?.requestTypeID,
+                                            data?.name?.formItemInput1ID,
+                                            data?.name?.formItemInput2ID,
+                                            data?.name?.formItemOutputID,
+                                            data?.name?.behaviorTypeID,
+                                            $event
+                                          )
+                                        : ''
+                                    "
+                                  >
+                                  </crem-date-picker>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [label]="data.name.formItemAnswerViewMode"
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchCase="3">
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'number'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                    (onBlurChange)="
+                                      onDecimalValueChanged(
+                                        $event,
+                                        data?.name?.numDecimals,
+                                        data?.dataField
+                                      )
+                                    "
+                                  ></crem-input>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [label]="
+                                      (data.name.formItemAnswer | isNumericUI)
+                                        ? (data.name.formItemAnswer
                                           | number
                                             : '1.' +
                                                 (isTruthy(data.name.numDecimals)
@@ -466,81 +394,394 @@
                                                 (isTruthy(data.name.numDecimals)
                                                   ? data.name.numDecimals
                                                   : '0'))
-                                      : ''
-                                  "
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchCase="206">
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'number'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                  (onBlurChange)="
-                                    onDecimalValueChanged(
-                                      $event,
-                                      data?.name?.numDecimals,
-                                      data?.dataField
-                                    )
-                                  "
-                                ></crem-input>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [label]="
-                                    data.name.formItemAnswer
-                                      | number
-                                        : '1.' +
-                                            (isTruthy(data.name.numDecimals)
-                                              ? data.name.numDecimals
-                                              : '0') +
-                                            '-' +
-                                            (isTruthy(data.name.numDecimals)
-                                              ? data.name.numDecimals
-                                              : '0')
-                                  "
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchDefault>
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'text'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                ></crem-input>
-                                <crem-input-label
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [formControlName]="data?.dataField"
-                                >
-                                </crem-input-label>
-                              </ng-container>
+                                        : data.name.formItemAnswer
+                                    "
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchCase="5">
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'number'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                    (onBlurChange)="
+                                      onDecimalValueChanged(
+                                        $event,
+                                        data?.name?.numDecimals,
+                                        data?.dataField
+                                      )
+                                    "
+                                  ></crem-input>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [label]="
+                                      data.name.formItemAnswer
+                                        | number
+                                          : '1.' +
+                                              (isTruthy(data.name.numDecimals)
+                                                ? data.name.numDecimals
+                                                : '0') +
+                                              '-' +
+                                              (isTruthy(data.name.numDecimals)
+                                                ? data.name.numDecimals
+                                                : '0')
+                                    "
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchCase="6">
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'number'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                    (onBlurChange)="
+                                      onDecimalValueChanged(
+                                        $event,
+                                        data?.name?.numDecimals,
+                                        data?.dataField
+                                      )
+                                    "
+                                  ></crem-input>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [label]="
+                                      data.name.formItemAnswer
+                                        ? '$' +
+                                          (data.name.formItemAnswer
+                                            | number
+                                              : '1.' +
+                                                  (isTruthy(
+                                                    data.name.numDecimals
+                                                  )
+                                                    ? data.name.numDecimals
+                                                    : '0') +
+                                                  '-' +
+                                                  (isTruthy(
+                                                    data.name.numDecimals
+                                                  )
+                                                    ? data.name.numDecimals
+                                                    : '0'))
+                                        : ''
+                                    "
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchCase="206">
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'number'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                    (onBlurChange)="
+                                      onDecimalValueChanged(
+                                        $event,
+                                        data?.name?.numDecimals,
+                                        data?.dataField
+                                      )
+                                    "
+                                  ></crem-input>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [label]="
+                                      data.name.formItemAnswer
+                                        | number
+                                          : '1.' +
+                                              (isTruthy(data.name.numDecimals)
+                                                ? data.name.numDecimals
+                                                : '0') +
+                                              '-' +
+                                              (isTruthy(data.name.numDecimals)
+                                                ? data.name.numDecimals
+                                                : '0')
+                                    "
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchDefault>
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'text'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                  ></crem-input>
+                                  <crem-input-label
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [formControlName]="data?.dataField"
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                              </div>
+                            </div>
+                            <div class="launch-form-item" *ngIf="!isRenderForm">
+                              <crem-input
+                                [inputType]="'text'"
+                                [id]="
+                                  'df-input-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                [disabled]="!editMode"
+                              ></crem-input>
+                              <crem-icon
+                                pack="solid"
+                                size="lg"
+                                [icon]="'faCog'"
+                                [id]="
+                                  'df-itemPopup-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                (click)="launchFormItemPopup(data)"
+                                class="form-field-tooltip"
+                              ></crem-icon>
                             </div>
                           </div>
-                          <div class="launch-form-item" *ngIf="!isRenderForm">
-                            <crem-input
-                              [inputType]="'text'"
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'EmailAddress'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content df-formSection-fieldContent"
+                          >
+                            <div *ngIf="isRenderForm">
+                              <div>
+                                <ng-container>
+                                  <crem-input
+                                    *ngIf="
+                                      editMode && !data?.name?.formItemViewOnly
+                                    "
+                                    [inputType]="'email'"
+                                    [id]="
+                                      'df-input-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    [formControlName]="data?.dataField"
+                                  ></crem-input>
+                                  <a
+                                    *ngIf="
+                                      !editMode || data?.name?.formItemViewOnly
+                                    "
+                                    [id]="
+                                      'df-email-' +
+                                      data?.name.formItemSectionDetail
+                                        .formItemID
+                                    "
+                                    href="mailto:{{
+                                      data?.name?.formItemAnswer
+                                    }}"
+                                    class="df-formSection-fieldContent"
+                                    >{{ data?.name?.formItemAnswer }}</a
+                                  >
+                                </ng-container>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Image'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <ng-container
+                            *ngIf="data?.name?.formItemAnswer as uri"
+                          >
+                            <img
                               [id]="
-                                'df-input-' +
+                                'df-image-' +
                                 data?.name.formItemSectionDetail.formItemID
                               "
-                              [disabled]="!editMode"
-                            ></crem-input>
+                              class="df-formSection-fieldContent"
+                              *ngIf="isTruthy(uri)"
+                              [src]="uri"
+                              [width]="
+                                isTruthy(data.name.formItemFieldWidth)
+                                  ? data.name.formItemFieldWidth
+                                  : 400
+                              "
+                              [height]="
+                                isTruthy(data.name.formItemFieldHeight)
+                                  ? data.name.formItemFieldHeight
+                                  : 300
+                              "
+                              aria-labelledby="{{ data?.name?.formItemName }}"
+                            />
+                          </ng-container>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Dyn Form Image'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <ng-container
+                            *ngIf="data?.name?.formItemAnswer as uri"
+                          >
+                            <img
+                              [id]="
+                                'df-image-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              class="df-formSection-fieldContent"
+                              *ngIf="isTruthy(uri) && !editMode"
+                              [src]="uri"
+                              [width]="
+                                isTruthy(data.name.formItemFieldWidth)
+                                  ? data.name.formItemFieldWidth
+                                  : 400
+                              "
+                              [height]="
+                                isTruthy(data.name.formItemFieldHeight)
+                                  ? data.name.formItemFieldHeight
+                                  : 300
+                              "
+                              aria-labelledby="{{ data?.name?.formItemName }}"
+                            />
+                          </ng-container>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'List Box'"
+                          [id]="'List_Box' + data?.dataField"
+                          class="field-container df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content display-flex df-formSection-fieldContent"
+                          >
+                            <ng-container *ngIf="!isDropdownValuesLoading">
+                              <crem-input
+                                [inputType]="'text'"
+                                *ngIf="!isRenderForm"
+                                [id]="
+                                  'df-input-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                [formControlName]="data?.dataField"
+                              ></crem-input>
+                              <ng-container *ngIf="isRenderForm">
+                                <crem-dropdown
+                                  *ngIf="
+                                    dropdownValues$ | async as dropdownValues
+                                  "
+                                  [dataSource]="dropdownValues[data?.dataField]"
+                                  [displayExpr]="
+                                    !this.editMode &&
+                                    dropdownValues[data?.dataField][1] &&
+                                    dropdownValues[data?.dataField][1][
+                                      'redirector'
+                                    ]
+                                      ? 'redirector'
+                                      : 'display'
+                                  "
+                                  [allowSearch]="true"
+                                  [valueExpr]="'value'"
+                                  [readOnly]="
+                                    !editMode || data?.name?.formItemViewOnly
+                                  "
+                                  [containerized]="false"
+                                  [formControlName]="data?.dataField"
+                                  [readOnlyStyle]="'text-only'"
+                                  [labelledby]="
+                                    data?.name?.formItemName + '_label'
+                                  "
+                                  [id]="
+                                    'df-dropdown-' +
+                                    data?.name.formItemSectionDetail.formItemID
+                                  "
+                                  (selectedItems)="
+                                    data?.name?.formItemInput1ID ===
+                                    data?.dataField
+                                      ? handleBehavior(
+                                          data?.name?.requestTypeID,
+                                          data?.name?.formItemInput1ID,
+                                          data?.name?.formItemInput2ID,
+                                          data?.name?.formItemOutputID,
+                                          data?.name?.behaviorTypeID,
+                                          $event,
+                                          data?.name?.dropdownBlankOption
+                                        )
+                                      : ''
+                                  "
+                                  (keydown.space)="$event.preventDefault()"
+                                >
+                                </crem-dropdown>
+                              </ng-container>
+                            </ng-container>
+                            <ngx-skeleton-loader
+                              [id]="
+                                'df-skelDropdown-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              *ngIf="isDropdownValuesLoading"
+                              class="crem-button-shadow"
+                            ></ngx-skeleton-loader>
                             <crem-icon
+                              *ngIf="!isRenderForm"
                               pack="solid"
                               size="lg"
                               [icon]="'faCog'"
@@ -553,168 +794,224 @@
                             ></crem-icon>
                           </div>
                         </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'EmailAddress'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <div class="field-content df-formSection-fieldContent">
-                          <div *ngIf="isRenderForm">
-                            <div>
-                              <ng-container>
-                                <crem-input
-                                  *ngIf="
-                                    editMode && !data?.name?.formItemViewOnly
-                                  "
-                                  [inputType]="'email'"
-                                  [id]="
-                                    'df-input-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  [formControlName]="data?.dataField"
-                                ></crem-input>
-                                <a
-                                  *ngIf="
-                                    !editMode || data?.name?.formItemViewOnly
-                                  "
-                                  [id]="
-                                    'df-email-' +
-                                    data?.name.formItemSectionDetail.formItemID
-                                  "
-                                  href="mailto:{{ data?.name?.formItemAnswer }}"
-                                  class="df-formSection-fieldContent"
-                                  >{{ data?.name?.formItemAnswer }}</a
-                                >
-                              </ng-container>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Image'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <ng-container *ngIf="data?.name?.formItemAnswer as uri">
-                          <img
-                            [id]="
-                              'df-image-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            class="df-formSection-fieldContent"
-                            *ngIf="isTruthy(uri)"
-                            [src]="uri"
-                            [width]="
-                              isTruthy(data.name.formItemFieldWidth)
-                                ? data.name.formItemFieldWidth
-                                : 400
-                            "
-                            [height]="
-                              isTruthy(data.name.formItemFieldHeight)
-                                ? data.name.formItemFieldHeight
-                                : 300
-                            "
-                            aria-labelledby="{{ data?.name?.formItemName }}"
-                          />
-                        </ng-container>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Dyn Form Image'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <ng-container *ngIf="data?.name?.formItemAnswer as uri">
-                          <img
-                            [id]="
-                              'df-image-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            class="df-formSection-fieldContent"
-                            *ngIf="isTruthy(uri) && !editMode"
-                            [src]="uri"
-                            [width]="
-                              isTruthy(data.name.formItemFieldWidth)
-                                ? data.name.formItemFieldWidth
-                                : 400
-                            "
-                            [height]="
-                              isTruthy(data.name.formItemFieldHeight)
-                                ? data.name.formItemFieldHeight
-                                : 300
-                            "
-                            aria-labelledby="{{ data?.name?.formItemName }}"
-                          />
-                        </ng-container>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'List Box'"
-                        [id]="'List_Box' + data?.dataField"
-                        class="field-container df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
                         <div
-                          class="field-content display-flex df-formSection-fieldContent"
+                          *dxTemplate="let data of 'Comment Area'"
+                          class="df-formSection-field"
                         >
-                          <ng-container *ngIf="!isDropdownValuesLoading">
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content df-formSection-fieldContent"
+                          >
+                            <crem-input-label
+                              *ngIf="!editMode"
+                              class="text-area-label"
+                              [formControlName]="data?.dataField"
+                            >
+                            </crem-input-label>
                             <crem-input
-                              [inputType]="'text'"
-                              *ngIf="!isRenderForm"
+                              class="text-area"
+                              *ngIf="editMode"
                               [id]="
-                                'df-input-' +
+                                'df-textArea-' +
                                 data?.name.formItemSectionDetail.formItemID
                               "
+                              [inputType]="'textarea'"
+                              [maxLengthField]="-1"
                               [formControlName]="data?.dataField"
                             ></crem-input>
-                            <ng-container *ngIf="isRenderForm">
+                            <crem-icon
+                              *ngIf="!isRenderForm"
+                              pack="solid"
+                              size="lg"
+                              [icon]="'faCog'"
+                              [id]="
+                                'df-itemPopup-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              (click)="launchFormItemPopup(data)"
+                              class="form-field-tooltip"
+                            ></crem-icon>
+                          </div>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Text only'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-input-label
+                            [formControlName]="data?.dataField"
+                            class="df-formSection-fieldContent"
+                          >
+                          </crem-input-label>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [icon]="'faCog'"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Filler'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-input-label
+                            [formControlName]="data?.dataField"
+                            class="df-formSection-fieldContent"
+                          >
+                          </crem-input-label>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [icon]="'faCog'"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Hidden'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-input-label
+                            [formControlName]="data?.dataField"
+                            class="df-formSection-fieldContent"
+                          >
+                          </crem-input-label>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [icon]="'faCog'"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Password'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-input-label
+                            class="df-formSection-fieldContent"
+                            *ngIf="!editMode"
+                            [formControlName]="data?.dataField"
+                          >
+                          </crem-input-label>
+                          <crem-input
+                            class="df-formSection-fieldContent field-content"
+                            *ngIf="editMode"
+                            [id]="
+                              'df-input-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [inputType]="'password'"
+                            [formControlName]="data?.dataField"
+                          ></crem-input>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [icon]="'faCog'"
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="
+                            let data of 'Multi-Select(Dropdown Based)'
+                          "
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content display-flex df-formSection-fieldContent"
+                          >
+                            <ng-container *ngIf="!isDropdownValuesLoading">
                               <crem-dropdown
                                 *ngIf="
                                   dropdownValues$ | async as dropdownValues
                                 "
-                                [dataSource]="dropdownValues[data?.dataField]"
-                                [displayExpr]="
-                                  !this.editMode &&
-                                  dropdownValues[data?.dataField][1] &&
-                                  dropdownValues[data?.dataField][1][
-                                    'redirector'
-                                  ]
-                                    ? 'redirector'
-                                    : 'display'
+                                [id]="
+                                  'df-dropdown-' +
+                                  data?.name.formItemSectionDetail.formItemID
                                 "
-                                [allowSearch]="true"
+                                [dataSource]="dropdownValues[data?.dataField]"
+                                [displayExpr]="'display'"
                                 [valueExpr]="'value'"
+                                [showCheckBoxesMode]="'always'"
+                                [showClearButton]="true"
+                                [allowSearch]="true"
+                                [useArrayOfKeys]="true"
+                                [showColumnHeader]="true"
+                                [selectMode]="'multiple'"
                                 [readOnly]="
                                   !editMode || data?.name?.formItemViewOnly
                                 "
@@ -724,539 +1021,20 @@
                                 [labelledby]="
                                   data?.name?.formItemName + '_label'
                                 "
-                                [id]="
-                                  'df-dropdown-' +
-                                  data?.name.formItemSectionDetail.formItemID
-                                "
-                                (selectedItems)="
-                                  data?.name?.formItemInput1ID ===
-                                  data?.dataField
-                                    ? handleBehavior(
-                                        data?.name?.requestTypeID,
-                                        data?.name?.formItemInput1ID,
-                                        data?.name?.formItemInput2ID,
-                                        data?.name?.formItemOutputID,
-                                        data?.name?.behaviorTypeID,
-                                        $event,
-                                        data?.name?.dropdownBlankOption
-                                      )
-                                    : ''
-                                "
+                                (keydown.space)="$event.preventDefault()"
                               >
                               </crem-dropdown>
                             </ng-container>
-                          </ng-container>
-                          <ngx-skeleton-loader
-                            [id]="
-                              'df-skelDropdown-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            *ngIf="isDropdownValuesLoading"
-                            class="crem-button-shadow"
-                          ></ngx-skeleton-loader>
-                          <crem-icon
-                            *ngIf="!isRenderForm"
-                            pack="solid"
-                            size="lg"
-                            [icon]="'faCog'"
-                            [id]="
-                              'df-itemPopup-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            (click)="launchFormItemPopup(data)"
-                            class="form-field-tooltip"
-                          ></crem-icon>
-                        </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Comment Area'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <div class="field-content df-formSection-fieldContent">
-                          <crem-input-label
-                            *ngIf="!editMode"
-                            class="text-area-label"
-                            [formControlName]="data?.dataField"
-                          >
-                          </crem-input-label>
-                          <crem-input
-                            class="text-area"
-                            *ngIf="editMode"
-                            [id]="
-                              'df-textArea-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            [inputType]="'textarea'"
-                            [maxLengthField]="-1"
-                            [formControlName]="data?.dataField"
-                          ></crem-input>
-                          <crem-icon
-                            *ngIf="!isRenderForm"
-                            pack="solid"
-                            size="lg"
-                            [icon]="'faCog'"
-                            [id]="
-                              'df-itemPopup-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            (click)="launchFormItemPopup(data)"
-                            class="form-field-tooltip"
-                          ></crem-icon>
-                        </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Text only'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-input-label
-                          [formControlName]="data?.dataField"
-                          class="df-formSection-fieldContent"
-                        >
-                        </crem-input-label>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [icon]="'faCog'"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Filler'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-input-label
-                          [formControlName]="data?.dataField"
-                          class="df-formSection-fieldContent"
-                        >
-                        </crem-input-label>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [icon]="'faCog'"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Hidden'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-input-label
-                          [formControlName]="data?.dataField"
-                          class="df-formSection-fieldContent"
-                        >
-                        </crem-input-label>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [icon]="'faCog'"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Password'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-input-label
-                          class="df-formSection-fieldContent"
-                          *ngIf="!editMode"
-                          [formControlName]="data?.dataField"
-                        >
-                        </crem-input-label>
-                        <crem-input
-                          class="df-formSection-fieldContent field-content"
-                          *ngIf="editMode"
-                          [id]="
-                            'df-input-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [inputType]="'password'"
-                          [formControlName]="data?.dataField"
-                        ></crem-input>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [icon]="'faCog'"
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Multi-Select(Dropdown Based)'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <div
-                          class="field-content display-flex df-formSection-fieldContent"
-                        >
-                          <ng-container *ngIf="!isDropdownValuesLoading">
-                            <crem-dropdown
-                              *ngIf="dropdownValues$ | async as dropdownValues"
+                            <ngx-skeleton-loader
                               [id]="
-                                'df-dropdown-' +
+                                'df-skelDropdown-' +
                                 data?.name.formItemSectionDetail.formItemID
                               "
-                              [dataSource]="dropdownValues[data?.dataField]"
-                              [displayExpr]="'display'"
-                              [valueExpr]="'value'"
-                              [showCheckBoxesMode]="'always'"
-                              [showClearButton]="true"
-                              [allowSearch]="true"
-                              [useArrayOfKeys]="true"
-                              [showColumnHeader]="true"
-                              [selectMode]="'multiple'"
-                              [readOnly]="
-                                !editMode || data?.name?.formItemViewOnly
-                              "
-                              [containerized]="false"
-                              [formControlName]="data?.dataField"
-                              [readOnlyStyle]="'text-only'"
-                              [labelledby]="data?.name?.formItemName + '_label'"
-                            >
-                            </crem-dropdown>
-                          </ng-container>
-                          <ngx-skeleton-loader
-                            [id]="
-                              'df-skelDropdown-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            *ngIf="isDropdownValuesLoading"
-                            class="crem-button-shadow"
-                          ></ngx-skeleton-loader>
-                          <crem-icon
-                            *ngIf="!isRenderForm"
-                            pack="solid"
-                            size="lg"
-                            [id]="
-                              'df-itemPopup-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            [icon]="'faCog'"
-                            (click)="launchFormItemPopup(data)"
-                            class="form-field-tooltip"
-                          ></crem-icon>
-                        </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Multi-Select (SQL Based)'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <div
-                          class="field-content display-flex df-formSection-fieldContent"
-                        >
-                          <ng-container *ngIf="!isDropdownValuesLoading">
-                            <crem-dropdown
-                              *ngIf="dropdownValues$ | async as dropdownValues"
-                              [id]="
-                                'df-dropdown-' +
-                                data?.name.formItemSectionDetail.formItemID
-                              "
-                              [dataSource]="dropdownValues[data?.dataField]"
-                              [displayExpr]="'display'"
-                              [valueExpr]="'value'"
-                              [showCheckBoxesMode]="'always'"
-                              [showClearButton]="true"
-                              [allowSearch]="true"
-                              [useArrayOfKeys]="true"
-                              [showColumnHeader]="true"
-                              [selectMode]="'multiple'"
-                              [readOnly]="
-                                !editMode || data?.name?.formItemViewOnly
-                              "
-                              [containerized]="false"
-                              [formControlName]="data?.dataField"
-                              [readOnlyStyle]="'text-only'"
-                              [labelledby]="data?.name?.formItemName + '_label'"
-                            >
-                            </crem-dropdown>
-                          </ng-container>
-                          <ngx-skeleton-loader
-                            [id]="
-                              'df-skelDropdown-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            *ngIf="isDropdownValuesLoading"
-                            class="crem-button-shadow"
-                          ></ngx-skeleton-loader>
-                          <crem-icon
-                            *ngIf="!isRenderForm"
-                            pack="solid"
-                            size="lg"
-                            [id]="
-                              'df-itemPopup-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            [icon]="'faCog'"
-                            (click)="launchFormItemPopup(data)"
-                            class="form-field-tooltip"
-                          ></crem-icon>
-                        </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Widget'"
-                        id="Widget_{{ section?.formSectionName }}"
-                        class="df-formSection-field"
-                      >
-                        <div
-                          *ngIf="
-                            (data?.name?.formItemAnswer
-                              ?.toString()
-                              .includes(
-                                '/v06/mapping/GoogleMapsWidgetV3.aspx'
-                              ) ||
-                              data?.name?.sourceURL
-                                ?.toString()
-                                .includes(
-                                  '/v06/mapping/GoogleMapsWidgetV3.aspx'
-                                )) &&
-                              (loadMapFlag$ | async);
-                            else widgetObjLinker
-                          "
-                          class="googleMap-container"
-                        >
-                          <google-map
-                            [id]="
-                              'df-googleMap-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            *ngIf="advMarkers.length"
-                            [options]="mapOptions"
-                            [center]="advMarkers[0]?.position"
-                          >
-                            <map-marker
-                              class="df-mapMarker"
-                              *ngFor="let advMarker of advMarkers"
-                              [position]="advMarker?.position"
-                              [title]="advMarker?.title"
-                            ></map-marker>
-                          </google-map>
-                          <span *ngIf="!advMarkers.length"
-                            >No valid address exists</span
-                          >
-                        </div>
-                        <ng-template #widgetObjLinker>
-                          <ng-container
-                            *ngIf="
-                              isWidgetObjectLinker(data?.dataField);
-                              else defaultWidgetDisplay
-                            "
-                          ></ng-container>
-                        </ng-template>
-
-                        <!-- Widget (Data Grid) -->
-                        <ng-template #defaultWidgetDisplay>
-                          <mango-dynamic-form-widget
-                            [id]="
-                              'df-widget-' +
-                              data?.name.formItemSectionDetail.formItemID
-                            "
-                            [form]="form"
-                            [formId]="formId"
-                            [section]="section"
-                            [field]="data?.name"
-                            [objectId]="objectId"
-                            [editMode]="editMode"
-                            [objectData]="objectData"
-                            [showDownloadButton]="true"
-                            [objectTypeId]="objectTypeId"
-                            [objectTypeTypeId]="objectTypeTypeId"
-                            (canShowDownload)="onCanShowDownload($event)"
-                          ></mango-dynamic-form-widget>
-                        </ng-template>
-                        <!-- End Widget (Data Grid) -->
-
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [icon]="'faCog'"
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Calculated'"
-                        class="field-container df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <div class="field-content df-formSection-fieldContent">
-                          <div *ngIf="isRenderForm">
-                            <div [ngSwitch]="data?.name?.dataTypeID">
-                              <ng-container *ngSwitchCase="7">
-                                <crem-input-label
-                                  [label]="data.name.formItemAnswerViewMode"
-                                >
-                                </crem-input-label>
-                              </ng-container>
-                              <ng-container *ngSwitchDefault>
-                                <div
-                                  *ngIf="
-                                    (data?.name?.formItemAnswer
-                                      ?.toString()
-                                      .includes(
-                                        '/v06/mapping/GoogleMapsWidgetV3.aspx'
-                                      ) ||
-                                      data?.name?.sourceURL
-                                        ?.toString()
-                                        .includes(
-                                          '/v06/mapping/GoogleMapsWidgetV3.aspx'
-                                        )) &&
-                                      (loadMapFlag$ | async);
-                                    else calcNotMapTemplate
-                                  "
-                                  class="googleMap-container"
-                                >
-                                  <google-map
-                                    *ngIf="advMarkers.length"
-                                    [id]="
-                                      'df-googleMap-' +
-                                      data?.name.formItemSectionDetail
-                                        .formItemID
-                                    "
-                                    [options]="mapOptions"
-                                    [center]="advMarkers[0]?.position"
-                                  >
-                                    <map-marker
-                                      class="df-mapMarker"
-                                      *ngFor="let advMarker of advMarkers"
-                                      [position]="advMarker?.position"
-                                      [title]="advMarker?.title"
-                                    ></map-marker>
-                                  </google-map>
-                                  <span *ngIf="!advMarkers.length"
-                                    >No valid address exists</span
-                                  >
-                                </div>
-                                <ng-template #calcNotMapTemplate>
-                                  <ng-container
-                                    *ngIf="
-                                      transform(
-                                        data?.name?.formItemAnswer,
-                                        'item-' + i,
-                                        data?.name?.dataTypeID,
-                                        data?.name?.numDecimals
-                                      ) as sanitizedValue
-                                    "
-                                  >
-                                    <div [innerHTML]="sanitizedValue"></div>
-                                  </ng-container>
-                                </ng-template>
-
-                                <ng-template #calcDefaultTemplate>
-                                  <crem-input-label
-                                    [formControlName]="data?.dataField"
-                                  >
-                                  </crem-input-label>
-                                </ng-template>
-                              </ng-container>
-                            </div>
-                          </div>
-                          <div *ngIf="!isRenderForm" class="display-flex">
-                            <crem-input
-                              [id]="
-                                'df-input-' +
-                                data?.name.formItemSectionDetail.formItemID
-                              "
-                              [disabled]="!editMode"
-                              [inputType]="'text'"
-                            ></crem-input>
+                              *ngIf="isDropdownValuesLoading"
+                              class="crem-button-shadow"
+                            ></ngx-skeleton-loader>
                             <crem-icon
+                              *ngIf="!isRenderForm"
                               pack="solid"
                               size="lg"
                               [id]="
@@ -1269,149 +1047,416 @@
                             ></crem-icon>
                           </div>
                         </div>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Clause'"
-                        class="clause-section-item df-formSection-field df-clauseSection"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <mango-dynamic-form-field-doc-sec-page
-                          [id]="
-                            'df-clauseGroup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          class="df-clauseElements"
-                          [formGroup]="childForm"
-                          [section]="section"
-                          [fieldData]="data"
-                          [editMode]="editMode"
-                          [dateFormat]="dateFormatPreference$ | async"
-                        ></mango-dynamic-form-field-doc-sec-page>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          pack="solid"
-                          size="lg"
-                          [icon]="'faCog'"
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Checkbox'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-check-box
-                          class="df-formSection-fieldContent"
-                          [id]="
-                            'df-checkBox-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          *ngIf="
-                            isRenderForm &&
-                            editMode &&
-                            !data?.name?.formItemViewOnly
-                          "
-                          [formControlName]="data?.dataField"
-                        ></crem-check-box>
-                        <crem-input-label
-                          class="df-formSection-fieldContent"
-                          *ngIf="
-                            isRenderForm &&
-                            (!editMode || data?.name?.formItemViewOnly)
-                          "
-                          [label]="data.name.formItemAnswer ? 'Yes' : 'No'"
-                        ></crem-input-label>
-                        <crem-check-box
-                          *ngIf="!isRenderForm"
-                          [id]="
-                            'df-checkBox-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [disabled]="!editMode"
-                        ></crem-check-box>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [icon]="'faCog'"
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
-                      <div
-                        *dxTemplate="let data of 'Radio Button'"
-                        class="df-formSection-field"
-                      >
-                        <ng-container
-                          *ngTemplateOutlet="
-                            formItemLabels;
-                            context: {
-                              $implicit: data,
-                              useConfigDirective: true
-                            }
-                          "
-                        ></ng-container>
-                        <crem-radio-group
-                          class="df-formSection-fieldContent"
-                          [id]="
-                            'df-radioGroup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [formControlName]="data?.dataField"
-                          [name]="'radio-group' + data?.dataField"
+                        <div
+                          *dxTemplate="let data of 'Multi-Select (SQL Based)'"
+                          class="df-formSection-field"
                         >
-                          <crem-radio-field
-                            *ngFor="
-                              let option of data?.dataField
-                                | parseformItemParameters: selectRenderFormData
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
                             "
-                            [value]="option.value"
-                            [readOnly]="
-                              !editMode || data?.name?.formItemViewOnly
-                            "
-                            [readOnlyStyle]="'text-only'"
+                          ></ng-container>
+                          <div
+                            class="field-content display-flex df-formSection-fieldContent"
                           >
-                            {{ option.display }}
-                          </crem-radio-field>
-                        </crem-radio-group>
-                        <crem-icon
-                          *ngIf="!isRenderForm"
-                          pack="solid"
-                          size="lg"
-                          [id]="
-                            'df-itemPopup-' +
-                            data?.name.formItemSectionDetail.formItemID
-                          "
-                          [icon]="'faCog'"
-                          (click)="launchFormItemPopup(data)"
-                          class="form-field-tooltip"
-                        ></crem-icon>
-                      </div>
+                            <ng-container *ngIf="!isDropdownValuesLoading">
+                              <crem-dropdown
+                                *ngIf="
+                                  dropdownValues$ | async as dropdownValues
+                                "
+                                [id]="
+                                  'df-dropdown-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                [dataSource]="dropdownValues[data?.dataField]"
+                                [displayExpr]="'display'"
+                                [valueExpr]="'value'"
+                                [showCheckBoxesMode]="'always'"
+                                [showClearButton]="true"
+                                [allowSearch]="true"
+                                [useArrayOfKeys]="true"
+                                [showColumnHeader]="true"
+                                [selectMode]="'multiple'"
+                                [readOnly]="
+                                  !editMode || data?.name?.formItemViewOnly
+                                "
+                                [containerized]="false"
+                                [formControlName]="data?.dataField"
+                                [readOnlyStyle]="'text-only'"
+                                [labelledby]="
+                                  data?.name?.formItemName + '_label'
+                                "
+                                (keydown.space)="$event.preventDefault()"
+                              >
+                              </crem-dropdown>
+                            </ng-container>
+                            <ngx-skeleton-loader
+                              [id]="
+                                'df-skelDropdown-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              *ngIf="isDropdownValuesLoading"
+                              class="crem-button-shadow"
+                            ></ngx-skeleton-loader>
+                            <crem-icon
+                              *ngIf="!isRenderForm"
+                              pack="solid"
+                              size="lg"
+                              [id]="
+                                'df-itemPopup-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              [icon]="'faCog'"
+                              (click)="launchFormItemPopup(data)"
+                              class="form-field-tooltip"
+                            ></crem-icon>
+                          </div>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Widget'"
+                          id="Widget_{{ section?.formSectionName }}"
+                          class="df-formSection-field"
+                        >
+                          <div
+                            *ngIf="
+                              (data?.name?.formItemAnswer
+                                ?.toString()
+                                .includes(
+                                  '/v06/mapping/GoogleMapsWidgetV3.aspx'
+                                ) ||
+                                data?.name?.sourceURL
+                                  ?.toString()
+                                  .includes(
+                                    '/v06/mapping/GoogleMapsWidgetV3.aspx'
+                                  )) &&
+                                (loadMapFlag$ | async);
+                              else widgetObjLinker
+                            "
+                            class="googleMap-container"
+                          >
+                            <google-map
+                              [id]="
+                                'df-googleMap-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              *ngIf="advMarkers.length"
+                              [options]="mapOptions"
+                              [center]="advMarkers[0]?.position"
+                            >
+                              <map-marker
+                                class="df-mapMarker"
+                                *ngFor="let advMarker of advMarkers"
+                                [position]="advMarker?.position"
+                                [title]="advMarker?.title"
+                              ></map-marker>
+                            </google-map>
+                            <span *ngIf="!advMarkers.length"
+                              >No valid address exists</span
+                            >
+                          </div>
+                          <ng-template #widgetObjLinker>
+                            <ng-container
+                              *ngIf="
+                                isWidgetObjectLinker(data?.dataField);
+                                else defaultWidgetDisplay
+                              "
+                            ></ng-container>
+                          </ng-template>
+
+                          <!-- Widget (Data Grid) -->
+                          <ng-template #defaultWidgetDisplay>
+                            <mango-dynamic-form-widget
+                              [id]="
+                                'df-widget-' +
+                                data?.name.formItemSectionDetail.formItemID
+                              "
+                              [form]="form"
+                              [formId]="formId"
+                              [section]="section"
+                              [field]="data?.name"
+                              [objectId]="objectId"
+                              [editMode]="editMode"
+                              [objectData]="objectData"
+                              [showDownloadButton]="true"
+                              [objectTypeId]="objectTypeId"
+                              [objectTypeTypeId]="objectTypeTypeId"
+                              (canShowDownload)="onCanShowDownload($event)"
+                            ></mango-dynamic-form-widget>
+                          </ng-template>
+                          <!-- End Widget (Data Grid) -->
+
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [icon]="'faCog'"
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Calculated'"
+                          class="field-container df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <div
+                            class="field-content df-formSection-fieldContent"
+                          >
+                            <div *ngIf="isRenderForm">
+                              <div [ngSwitch]="data?.name?.dataTypeID">
+                                <ng-container *ngSwitchCase="7">
+                                  <crem-input-label
+                                    [label]="data.name.formItemAnswerViewMode"
+                                  >
+                                  </crem-input-label>
+                                </ng-container>
+                                <ng-container *ngSwitchDefault>
+                                  <div
+                                    *ngIf="
+                                      (data?.name?.formItemAnswer
+                                        ?.toString()
+                                        .includes(
+                                          '/v06/mapping/GoogleMapsWidgetV3.aspx'
+                                        ) ||
+                                        data?.name?.sourceURL
+                                          ?.toString()
+                                          .includes(
+                                            '/v06/mapping/GoogleMapsWidgetV3.aspx'
+                                          )) &&
+                                        (loadMapFlag$ | async);
+                                      else calcNotMapTemplate
+                                    "
+                                    class="googleMap-container"
+                                  >
+                                    <google-map
+                                      *ngIf="advMarkers.length"
+                                      [id]="
+                                        'df-googleMap-' +
+                                        data?.name.formItemSectionDetail
+                                          .formItemID
+                                      "
+                                      [options]="mapOptions"
+                                      [center]="advMarkers[0]?.position"
+                                    >
+                                      <map-marker
+                                        class="df-mapMarker"
+                                        *ngFor="let advMarker of advMarkers"
+                                        [position]="advMarker?.position"
+                                        [title]="advMarker?.title"
+                                      ></map-marker>
+                                    </google-map>
+                                    <span *ngIf="!advMarkers.length"
+                                      >No valid address exists</span
+                                    >
+                                  </div>
+                                  <ng-template #calcNotMapTemplate>
+                                    <ng-container
+                                      *ngIf="
+                                        transform(
+                                          data?.name?.formItemAnswer,
+                                          'item-' + i,
+                                          data?.name?.dataTypeID,
+                                          data?.name?.numDecimals
+                                        ) as sanitizedValue
+                                      "
+                                    >
+                                      <div [innerHTML]="sanitizedValue"></div>
+                                    </ng-container>
+                                  </ng-template>
+
+                                  <ng-template #calcDefaultTemplate>
+                                    <crem-input-label
+                                      [formControlName]="data?.dataField"
+                                    >
+                                    </crem-input-label>
+                                  </ng-template>
+                                </ng-container>
+                              </div>
+                            </div>
+                            <div *ngIf="!isRenderForm" class="display-flex">
+                              <crem-input
+                                [id]="
+                                  'df-input-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                [disabled]="!editMode"
+                                [inputType]="'text'"
+                              ></crem-input>
+                              <crem-icon
+                                pack="solid"
+                                size="lg"
+                                [id]="
+                                  'df-itemPopup-' +
+                                  data?.name.formItemSectionDetail.formItemID
+                                "
+                                [icon]="'faCog'"
+                                (click)="launchFormItemPopup(data)"
+                                class="form-field-tooltip"
+                              ></crem-icon>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Clause'"
+                          class="clause-section-item df-formSection-field df-clauseSection"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <mango-dynamic-form-field-doc-sec-page
+                            [id]="
+                              'df-clauseGroup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            class="df-clauseElements"
+                            [formGroup]="childForm"
+                            [section]="section"
+                            [fieldData]="data"
+                            [editMode]="editMode"
+                            [dateFormat]="dateFormatPreference$ | async"
+                          ></mango-dynamic-form-field-doc-sec-page>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            pack="solid"
+                            size="lg"
+                            [icon]="'faCog'"
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Checkbox'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-check-box
+                            class="df-formSection-fieldContent"
+                            [id]="
+                              'df-checkBox-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            *ngIf="
+                              isRenderForm &&
+                              editMode &&
+                              !data?.name?.formItemViewOnly
+                            "
+                            [formControlName]="data?.dataField"
+                          ></crem-check-box>
+                          <crem-input-label
+                            class="df-formSection-fieldContent"
+                            *ngIf="
+                              isRenderForm &&
+                              (!editMode || data?.name?.formItemViewOnly)
+                            "
+                            [label]="data.name.formItemAnswer ? 'Yes' : 'No'"
+                          ></crem-input-label>
+                          <crem-check-box
+                            *ngIf="!isRenderForm"
+                            [id]="
+                              'df-checkBox-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [disabled]="!editMode"
+                          ></crem-check-box>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [icon]="'faCog'"
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                        <div
+                          *dxTemplate="let data of 'Radio Button'"
+                          class="df-formSection-field"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              formItemLabels;
+                              context: {
+                                $implicit: data,
+                                useConfigDirective: true
+                              }
+                            "
+                          ></ng-container>
+                          <crem-radio-group
+                            class="df-formSection-fieldContent"
+                            [id]="
+                              'df-radioGroup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [formControlName]="data?.dataField"
+                            [name]="'radio-group' + data?.dataField"
+                            (change)="onRadioGroupChange($event, data?.name)"
+                          >
+                            <crem-radio-field
+                              *ngFor="
+                                let option of data?.dataField
+                                  | parseformItemParameters
+                                    : selectRenderFormData
+                              "
+                              [value]="option.value"
+                              [readOnly]="
+                                !editMode || data?.name?.formItemViewOnly
+                              "
+                              [readOnlyStyle]="'text-only'"
+                            >
+                              {{ option.display }}
+                            </crem-radio-field>
+                          </crem-radio-group>
+                          <crem-icon
+                            *ngIf="!isRenderForm"
+                            pack="solid"
+                            size="lg"
+                            [id]="
+                              'df-itemPopup-' +
+                              data?.name.formItemSectionDetail.formItemID
+                            "
+                            [icon]="'faCog'"
+                            (click)="launchFormItemPopup(data)"
+                            class="form-field-tooltip"
+                          ></crem-icon>
+                        </div>
+                      </ng-container>
                     </ng-container>
                   </dx-list>
                 </dxi-item>

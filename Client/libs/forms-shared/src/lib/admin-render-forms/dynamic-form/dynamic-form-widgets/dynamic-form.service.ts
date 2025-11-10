@@ -720,16 +720,22 @@ export class DynamicWidgetService {
    * Utility function to remove duplicates by oid
    * Fixes an issue with displaying duplicate rows. This fix
    * mimics RemoveDuplicateRowsWhenSecurityApplied in v06.
+   * Items without an oid are always included in the result.
    * @param data
    * @returns
    */
   getUniqueByOid(data: any[]): any[] {
+    const itemsWithoutOid: any[] = [];
     const mapByOid = data.reduce((acc, item) => {
-      acc[item.oid] = item; // Keeps the last occurrence
+      if (item.oid !== undefined && item.oid !== null) {
+        acc[item.oid] = item; // Keeps the last occurrence
+      } else {
+        itemsWithoutOid.push(item); // Collect items without oid
+      }
       return acc;
     }, {} as Record<number, any>);
 
-    const uniqueItems = Object.values(mapByOid);
+    const uniqueItems = [...Object.values(mapByOid), ...itemsWithoutOid];
     return uniqueItems;
   }
 }

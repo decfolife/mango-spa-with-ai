@@ -132,6 +132,8 @@ const booleanStringMap = {
   ['True']: '1',
   ['False']: '0',
 };
+const truthyRadioVals = ['1', 'true', 'yes', true, 'y'];
+const falsyRadioVals = ['0', 'false', 'no', false, 'n'];
 
 @Component({
   selector: 'mango-dynamic-form-section',
@@ -320,6 +322,10 @@ export class DynamicFormSectionComponent
   };
 
   //*************************************************
+
+  // ********toggleChildBehavior*********************
+  formItemsToHide = new Set<number>();
+  //*************************************************
   constructor(
     private dynamicFormsFacade: DynamicFormsFacade,
     private mangoFacade: MangoAppFacade,
@@ -433,7 +439,16 @@ export class DynamicFormSectionComponent
           next: ([fields, renderFormData]) => {
             if (this.isRenderForm) {
               this.selectRenderFormData = renderFormData;
-
+              fields.forEach((element) => {
+                element.formObjectId = renderFormData.filter(
+                  (s) => s.formObjectId
+                )
+                  ? Number(
+                      renderFormData.filter((s) => s.formObjectId)[0]
+                        ?.formObjectId
+                    )
+                  : 0;
+              });
               this.processFormFields(fields);
               this.setupRenderFormDropdownsSubscription();
               this.filterRenderFormData();
@@ -442,6 +457,55 @@ export class DynamicFormSectionComponent
           },
         })
     );
+  }
+
+  onRadioGroupChange(selectedValue: any, field?: IFields): void {
+    if (!field?.formItemOutputIDs?.length) {
+      return;
+    }
+
+    const normalized = this.normalizeRadioValue(selectedValue);
+    if (normalized === null) {
+      return;
+    }
+
+    const updated = new Set(this.formItemsToHide);
+    field.formItemOutputIDs.forEach((id) => {
+      if (normalized) {
+        updated.delete(id);
+      } else {
+        updated.add(id);
+      }
+    });
+
+    this.formItemsToHide = updated;
+  }
+
+  private normalizeRadioValue(value: any): boolean | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      if (value === 1) return true;
+      if (value === 0) return false;
+    }
+
+    const normalized = `${value}`.trim().toLowerCase();
+
+    if (truthyRadioVals.includes(normalized)) {
+      return true;
+    }
+
+    if (falsyRadioVals.includes(normalized)) {
+      return false;
+    }
+
+    return null;
   }
 
   processFormFields(data: any[]): void {
@@ -468,13 +532,44 @@ export class DynamicFormSectionComponent
 
         fieldsInColumn = this.addAdditionalInfoToFields(fieldsInColumn);
 
-        if (fieldsInColumn.length)
+        if (fieldsInColumn.length) {
           this.tempList.push({ columnNum: i, listOfFields: fieldsInColumn });
+        }
       }
+
+      this.formItemsToHide = this.buildFormItemsToHide(this.tempList);
 
       this.sectionFields$ = of(data);
     }
+
     this.isLoading = false;
+  }
+
+  // For toggleChild behavior
+  private buildFormItemsToHide(list: tempList[]): Set<number> {
+    const formItemsToHide = new Set<number>();
+
+    list.forEach((item) => {
+      item.listOfFields
+        .filter((field) => {
+          let ans = field.formItemAnswer;
+          if (typeof ans === 'string') {
+            ans = field.formItemAnswer?.toLowerCase();
+          }
+
+          const isToggleChild =
+            field.behaviorTypeID === BehaviorType.ToggleChild;
+          const isNegativeAnswer = falsyRadioVals.includes(ans);
+
+          return isToggleChild && isNegativeAnswer;
+        })
+        .forEach((field) => {
+          field.formItemOutputIDs?.forEach((x) => {
+            formItemsToHide.add(x);
+          });
+        });
+    });
+    return formItemsToHide;
   }
 
   private addAdditionalInfoToFields(fieldsArray: any[]): any[] {
@@ -1353,6 +1448,9 @@ export class DynamicFormSectionComponent
         renderFormData: this.selectRenderFormData,
         formID: this.formId,
         formSectionID: this.section?.formSectionID,
+        objectID: this.objectId,
+        objectTypeID: this.objectTypeId,
+        formSectionName: this.section?.formSectionName,
       },
     });
     dialogRef.afterClosed();

@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  EventEmitter,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChanges,
   forwardRef,
 } from '@angular/core';
@@ -38,6 +40,8 @@ export class CremRadioGroupComponent
   @Input() name: string = null;
   @Input() disabled = false;
 
+  @Output() change = new EventEmitter<any>();
+
   onChange: (value: any) => void = () => {};
   onTouched: () => void = () => {};
 
@@ -57,6 +61,7 @@ export class CremRadioGroupComponent
           this.value = value;
           this.onChange(this.value);
           this.onTouched();
+          this.change.emit(this.value);
         }
       })
     );

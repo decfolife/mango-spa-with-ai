@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Injectable, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
 import { EndpointService, UtilitiesService } from '@mango/core-shared';
@@ -250,6 +250,13 @@ export class ReportsService extends EndpointService {
       'deleteReportUsersShare',
       deleteReportUser
     );
+  }
+
+  public uploadOfflineTemplate(
+    formData: FormData
+  ): Observable<HttpEvent<unknown>> {
+    const url = `${this.reportsUrl}ReportsPage/UploadOfflineTemplate`;
+    return this.uploadFileChunk(url, formData);
   }
 
   public setUserDateFormat(isDatesEU: boolean) {

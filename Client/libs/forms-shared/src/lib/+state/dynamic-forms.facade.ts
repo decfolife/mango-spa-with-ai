@@ -111,9 +111,9 @@ export class DynamicFormsFacade {
     this.store.dispatch(dynamicFormsActions.setisRenderForm({ isRenderForm }));
   }
 
-  loadFormSections(formId: number, groupId: number): void {
+  loadFormSections(formId: number, groupId: number, objectId: number): void {
     this.store.dispatch(
-      dynamicFormsActions.dynamicFormLoadSections({ formId, groupId })
+      dynamicFormsActions.dynamicFormLoadSections({ formId, groupId, objectId })
     );
   }
 
@@ -189,9 +189,12 @@ export class DynamicFormsFacade {
     this.store.dispatch(dynamicFormsActions.dynamicFormLoadDatabaseTables());
   }
 
-  loadWidgetByWidgetId(widgetId: number): void {
+  loadWidgetByWidgetId(widgetId: number, objectId: number): void {
     this.store.dispatch(
-      dynamicFormsActions.dynamicFormLoadWidgetByWidgetId({ widgetId })
+      dynamicFormsActions.dynamicFormLoadWidgetByWidgetId({
+        widgetId,
+        objectId,
+      })
     );
   }
 

@@ -128,7 +128,7 @@ export class DynamicFormsEffects {
       ofType(DynamicFormsActions.dynamicFormLoadSections),
       switchMap((action) => {
         return this.dynamicFormsService
-          .getFormSections(action.formId, action.groupId)
+          .getFormSections(action.formId, action.groupId, action.objectId)
           .pipe(
             map((result) =>
               DynamicFormsActions.dynamicFormLoadSectionsSuccess({
@@ -321,9 +321,9 @@ export class DynamicFormsEffects {
     this.actions$.pipe(
       ofType(DynamicFormsActions.dynamicFormLoadWidgetByWidgetId),
       withLatestFrom(this.store.pipe(select(fromDynamicForms.selectObjectId))),
-      mergeMap(([action, objectId]) =>
+      mergeMap(([action]) =>
         this.dynamicFormsService
-          .getFormItemWidgetByWidgetId(action.widgetId, objectId)
+          .getFormItemWidgetByWidgetId(action.widgetId, action.objectId)
           .pipe(
             take(1),
             map((result) => {
@@ -429,9 +429,10 @@ export class DynamicFormsEffects {
           .pipe(
             map((result) =>
               !!result && result.success
-                ? DynamicFormsActions.dynamicFormLoadRenderFormSuccess({
+                ? (result.data.push({ formObjectId: action.formObjectId }),
+                  DynamicFormsActions.dynamicFormLoadRenderFormSuccess({
                     renderFormData: result.data,
-                  })
+                  }))
                 : !!result
                 ? DynamicFormsActions.dynamicFormLoadRenderFormFailure({
                     error: {

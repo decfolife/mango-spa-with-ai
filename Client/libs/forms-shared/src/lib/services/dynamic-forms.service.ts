@@ -74,8 +74,12 @@ export class DynamicFormsService extends EndpointService {
     });
   }
 
-  getFormSections(formId: number, groupId: number): Observable<any> {
-    const url = `${this.formWizardUrl}AdminForms/GetFormSections/${formId}/${groupId}`;
+  getFormSections(
+    formId: number,
+    groupId: number,
+    objectId: number = 0
+  ): Observable<any> {
+    const url = `${this.formWizardUrl}AdminForms/GetFormSections/${formId}/${groupId}/${objectId}`;
     return this.callHttpGet(url, 'GetFormSections');
   }
 
@@ -313,12 +317,26 @@ export class DynamicFormsService extends EndpointService {
     return this.callHttpPost(url, 'addBookmark', bookmarkInfo);
   }
 
-  download(
+  downloadExcel(
     formId: number,
     objectId: number,
-    objectTypeId: number
+    objectTypeId: number,
+    objectTypeTypeId: number
   ): Observable<any> {
-    const url = `${this.formWizardUrl}adminForms/download?formId=${formId}&objectId=${objectId}&objectTypeId=${objectTypeId}`;
+    const url = `${this.formWizardUrl}adminForms/download/excel?formId=${formId}&objectId=${objectId}&objectTypeId=${objectTypeId}&objectTypeTypeId=${objectTypeTypeId}`;
+    return this.http.get(url, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+
+  downloadPdf(
+    formId: number,
+    objectId: number,
+    objectTypeId: number,
+    objectTypeTypeId
+  ): Observable<any> {
+    const url = `${this.formWizardUrl}adminForms/download/pdf?formId=${formId}&objectId=${objectId}&objectTypeId=${objectTypeId}&objectTypeTypeId=${objectTypeTypeId}`;
     return this.http.get(url, {
       observe: 'response',
       responseType: 'blob',
