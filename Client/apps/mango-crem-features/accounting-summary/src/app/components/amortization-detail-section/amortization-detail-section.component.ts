@@ -252,11 +252,7 @@ export class AmortizationDetailSectionComponent
         !!this.amortizationDetailsGridData &&
         this.amortizationDetailsGridData.length > 0
       ) {
-        this.amortizationGridHeight =
-          this.accountingSummaryService.setGridHeight(
-            this.amortizationDataGrid,
-            15
-          );
+        this.showDefaultRows();
         this.amortizationDataGrid.instance.state(this.initialState);
       }
       this.contentLoaded = true;

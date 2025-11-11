@@ -164,7 +164,6 @@
                   >arrow_drop_down</mat-icon
                 >
               </crem-button>
-
               <mat-menu #dfActionsMenu="matMenu" class="df-actionsMenu">
                 <ng-container
                   *ngFor="
@@ -178,9 +177,24 @@
                     class="df-actionsMenuBtn"
                     id="{{ 'df-actionsMenuBtn-' + i }}"
                     (click)="performFormAction(action)"
+                    [disabled]="isLeaseLocked && action.accessLevel >= 4"
                   >
                     <span>{{ action.formActionLabel }}</span>
                   </button>
+                  <dx-tooltip
+                    *ngIf="isLeaseLocked && action.accessLevel >= 4"
+                    [target]="'#df-actionsMenuBtn-' + i"
+                    [showEvent]="'mouseenter'"
+                    [hideEvent]="'mouseleave'"
+                    position="right"
+                  >
+                    <div
+                      *dxTemplate="let data of 'content'"
+                      class="tooltip-content-wrapper"
+                    >
+                      This action is unavailable while the lease is locked
+                    </div>
+                  </dx-tooltip>
                 </ng-container>
                 <hr />
                 <button

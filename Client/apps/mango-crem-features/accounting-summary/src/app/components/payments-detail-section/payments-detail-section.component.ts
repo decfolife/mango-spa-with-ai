@@ -200,10 +200,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
 
   onGridContentReady() {
     if (this.paymentsDataGrid.instance.totalCount() > 0) {
-      this.paymentsGridHeight =
-        this.accountingSummaryService.setDefaultGridHeight(
-          this.paymentsDataGrid
-        );
+      this.showDefaultRows();
     }
     if (!this.contentLoaded) {
       this.paymentsDataGrid.instance.state(this.initialState);

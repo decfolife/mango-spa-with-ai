@@ -21,11 +21,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+
   .page-header {
     position: sticky;
     top: 0;
     z-index: 1;
     border-bottom: 1px solid #c5c5c5;
+
     &__actions {
       display: flex;
       gap: 7px;
@@ -129,6 +131,10 @@
     min-height: 34px;
     display: flex;
     line-height: 34px;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
   }
 }
 
@@ -148,6 +154,7 @@
 
   #df-leaseAlertsBtn #openLeaseAlertsPopupButton {
     height: 32px;
+
     &:focus {
       box-shadow: 0 0 0 0.3rem #c8c8c8;
       outline: -webkit-focus-ring-color auto 1px;
@@ -163,4 +170,9 @@
 
 .center {
   margin-top: 20px;
+}
+
+.tooltip-content-wrapper {
+  padding: 8px 12px;
+  text-wrap: wrap;
 }

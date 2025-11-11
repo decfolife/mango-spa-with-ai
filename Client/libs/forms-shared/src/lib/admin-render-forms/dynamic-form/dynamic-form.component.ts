@@ -106,6 +106,7 @@ import { MangoNavigationService } from '@mangoSpa/src/app/services/navigation.se
 import { AssociateToProjectComponent } from './dynamic-form-actions/associate-project/associate-project.component';
 import { LeaseAlertsModule } from '@micro-components/lease-alerts/lease-alerts.module';
 import { AddContactModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-contact-modal/add-contact-modal.component';
+import { DxTooltipModule } from 'devextreme-angular';
 
 @Component({
   selector: 'mango-dynamic-form',
@@ -131,6 +132,7 @@ import { AddContactModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/a
     LeaseAlertsModule,
     ToastComponent,
     PageHeaderComponent,
+    DxTooltipModule,
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrls: ['./dynamic-form.component.scss'],
@@ -172,6 +174,7 @@ export class DynamicFormComponent
   showCannotLoadForm = true;
   companyModuleUser = { hasAddRights: false };
   contactModuleUser = { hasAddRights: false };
+  isLeaseLocked = false;
 
   // Form data
   userMessage = '';
@@ -988,6 +991,7 @@ export class DynamicFormComponent
         .getLockingInfo(this.objectId, this.objectTypeId)
         .subscribe((res) => {
           if (res != null && res.success && res.data != null) {
+            this.isLeaseLocked = res?.data?.isLocked ?? false;
             if (!res.data.leaseActive) {
               statusPill.text = 'Archived';
               statusPill.type = Pill.BASIC;
