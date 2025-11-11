@@ -30,14 +30,16 @@ export class CustomerSelectionPageComponent implements OnInit {
   clientsDropdown$: Observable<string[]>;
   tooltipState: boolean[] = [];
 
-  constructor(private centralAuthFacade: CentralAuthFacade) {
+ 
+  constructor(
+    private centralAuthFacade: CentralAuthFacade) {
     this.clients$ = this.centralAuthFacade.userClients$;
     this.isLoading$ = this.clients$.pipe(map((clients) => !clients));
     this.recentClients$ = this.centralAuthFacade.userRecentClients$;
     this.clientsDropdown$ = this.clients$.pipe(
       filter((clients) => !!clients),
       map((clients) => clients.map((client) => client.clientKey.toUpperCase()))
-    );
+    );    
   }
 
   ngOnInit(): void {

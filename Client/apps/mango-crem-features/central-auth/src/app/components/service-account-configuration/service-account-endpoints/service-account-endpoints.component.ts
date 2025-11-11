@@ -25,14 +25,37 @@ export class ServiceAccountEndpointsComponent implements OnDestroy {
   @Output() endPointAccessUpdated = new EventEmitter<boolean>();
 
   subs: Subscription[] = [];
+  newEndpoints = [];
 
   constructor(private serviceAccountService: ServiceAccountService) {}
 
   ngOnInit() {
-    this.endpoints.forEach((element) => {
+    this.newEndpoints = this.endpoints.map((item) => ({
+      ...item,
+      isInbound: false,
+    }));
+
+    this.newEndpoints.forEach((element) => {
+      if (element.endpoint.toLocaleLowerCase().startsWith('inbound_')) {
+        element.endpoint = element.endpoint.substring(8);
+        element.isInbound = true;
+      }
+
       if (
-        element.endpoint != 'Transactions' &&
-        element.endpoint != 'Portfolio'
+        element.endpoint
+          .toLocaleLowerCase()
+          .replace(/ /g, '')
+          .startsWith('userprovisioning')
+      )
+        element.isInbound = true;
+
+      if (
+        element.endpoint.toLocaleLowerCase().indexOf('transactions') != 0 &&
+        element.endpoint.toLocaleLowerCase().indexOf('portfolio') != 0 &&
+        element.endpoint
+          .replace(/ /g, '')
+          .toLocaleLowerCase()
+          .indexOf('userprovisioning') != 0
       ) {
         element.isCommingSoon = true;
       }

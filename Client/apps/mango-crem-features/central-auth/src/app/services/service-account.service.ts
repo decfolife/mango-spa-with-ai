@@ -62,7 +62,8 @@ export class ServiceAccountService {
   ): Observable<boolean> {
     return this.http.put<boolean>(
       `${this.identityUrl}/serviceaccount/updateendpointaccess`,
-      request
+      request,
+      { withCredentials: true }
     );
   }
 

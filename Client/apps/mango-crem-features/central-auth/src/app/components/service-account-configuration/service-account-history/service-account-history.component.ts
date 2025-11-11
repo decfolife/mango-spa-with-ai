@@ -16,7 +16,7 @@ export class ServiceAccountHistoryComponent implements OnDestroy {
   subs: Subscription[] = [];
 
   //Fix header filter ADA related issues
-  onCellPrepared(e) {
+  onCellPrepared(e: any) {
     if (e.rowType === 'header') {
       ['click', 'keydown'].forEach((event) =>
         fromEvent(e.cellElement.querySelector('.dx-header-filter'), event)
@@ -43,6 +43,21 @@ export class ServiceAccountHistoryComponent implements OnDestroy {
           .subscribe()
       );
     }
+  }
+
+  ngOnInit() {
+    this.histories.forEach((e: any) => {
+      if (e.fieldName == 'EndPoint Access')
+        if (e.description.toLocaleLowerCase().startsWith('inbound_'))
+          e.description = e.description.replace('_', ' ');
+        else if (
+          !e.description
+            .toLocaleLowerCase()
+            .replace(/ /g, '')
+            .startsWith('userprovisioning')
+        )
+          e.description = 'OUTBOUND ' + e.description;
+    });
   }
 
   ngOnDestroy(): void {
