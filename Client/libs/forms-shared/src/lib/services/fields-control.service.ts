@@ -33,10 +33,26 @@ export class FieldsControlService {
         );
       }
 
-      if ((['2','3','10','11','14','15','16',].some((typeId) => field.formItemTypeID === typeId))
+      // Apply XSS protection pattern validator
+      // For single-line fields (Text Field, Email, etc.)
+      if (
+        ['2', '11', '14', '15', '16'].some(
+          (typeId) => field.formItemTypeID === typeId
+        )
       ) {
         conditionalValidators.push(
-          Validators.pattern(/^(?!.*(<.*|javascript:|eval\(|alert\(|document\.|window\.)).*$/)
+          Validators.pattern(
+            /^(?!.*(<.*|javascript:|eval\(|alert\(|document\.|window\.)).*$/
+          )
+        );
+      } else if (
+        ['3', '10'].some((typeId) => field.formItemTypeID === typeId)
+      ) {
+        // For multi-line fields (Comment Area and Clause) - use [\s\S] to allow newlines
+        conditionalValidators.push(
+          Validators.pattern(
+            /^(?![\s\S]*(<.*|javascript:|eval\(|alert\(|document\.|window\.))[\s\S]*$/
+          )
         );
       }
 
