@@ -83,10 +83,23 @@ export class ReportsSegmentComponent implements OnInit {
     this.reportsService.getSegmentsRights(0, 2).subscribe((result) => {
       if (result.data) {
         this.hasSegmentDeleteRight = result.data.securityTypeID >= 5;
-        this.hasSegmentsAddRight = result.data.securityTypeID >= 3;
         this.hasSegmentsViewRight = result.data.securityTypeID >= 2;
       }
     });
+
+    this.reportsService.getUserModuleRights(this.MODULE_IDS).subscribe(
+      (res: any) => {
+        if (res.success && res.data) {
+          const segmentRights = (res.data as Array<any>).find(
+            (module) => module.moduleId === 195
+          );
+          this.hasSegmentsAddRight = segmentRights?.hasAddRights ?? false;
+        }
+      },
+      (error: any) => {
+        console.error('Error fetching user module rights:', error);
+      }
+    );
   }
 
   public onCellClicked(item): void {
