@@ -1,4 +1,5 @@
-# Used for DEV/TEST/OPS
+# Used for STAGE/PROD
+# This is a copy of the Dockerfile that uses nginx-spa-prod.conf
 
 # Stage 1: Compile and Build angular codebase
 FROM public.ecr.aws/docker/library/node:16-alpine as build
@@ -18,7 +19,7 @@ RUN npx nx run mango:build --configuration=$COSTAR_ENVIRONMENT
 
 # Stage 2: Serve app with nginx server
 FROM public.ecr.aws/nginx/nginx:alpine as final
-COPY ./config/nginx-spa.conf /etc/nginx/nginx.conf
+COPY ./config/nginx-spa-prod.conf /etc/nginx/nginx.conf
 RUN rm -rf /usr/share/nginx/html/*
 COPY --from=build /app/dist/apps/mango/ /usr/share/nginx/html
 EXPOSE 8000

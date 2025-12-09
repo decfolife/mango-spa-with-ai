@@ -1,4 +1,5 @@
-# Used for DEV/TEST/OPS
+# Used for STAGE/PROD
+# This is a copy of the Dockerfile that uses nginx-ca-prod.conf
 
 # Stage 1: Compile and Build angular codebase
 FROM public.ecr.aws/docker/library/node:16.19-alpine as build
@@ -18,7 +19,7 @@ RUN npm run build:$COSTAR_ENVIRONMENT:microcomponent-central-auth
 
 # Stage 2: Serve app with nginx server
 FROM public.ecr.aws/nginx/nginx:alpine-slim as final
-COPY ./config/nginx-ca.conf /etc/nginx/nginx.conf
+COPY ./config/nginx-ca-prod.conf /etc/nginx/nginx.conf
 RUN rm -rf /usr/share/nginx/html/*
 RUN apk update && apk add --upgrade openssl
 COPY --from=build /app/dist/apps/mango-crem-features/central-auth/ /usr/share/nginx/html
