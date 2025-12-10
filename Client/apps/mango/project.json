@@ -187,7 +187,7 @@
             },
             "fonts": false
           },
-          "outputHashing": "none",
+          "outputHashing": "all",
           "sourceMap": false,
           "namedChunks": false,
           "extractLicenses": true,
