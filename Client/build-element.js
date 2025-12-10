@@ -37,10 +37,7 @@ const cremDistElementPath = path.join(__dirname, `dist/cremDist/${outputPrefixPa
   
   if (cssFile) {
     const outputCssName = appName === 'alerts-rules' ? 'alerts-rules.css' : 'styles.css';
-    await fs.copyFile(
-      path.join(distPath, cssFile), 
-      path.join(cremDistPath, outputCssName)
-    );
+    await fs.copyFile(`./dist/apps/mango-crem-features/${appName}/styles.css`, `dist/cremDist/${outputPrefixPath || appName}/${outputCssName}`)
   } else {
     console.warn(`WARNING: No CSS file found for ${appName}`);
   }
