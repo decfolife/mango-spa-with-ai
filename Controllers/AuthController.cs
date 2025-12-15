@@ -157,6 +157,7 @@ public class AuthController : ControllerBase
         return Ok(user);
     }
 
+    [IgnoreAntiforgeryToken]
     [HttpPost("logout")] //auth/logout   
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]

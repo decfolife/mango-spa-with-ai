@@ -56,6 +56,13 @@ public class Startup
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
+        ConnectionMultiplexer redisMultiplexer = null;
+        if (!Configuration.UseInMemoryCaching())
+        {
+            var configOptions = Configuration.RedisConfigurationOptions();
+            redisMultiplexer = ConnectionMultiplexer.Connect(configOptions);
+        }
+
         AddLogging(services);
         AddAppSettings(services);
         AddCache(services, Configuration);
@@ -382,7 +389,7 @@ public class Startup
             options.Cookie.SameSite = env.IsLocal() ? SameSiteMode.None : SameSiteMode.Strict;
             options.Cookie.SecurePolicy = env.IsLowerEnvs() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
             options.Cookie.HttpOnly = true;
-            //options.Cookie.Expiration = TimeSpan.FromMinutes(Configuration.CookieExpirationInMinutes()); // doesnt work
+            options.Cookie.Expiration = TimeSpan.FromMinutes(Configuration.CookieExpirationInMinutes()); // doesnt work
         });
     }
 

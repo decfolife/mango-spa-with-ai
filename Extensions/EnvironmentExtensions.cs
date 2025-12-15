@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using System.Collections.Generic;
-using System;
 
 namespace MangoSPA.Extensions;
 
@@ -38,7 +36,7 @@ public static class EnvironmentExtensions
 
     public static bool IsLowerEnvs(this IWebHostEnvironment env)
     {
-        return env.IsDev() || env.IsTest() || env.IsOps();
+        return env.IsLocal() || env.IsDev() || env.IsTest() || env.IsOps();
     }
 
     public static bool IsUpperEnvs(this IWebHostEnvironment env)

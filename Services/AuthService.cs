@@ -125,7 +125,7 @@ public class AuthService : IAuthService
                 HttpOnly = false,
                 Secure = true,
                 SameSite = _env.IsLocal() ? SameSiteMode.None : SameSiteMode.Strict,
-                //Expires = DateTime.UtcNow.AddMinutes(_config.CookieExpirationInMinutes())
+                Expires = DateTime.UtcNow.AddMinutes(_config.CookieExpirationInMinutes())
             });
     }
 
