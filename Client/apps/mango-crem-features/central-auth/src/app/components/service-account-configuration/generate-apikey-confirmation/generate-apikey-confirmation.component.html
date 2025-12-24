@@ -1,14 +1,17 @@
 <crem-modal
   class="client-delivery-modal"
   modalId="generateApiKeyConfirmationComponentModalId"
-  modalTitle="{{ title }}"
+  modalTitle="Generate Client Secret Confirmation"
   closeIconVisible=""
-  primaryFooterButtonText="{{ confirmButtonText }}"
+  primaryFooterButtonText="Yes"
   closeOrCancelButtonText="Cancel"
   (primaryButtonAction)="yes()"
 >
   <div modalContent class="account-modal-content">
-    <span>{{ msg }}</span>
+    <span
+      >This will generate a new <b>Client Secret</b> and replace the existing
+      one. Are you sure you want to continue?</span
+    >
   </div>
 
   <button id="Close me">Test</button>

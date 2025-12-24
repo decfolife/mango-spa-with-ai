@@ -7,7 +7,12 @@ import {
   UtilitiesService,
 } from '@mango/core-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
-import { Api, CentralAuthHttpError } from '@mango/data-models/lib-data-models';
+import {
+  Api,
+  CentralAuthHttpError,
+  CreateClientRequest,
+  CreateClientResponse,
+} from '@mango/data-models/lib-data-models';
 
 @Injectable({
   providedIn: 'root',
@@ -26,12 +31,17 @@ export class ClientDeliveryService extends EndpointService {
     super(http, facade);
   }
 
+  getScopes(): Observable<CreateClientResponse> {
+    const url = `${this.authentication}admin/oauth/scopes`;
+    return this.callHttpGet(url, 'GetOAuthScopes');
+  }
+
   updateServiceAccount(
     contactEmailAddress: string,
     contactID: number,
     contactActiveFlg: boolean
   ): Observable<any> {
-    const url = `${this.authentication}serviceaccount`;
+    const url = `${this.authentication}oauth`;
     var reqbody = {
       email: contactEmailAddress,
       contactID: contactID,
@@ -40,10 +50,9 @@ export class ClientDeliveryService extends EndpointService {
     return this.callHttpPut(url, 'UpdateServiceAccount', reqbody);
   }
 
-  addServiceAccount(emailAddress: string): Observable<any> {
-    var reqbody = { email: emailAddress };
-    const url = `${this.authentication}serviceaccount`;
-    return this.callHttpPost(url, 'AddServiceAccount', reqbody);
+  addServiceAccount(request: CreateClientRequest): Observable<any> {
+    const url = `${this.authentication}oauth`;
+    return this.callHttpPost(url, 'AddServiceAccount', request);
   }
 
   resetPassword(emailAddress: string): Observable<any> {

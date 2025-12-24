@@ -58,3 +58,26 @@ export interface OAuthTokenHTTPResponse {
   state: string;
   issuer: string;
 }
+
+export interface CreateClientRequest {
+  email: string;
+  //name: string;
+  //description: string;
+  //accessTokenLifetimeInSeconds: number;
+  //requestedScopes: string[];
+}
+
+export interface CreateClientResponse {
+  success: boolean;
+  data: ClientScope[];
+}
+
+export interface ClientScope {
+  clientScopes: string[];
+  createdBy: string;
+  createdOn: string;
+  description: string;
+  lastModifiedBy: string;
+  lastModifiedOn: string;
+  scopeName: string;
+}

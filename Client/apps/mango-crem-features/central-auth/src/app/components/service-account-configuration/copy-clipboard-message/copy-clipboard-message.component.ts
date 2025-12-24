@@ -14,11 +14,15 @@ export class CopyClipboardMessageComponent {
   public apiKey: string = '';
   public value: string = '';
   public info: string = '';
+  public title: string;
+  public msg: string;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 
   ngOnInit() {
     this.apiKey = this.data.apikey;
+    this.title = this.data.title;
+    this.msg = this.data.msg;
   }
 
   copyClipboard() {

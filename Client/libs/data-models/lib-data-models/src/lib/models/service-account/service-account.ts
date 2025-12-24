@@ -3,4 +3,5 @@ export interface ServiceAccount {
   contactEmailAddress: string;
   isServiceAccount: boolean;
   contactActive: boolean;
+  clientId: string;
 }

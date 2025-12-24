@@ -83,6 +83,13 @@ export class ServiceAccountsComponent implements OnDestroy {
       dataType: null,
     },
     {
+      dataField: 'clientId',
+      alignment: 'left',
+      visible: true,
+      dataType: null,
+      caption: 'Client ID',
+    },
+    {
       dataField: 'contactActive',
       caption: 'Active',
       alignment: null,
@@ -147,7 +154,7 @@ export class ServiceAccountsComponent implements OnDestroy {
       dialogRef
         .afterClosed()
         .pipe(
-          filter((result) => !!result && result.length > 0),
+          filter((result) => result != null),
           switchMap((result) =>
             this.clientDeliveryService.addServiceAccount(result)
           )

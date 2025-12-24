@@ -11,20 +11,12 @@ import { MatDialogModule } from '@angular/material/dialog';
   styleUrls: ['generate-apikey-confirmation.component.scss'],
 })
 export class GenerateApiKeyConfirmationComponent implements OnInit {
-  public msg: string;
-  public confirmButtonText: string;
-  public title: string;
-
   constructor(
     private dialogRef: MatDialogRef<GenerateApiKeyConfirmationComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 
-  ngOnInit() {
-    this.msg = this.data.msg;
-    this.confirmButtonText = this.data.confirmButtonText;
-    this.title = this.data.title;
-  }
+  ngOnInit() {}
 
   yes() {
     this.dialogRef.close(true);

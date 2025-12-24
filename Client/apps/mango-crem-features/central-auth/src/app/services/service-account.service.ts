@@ -20,19 +20,21 @@ export class ServiceAccountService {
 
   constructor(private http: HttpClient, private env: Environment) {}
 
-  generateApiKey(): Observable<any> {
-    const url = `${this.identityUrl}/serviceaccount/createapikey`;
+  generateClientSecret(): Observable<any> {
+    const url = `${this.identityUrl}/oauth/secret`;
     const body = {};
-    return this.http.post(url, body).pipe<string>(
+    return this.http.post(url, body, { withCredentials: true }).pipe<string>(
       tap((response: any) => {
+        console.log(response.data);
         return response.data;
       })
     );
   }
 
   getServiceAccountInfo(): Observable<ServiceAccountInfo> {
+    //console.log(`${this.identityUrl}/oauth/client`);
     return this.http.get<ServiceAccountInfo>(
-      `${this.identityUrl}/serviceaccount/accountinfo`,
+      `${this.identityUrl}/oauth/client`,
       { withCredentials: true }
     );
   }
@@ -41,7 +43,7 @@ export class ServiceAccountService {
     request: UpdateServiceAccountApiAccessRequest
   ): Observable<boolean> {
     return this.http.put<boolean>(
-      `${this.identityUrl}/serviceaccount/updateapiaccess`,
+      `${this.identityUrl}/oauth/api-access`,
       request,
       { withCredentials: true }
     );
@@ -51,7 +53,7 @@ export class ServiceAccountService {
     request: UpdateServiceAccountExpiresInDaysRequest
   ): Observable<boolean> {
     return this.http.put<boolean>(
-      `${this.identityUrl}/serviceaccount/expiresindays`,
+      `${this.identityUrl}/oauth/expires-in-days`,
       request,
       { withCredentials: true }
     );
@@ -60,16 +62,14 @@ export class ServiceAccountService {
   updateServiceAccountEndPointAccess(
     request: UpdateServiceAccountEndPointAccessRequest
   ): Observable<boolean> {
-    return this.http.put<boolean>(
-      `${this.identityUrl}/serviceaccount/updateendpointaccess`,
-      request,
-      { withCredentials: true }
-    );
+    return this.http.put<boolean>(`${this.identityUrl}/oauth/scopes`, request, {
+      withCredentials: true,
+    });
   }
 
   getServiceAccountChangeHistory(): Observable<ServiceAccountChangeHistory[]> {
     return this.http.get<ServiceAccountChangeHistory[]>(
-      `${this.identityUrl}/serviceaccount/accounthistory`,
+      `${this.identityUrl}/oauth/history`,
       { withCredentials: true }
     );
   }

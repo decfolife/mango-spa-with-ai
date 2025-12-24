@@ -30,7 +30,7 @@ export class ServiceAccountApiKeyDurationComponent implements OnDestroy {
 
   saveExpiresInDays(days: string) {
     const request: UpdateServiceAccountExpiresInDaysRequest = {
-      serviceAccountExpiresInDays: Number(days) === 0 ? null : Number(days),
+      expiresInDays: Number(days) === 0 ? null : Number(days),
     };
 
     this.subs.push(

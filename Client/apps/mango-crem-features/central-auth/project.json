@@ -182,6 +182,9 @@
         "browserTarget": "mango-crem-features-central-auth:build"
       },
       "configurations": {
+        "dev": {
+          "browserTarget": "mango-crem-features-central-auth:build:dev"
+        },
         "ops": {
           "browserTarget": "mango-crem-features-central-auth:build:ops"
         },

@@ -35,31 +35,29 @@ export class ServiceAccountApiKeysComponent {
     let dialogRef = this.dialog.open(GenerateApiKeyConfirmationComponent, {
       width: '600px',
       panelClass: 'client-delivery-modal',
-      data: {
-        msg: 'This will generate a new API Key and replace the existing one. Are you sure you want to continue?',
-        confirmButtonText: 'Yes',
-        title: 'Generate API Key Confirmation',
-      },
+      data: {},
       disableClose: true,
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.subs.push(
-          this.serviceAccountService.generateApiKey().subscribe((result) => {
-            if (result) {
-              this.apiKeyUpdated.emit(result);
-              this.dialog.open(CopyClipboardMessageComponent, {
-                width: '650px',
-                height: '350px',
-                panelClass: 'client-delivery-modal',
-                data: {
-                  apikey: result.data,
-                },
-                disableClose: true,
-              });
-            }
-          })
+          this.serviceAccountService
+            .generateClientSecret()
+            .subscribe((result) => {
+              if (result) {
+                this.apiKeyUpdated.emit(result);
+                this.dialog.open(CopyClipboardMessageComponent, {
+                  width: '650px',
+                  height: '350px',
+                  panelClass: 'client-delivery-modal',
+                  data: {
+                    apikey: result.data,
+                  },
+                  disableClose: true,
+                });
+              }
+            })
         );
       }
     });

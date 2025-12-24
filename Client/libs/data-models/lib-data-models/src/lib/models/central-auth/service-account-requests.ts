@@ -1,13 +1,13 @@
-export interface UpdateServiceAccountApiAccessRequest{
+export interface UpdateServiceAccountApiAccessRequest {
   clientKey: string;
   apiAccess: boolean;
 }
 
-export interface UpdateServiceAccountEndPointAccessRequest{
-  endPoint: string;
-  endPointAccess: boolean;
+export interface UpdateServiceAccountEndPointAccessRequest {
+  addScopes: string[];
+  removeScopes: string[];
 }
 
-export interface UpdateServiceAccountExpiresInDaysRequest{
-  serviceAccountExpiresInDays?: number;
+export interface UpdateServiceAccountExpiresInDaysRequest {
+  expiresInDays?: number;
 }
