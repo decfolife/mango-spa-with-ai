@@ -32,6 +32,14 @@ public class Constants
         public const string Admin = "admin";
     }
 
+    public class Policy
+    {
+        public const string FullAccess = "FullAccess";
+        public const string SuperUserContact = "SuperUserContact";
+        public const string AdminUserContact = "AdminUserContact";
+        public const string AdminOrSuperUserContact = "AdminOrSuperUserContact";
+    }
+
     public class Headers
     {
         public const string TrackingId = "TrackingId";

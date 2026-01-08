@@ -12,20 +12,26 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
+using RedisRateLimiting.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using StackExchange.Redis;
+using System;
 using System.IO;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Threading.RateLimiting;
 using Yarp.ReverseProxy.Transforms;
 using static MangoSPA.Constants;
 
@@ -68,9 +74,10 @@ public class Startup
         AddCache(services, Configuration);
         AddAuth(services, Environment);
         AddAddAntiforgery(services, Environment);
-        AddDataProtection(services);
+        AddDataProtection(services, redisMultiplexer);
         AddServices(services);
         ConfigureOpenTelemetry(services, Configuration, Environment);
+        AddRateLimiting(services, redisMultiplexer);
 
         AddYarp(services);
 
@@ -88,7 +95,7 @@ public class Startup
             var service = p.GetRequiredService<IRequestService>();
 
             c.DefaultRequestHeaders.Add(Headers.TrackingId, service.TrackingId.ToString());
-        });
+        }).AddStandardResilienceHandler();
 
         services.AddCors(options =>
         {
@@ -186,6 +193,8 @@ public class Startup
         app.UseMiddleware<RequestLogContextMiddleware>();
         app.UseAuthorization();
         app.UseAntiforgery();
+
+        app.UseRateLimiter();
 
         app.UseEndpoints(endpoints =>
         {
@@ -302,18 +311,18 @@ public class Startup
 
         services.AddAuthorization(opts =>
         {
-            opts.AddPolicy("FullAccess", policy => policy.RequireAssertion(context =>
+            opts.AddPolicy(Policy.FullAccess, policy => policy.RequireAssertion(context =>
                 context.User.IsAdmin()));
 
-            opts.AddPolicy("AdminUserContact", policy => policy.RequireAssertion(context =>
+            opts.AddPolicy(Policy.AdminUserContact, policy => policy.RequireAssertion(context =>
                 context.User.IsAdminUserContact() ||
                 context.User.IsAdmin()));
 
-            opts.AddPolicy("SuperUserContact", policy => policy.RequireAssertion(context =>
+            opts.AddPolicy(Policy.SuperUserContact, policy => policy.RequireAssertion(context =>
                 context.User.IsSuperUserContact() ||
                 context.User.IsAdmin()));
 
-            opts.AddPolicy("AdminOrSuperUserContact", policy => policy.RequireAssertion(context =>
+            opts.AddPolicy(Policy.AdminOrSuperUserContact, policy => policy.RequireAssertion(context =>
                 context.User.IsAdminOrSuperUserContact() ||
                 context.User.IsAdmin()));
         });
@@ -410,7 +419,7 @@ public class Startup
 
     // Configure data protection to use the same key ring and app identifier persisted to Redis.
     // Needed for production scenarios where we may have multiple instances of this app running
-    public void AddDataProtection(IServiceCollection services)
+    public void AddDataProtection(IServiceCollection services, ConnectionMultiplexer multiplexer)
     {
         var builder = services.AddDataProtection()
             .SetApplicationName("mangospa_bff");
@@ -418,9 +427,6 @@ public class Startup
         if (Configuration.UseInMemoryCaching())
             return;
 
-        var configOptions = Configuration.RedisConfigurationOptions();
-
-        var multiplexer = ConnectionMultiplexer.Connect(configOptions);
         builder.PersistKeysToStackExchangeRedis(multiplexer, "dataprotection");     
     }
 
@@ -457,6 +463,74 @@ public class Startup
             });
 
         return services;
+    }
+
+    void AddRateLimiting(IServiceCollection services, ConnectionMultiplexer multiplexer)
+    {
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            var rateLimitOptions = Configuration.FixedWindowLimiterOptions();
+
+            // Rate Limit Type - Fixed Window
+            if (Configuration.UseInMemoryCaching())
+            {
+                options.AddFixedWindowLimiter("fixed", options =>
+                {
+                    options.Window = rateLimitOptions.Window;
+                    options.PermitLimit = rateLimitOptions.PermitLimit;
+                    //options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    //options.QueueLimit = 5;
+                });
+            } 
+            else
+            {
+                options.AddRedisFixedWindowLimiter("fixed", (opt) =>
+                {
+                    opt.ConnectionMultiplexerFactory = () => multiplexer;
+                    opt.PermitLimit = rateLimitOptions.PermitLimit;
+                    opt.Window = rateLimitOptions.Window;
+                });
+            }
+
+            // Rate Limit Policies
+            options.AddPolicy("fixed-by-user", httpContext =>
+            {
+                int contactId = httpContext.User.ContactId();
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: contactId,
+                    factory: _ => rateLimitOptions);
+            });
+
+            options.AddPolicy("fixed-by-user-and-path", httpContext =>
+            {
+                int contactId = httpContext.User.ContactId();
+                var path = httpContext.Request.Path.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: $"{contactId}:{path}",
+                    factory: _ => rateLimitOptions);
+            });
+
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.HttpContext.Response.Headers.RetryAfter = rateLimitOptions.Window.ToString();
+
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
+                logger.LogWarning("Rate limit exceeded for {User} | {Client} | {ContactID}",
+                    context.HttpContext.User.Email(), context.HttpContext.User.ClientKey(), context.HttpContext.User.ContactId());
+
+                await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Type = "TooManyRequests",
+                    Title = "Rate limit exceeded.",
+                    Detail = $"Rate limit exceeded. Please try again after {rateLimitOptions.Window.Seconds} seconds"
+                }, cancellationToken);
+            };
+        });
     }
 }
 

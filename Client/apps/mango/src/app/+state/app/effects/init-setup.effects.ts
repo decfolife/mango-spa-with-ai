@@ -99,11 +99,7 @@ export class InitSetupEffects {
       switchMap((_) => this.facade.authenticatedUser$),
       filter((user) => !!user),
       switchMap((user) =>
-        this.userService.hasMultipleContactRecords(
-          user.email,
-          user.contactId,
-          user.clientKey
-        )
+        this.userService.hasMultipleContactRecords(user.email)
       ),
       map((hasMultipleContactRecords) =>
         AppActions.setUserHasMultipleContactRecords({
@@ -136,7 +132,7 @@ export class InitSetupEffects {
       ),
       filter(([user, contact]) => !!user && !contact),
       switchMap(([user]) =>
-        this.userService.getContactRecord(user.contactId, user.clientKey)
+        this.userService.getContactRecord(user.contactId)
       ),
       filter((contactRecord) => !!contactRecord),
       map((contactRecord) => AppActions.setContactRecord({ contactRecord }))

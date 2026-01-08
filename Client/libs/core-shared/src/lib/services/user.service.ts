@@ -27,31 +27,16 @@ export class UserService {
     this.currencyMappingTable$ = this.getCurrencyMappings();
   }
 
-  getContactRecords(
-    email: string,
-    contactId: number,
-    clientKey: string
-  ): Observable<ContactRecord[]> {
-    let headers = new HttpHeaders({
-      UserId: contactId,
-      ClientKey: clientKey,
-    });
-
+  getContactRecords(email: string): Observable<ContactRecord[]> {
     return this.http.get<ContactRecord[]>(
-      `${this.userMaintenanceUrl}usermaintenance/getusers/${email}`,
-      { headers: headers }
+      `${this.userMaintenanceUrl}usermaintenance/getusers/${email}`
     );
   }
 
-  getContactRecord(
-    contactId: number,
-    clientKey: string
-  ): Observable<ContactRecord> {
+  getContactRecord(contactId: number): Observable<ContactRecord> {
     let headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      UserId: contactId,
-      ClientKey: clientKey,
     });
 
     return this.http.get<ContactRecord>(
@@ -60,19 +45,9 @@ export class UserService {
     );
   }
 
-  hasMultipleContactRecords(
-    email: string,
-    contactId: number,
-    clientKey: string
-  ): Observable<boolean> {
-    let headers = new HttpHeaders({
-      UserId: contactId,
-      ClientKey: clientKey,
-    });
-
+  hasMultipleContactRecords(email: string): Observable<boolean> {
     return this.http.get<boolean>(
-      `${this.userMaintenanceUrl}usermaintenance/hasmultipleusers/${email}`,
-      { headers: headers }
+      `${this.userMaintenanceUrl}usermaintenance/hasmultipleusers/${email}`
     );
   }
 

@@ -31,3 +31,11 @@ public class RedisOptions
     public string Token { get; set; }
     public bool UseSSL { get; set; }
 }
+
+public class RateLimitOptions
+{
+    public const string Section = "RateLimit";
+
+    public int WindowInSeconds { get; set; }
+    public int PermitLimit { get; set; }
+}

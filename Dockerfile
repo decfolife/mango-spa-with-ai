@@ -1,9 +1,9 @@
-FROM costarrem/crem_aspnet9.0_alpine AS base
+FROM costarrem/crem_aspnet10.0_alpine AS base
 WORKDIR /app
 EXPOSE 8000
 ENV ASPNETCORE_HTTP_PORTS=8000
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS restore
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS restore
 WORKDIR /src
 COPY ["MangoSPA.csproj", "."]
 

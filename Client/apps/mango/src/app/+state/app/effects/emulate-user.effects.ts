@@ -63,7 +63,7 @@ export class EmulateUserEffects {
       filter(([_, __, user]) => !!user),
       switchMap(([contactId, initiatedFromV06, user]) =>
         combineLatest([
-          this.userService.getContactRecord(contactId, user.clientKey),
+          this.userService.getContactRecord(contactId),
           of(initiatedFromV06),
           of(user),
         ])

@@ -3,10 +3,11 @@ using MangoSPA.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static MangoSPA.Constants;
 
 namespace MangoSPA.Controllers;
 
-[Authorize(Policy = "FullAccess")]
+[Authorize(Policy = Policy.FullAccess)]
 [Route("[controller]")]
 public class SessionsController : ControllerBase
 {

@@ -219,7 +219,7 @@ export class UserPreferencesComponent implements OnInit {
           );
         }
         this.userService
-          .getContactRecord(this.contactInfo.contactID, this.clientKey)
+          .getContactRecord(this.contactInfo.contactID)
           .subscribe((cr) => this.facade.updateContactRecord(cr));
         this.dialogRef.close();
       });

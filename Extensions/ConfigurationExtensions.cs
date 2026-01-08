@@ -1,6 +1,8 @@
 ﻿using Mango.MangoSPA;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
+using System.Threading.RateLimiting;
 
 namespace MangoSPA.Extensions;
 
@@ -45,6 +47,17 @@ public static class ConfigurationExtensions
             SyncTimeout = 5000,
             AsyncTimeout = 5000,
             ConnectRetry = 5
+        };
+    }
+
+    public static FixedWindowRateLimiterOptions FixedWindowLimiterOptions(this IConfiguration config)
+    {
+        var options = config.GetSection(RateLimitOptions.Section);
+
+        return new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = options.GetValue<int>("PermitLimit"),
+            Window = TimeSpan.FromSeconds(options.GetValue<int>("WindowInSeconds"))
         };
     }
 }
