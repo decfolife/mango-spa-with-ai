@@ -82,7 +82,7 @@ export class IADCardComponent implements OnInit, AfterViewInit {
       });
     }
     if (e.area === 'data' && e.cell.text === '') {
-      e.cellElement.textContent = '0';
+      e.cellElement.textContent = '0.00';
     }
     if (
       e.cell.text === 'ROU Asset Balance' ||

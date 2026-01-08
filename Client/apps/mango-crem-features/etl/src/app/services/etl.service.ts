@@ -302,4 +302,9 @@ export class ETLService extends EndpointService {
     const url = `${this.etlServiceUrl}etldocumentmigration/getdocumentimporthistory`;
     return this.callHttpGetWithErrorMessage(url, 'getDocumentImportHistory');
   }
+
+  deleteTemplate(templateId: any): Observable<any> {
+    const url = `${this.etlServiceUrl}etl/deletetemplate/${templateId}`;
+    return this.callHttpDelete(url, 'DeleteTemplate');
+  }
 }

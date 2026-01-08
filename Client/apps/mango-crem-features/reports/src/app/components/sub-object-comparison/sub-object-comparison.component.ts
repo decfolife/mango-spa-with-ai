@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import 'regenerator-runtime/runtime';
 import * as ExcelJS from 'exceljs';
 import { exportDataGrid } from 'devextreme/excel_exporter';
@@ -13,12 +13,14 @@ import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { ProjectGanttChartService } from '../project-gantt-chart/project-gantt-chart.service';
 import { SharedService } from '../../shared/services/shared.service';
 import { DomSanitizer } from '@angular/platform-browser';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, Observable, of } from 'rxjs';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 import notify from 'devextreme/ui/notify';
 import { UtilitiesService } from '@mango/core-shared';
 import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { DataType } from 'libs/data-models/lib-data-models/src/lib/enums/index';
+import { DynamicFormsService } from 'libs/forms-shared/src/lib/services/dynamic-forms.service';
 
 @Component({
   selector: 'mango-sub-object-comparison',
@@ -28,7 +30,7 @@ import { DataType } from 'libs/data-models/lib-data-models/src/lib/enums/index';
     '../../../assets/styles/reports.scss',
   ],
 })
-export class SubObjectComparisonComponent implements OnInit {
+export class SubObjectComparisonComponent implements OnInit, OnDestroy {
   public pageTitle = this.route.snapshot.data['pageTitle'];
   public data: any;
   public columns: any;
@@ -51,6 +53,7 @@ export class SubObjectComparisonComponent implements OnInit {
   public valid = true;
   public widgetId: number;
   public subObjectIds: number[] = [];
+  private imageObservableCache: { [key: string]: Observable<string> } = {};
   DataType = DataType;
 
   @ViewChild('DataGrid') dataGrid: DxDataGridComponent;
@@ -65,7 +68,8 @@ export class SubObjectComparisonComponent implements OnInit {
     private currencyPipe: CurrencyPipe,
     private decimalPipe: DecimalPipe,
     private route: ActivatedRoute,
-    private toastService: CremToastService
+    private toastService: CremToastService,
+    private dynamicFormsService: DynamicFormsService
   ) {
     this.widgetId = +this.route.snapshot.paramMap.get('widgetId');
   }
@@ -111,6 +115,19 @@ export class SubObjectComparisonComponent implements OnInit {
       this.valid = false;
       this.loading = false;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+    for (const key in this.subscriptionObject) {
+      if (this.subscriptionObject[key]) {
+        this.subscriptionObject[key].unsubscribe();
+      }
+    }
+
+    this.imageObservableCache = {};
+    this.imageLoaded = false;
+    this.imgLoaded = {};
   }
 
   public displayColumnChooser() {
@@ -414,23 +431,37 @@ export class SubObjectComparisonComponent implements OnInit {
     }
   }
 
-  public onImageLoad(subObjectTypeId, fileName, isError) {
-    if (!this.imgLoaded[subObjectTypeId]) {
-      this.imgLoaded[subObjectTypeId] = {};
-    }
-
-    if (!this.imgLoaded[subObjectTypeId][fileName]) {
-      this.imgLoaded[subObjectTypeId][fileName] = {};
-      this.imgLoaded[subObjectTypeId][fileName].isLoaded = true;
-      this.imgLoaded[subObjectTypeId][fileName].isError = isError;
-      this.dataGrid.instance.refresh();
-    }
-  }
-
   public onMapImageLoad(column) {
     if (!this.imgLoaded[column]) {
       this.imgLoaded[column] = true;
     }
+  }
+
+  public getImageUrl(filePath: string): Observable<string> {
+    if (!filePath) {
+      return of('');
+    }
+
+    // Return cached Observable if available
+    if (this.imageObservableCache[filePath]) {
+      return this.imageObservableCache[filePath];
+    }
+
+    // Create and cache the Observable
+    this.imageObservableCache[filePath] = this.dynamicFormsService
+      .getImageData(filePath)
+      .pipe(
+        map((response) => response?.data || ''),
+        tap((imageData) => {
+          if (imageData) {
+            this.dataGrid?.instance?.refresh();
+          }
+        }),
+        catchError(() => of('')),
+        shareReplay({ bufferSize: 1, refCount: true }) // Cache the result and replay to new subscribers
+      );
+
+    return this.imageObservableCache[filePath];
   }
 
   private columnBuilder(): void {

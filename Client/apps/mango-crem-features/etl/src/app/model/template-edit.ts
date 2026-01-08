@@ -27,6 +27,7 @@ export class ITemplate {
   isImportForAccounting: boolean | null = false;
   isImportForFinancials: boolean | null = false;
   canEdit: boolean | null = null;
+  isCopy: boolean = false;
 
   static createDefaultTemplate(): ITemplate {
     return new ITemplate();

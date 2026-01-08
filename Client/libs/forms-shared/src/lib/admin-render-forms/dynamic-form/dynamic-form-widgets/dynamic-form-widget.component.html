@@ -198,9 +198,15 @@
           [dataField]="columnField.dataFieldTableField | lowercase"
           [format]="columnField.dataTypeFormatString"
           [visible]="columnField.visible"
+          [cellTemplate]="'textWithNewlines'"
         >
         </dxi-column>
       </ng-container>
+
+      <!-- Cell Template for handling newline characters -->
+      <div *dxTemplate="let cell of 'textWithNewlines'">
+        <span class="multiline">{{ cell.text }}</span>
+      </div>
       <!-- End Grid Columns -->
 
       <!-- Actions Column -->
@@ -443,7 +449,7 @@
                 }"
               >
                 <dt>{{ col.label }}</dt>
-                <dd>
+                <dd class="multiline">
                   {{
                     detail.data[col.dataFieldTableField | lowercase]
                       | masterDetailFormat

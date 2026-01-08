@@ -139,3 +139,7 @@
     @include costar(color, gray01);
   }
 }
+
+.multiline {
+  white-space: pre-line;
+}

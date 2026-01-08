@@ -46,6 +46,7 @@ import {
   filter,
   switchMap,
   take,
+  tap,
   map,
   takeUntil,
   finalize,
@@ -416,67 +417,66 @@ export class DynamicFormWidgetComponent
       this.field.formObjectId ?? this.objectId
     );
 
-    return this.dynamicFormsFacade
+    // Create the base selector observable.
+    // Data is already formatted in the effect before entering the store.
+    const widgetResponse$ = this.dynamicFormsFacade
       .selectFormItemWidgetsApiResponseByWidgetId(this.field.widgetID)
-      .pipe(
-        filter((res) => res !== null && res !== undefined),
-        take(1),
-        map((widgetResponse) => {
-          if (!widgetResponse.data?.widgetID) {
-            return EMPTY;
-          }
-          const clone = JSON.parse(JSON.stringify(widgetResponse));
-          clone.data.renderFormWidgetData = this.widgetService.getUniqueByOid(
-            clone.data.renderFormWidgetData
-          );
-          clone.data = this.convertDateStrings(clone.data);
-          this.columnFormatMap = this.buildColumnFormatting(clone.data);
-          return clone;
-        }),
-        switchMap((widgetResponse) => {
-          if (!widgetResponse.success) {
-            this.errorLoading = true;
-            if (widgetResponse.statusCode === 400) {
-              this.userMessage = widgetResponse.clientErrorMessage;
-            }
-            return EMPTY;
-          } else {
-            this.allowEdits = widgetResponse.data.allowEdits;
-            this.allowLinking = widgetResponse.data.allowLinking;
-            this.showFormWidgetHistory =
-              widgetResponse.data.showFormWidgetHistory;
-            this.widgetId = widgetResponse.data.widgetID;
-            this.dataGroupID = widgetResponse.data.dataGroupID;
-            this.columnGroupID = widgetResponse.data.columnGroupID;
-            this.dataFieldTable =
-              widgetResponse.data.columnGroup.columnGroupName;
-            this.widgetFormId = widgetResponse.data.formID;
-            this.widgetObjectTypeId = widgetResponse.data.objectTypeID;
-            this.widgetObjectTypeTypeId = widgetResponse.data.objectTypeTypeID;
-            this.widgetRelationshipDefId =
-              widgetResponse.data.relationshipDefinitionID;
-            this.widgetChildObjectTypeId =
-              widgetResponse.data.childObjectTypeID;
-            this.showActionColumn = this.checkShowActionColumn();
+      .pipe(filter((res) => res?.data?.widgetID != null));
 
-            if (widgetResponse.data.subObject) {
-              this.dynamicFormsService
-                .getFormForObjectTypeType(this.widgetObjectTypeTypeId)
-                .subscribe((result) => {
-                  this.launchFormID = result.data.formID;
-                });
-            }
-            this.selectWidget$ = of(widgetResponse.data);
+    // Set up the persistent subscription for the template
+    this.selectWidget$ = widgetResponse$.pipe(
+      map((widgetResponse) => {
+        this.columnFormatMap = this.buildColumnFormatting(widgetResponse.data);
+        return widgetResponse.data;
+      }),
+      // Update grid dimensions after new data arrives to prevent overflow/scrollbar issues
+      tap(() => this.widgetDataGrid?.instance?.updateDimensions())
+    );
 
-            this.canShowDownload.emit(widgetResponse.data.allowExcelExport);
-            return of(null);
+    // Return an observable that completes after initial load for forkJoin.
+    // This handles one-time initialization of component properties.
+    return widgetResponse$.pipe(
+      take(1),
+      switchMap((widgetResponse) => {
+        if (!widgetResponse.success) {
+          this.errorLoading = true;
+          if (widgetResponse.statusCode === 400) {
+            this.userMessage = widgetResponse.clientErrorMessage;
           }
-        }),
-        catchError((error) => {
-          console.error('Error loading widget:', error);
-          return of(null);
-        })
-      );
+          return EMPTY;
+        }
+
+        this.allowEdits = widgetResponse.data.allowEdits;
+        this.allowLinking = widgetResponse.data.allowLinking;
+        this.showFormWidgetHistory = widgetResponse.data.showFormWidgetHistory;
+        this.widgetId = widgetResponse.data.widgetID;
+        this.dataGroupID = widgetResponse.data.dataGroupID;
+        this.columnGroupID = widgetResponse.data.columnGroupID;
+        this.dataFieldTable = widgetResponse.data.columnGroup.columnGroupName;
+        this.widgetFormId = widgetResponse.data.formID;
+        this.widgetObjectTypeId = widgetResponse.data.objectTypeID;
+        this.widgetObjectTypeTypeId = widgetResponse.data.objectTypeTypeID;
+        this.widgetRelationshipDefId =
+          widgetResponse.data.relationshipDefinitionID;
+        this.widgetChildObjectTypeId = widgetResponse.data.childObjectTypeID;
+        this.showActionColumn = this.checkShowActionColumn();
+
+        if (widgetResponse.data.subObject) {
+          this.dynamicFormsService
+            .getFormForObjectTypeType(this.widgetObjectTypeTypeId)
+            .subscribe((result) => {
+              this.launchFormID = result.data.formID;
+            });
+        }
+
+        this.canShowDownload.emit(widgetResponse.data.allowExcelExport);
+        return of(null);
+      }),
+      catchError((error) => {
+        console.error('Error loading widget:', error);
+        return of(null);
+      })
+    );
   }
 
   private getContactPreferences(): Observable<ContactRecord> {
@@ -606,35 +606,12 @@ export class DynamicFormWidgetComponent
       );
   }
 
-  convertDateStrings(widget: any): any {
-    const columnFields = widget.columnGroup?.columnFields as Array<any>;
-    const columnRowData = widget?.renderFormWidgetData;
-
-    if (!(columnFields && columnRowData)) {
-      return;
-    }
-
-    const dateFields = columnFields
-      .filter((x) => x.dataFieldDataType === this.DATE_COL_ID)
-      .map((x) => x.dataFieldTableField?.toLowerCase());
-
-    for (let i = 0; i < columnRowData.length; i++) {
-      for (let j = 0; j < dateFields.length; j++) {
-        if (
-          columnRowData[i][dateFields[j]] &&
-          !Number.isNaN(Date.parse(columnRowData[i][dateFields[j]])) &&
-          // We need at least 6 chars to have a proper date (YYYYMMDD)
-          // otherwise, leave it as a string
-          columnRowData[i][dateFields[j]].length > 6
-        ) {
-          columnRowData[i][dateFields[j]] = new Date(
-            columnRowData[i][dateFields[j]]
-          );
-        }
-      }
-    }
-
-    return widget;
+  /**
+   * Refresh widget data by dispatching action to reload through NgRx store.
+   * The selectWidget$ observable will automatically emit the new data.
+   */
+  private refreshWidgetData(): void {
+    this.dynamicFormsFacade.loadWidgetByWidgetId(this.field.widgetID, this.oid);
   }
 
   // Used to get column formatting so it can be applied again on excel export
@@ -1024,7 +1001,8 @@ export class DynamicFormWidgetComponent
 
     this.dynamicFormsService.downloadDocument(urlPath).subscribe(
       (data) => {
-        fileSaver.saveAs(data.body, path[1]);
+        // Use a global regex replace for compatibility with older TS lib targets
+        fileSaver.saveAs(data.body, path[1].replace(/%23/g, '#'));
       },
       (error) => {
         console.error('Error downloading file', error);
@@ -1138,25 +1116,16 @@ export class DynamicFormWidgetComponent
       .subscribe(
         (res) => {
           if (res?.success && res?.statusCode === 200) {
-            this.dynamicFormsService
-              .getFormItemWidgetByWidgetId(this.field.widgetID, this.oid)
-              .pipe(take(1))
-              .subscribe((resp) => {
-                resp.data.renderFormWidgetData =
-                  this.widgetService.getUniqueByOid(
-                    resp.data.renderFormWidgetData
-                  );
-                this.selectWidget$ = of(resp.data);
-                this.toastService.show(
-                  'Item deleted successfully!',
-                  '',
-                  ToastState.SUCCESS,
-                  {
-                    position: 'bottom right',
-                    maxWidth: '350px',
-                  }
-                );
-              });
+            this.refreshWidgetData();
+            this.toastService.show(
+              'Item deleted successfully!',
+              '',
+              ToastState.SUCCESS,
+              {
+                position: 'bottom right',
+                maxWidth: '350px',
+              }
+            );
 
             if (res?.data?.warning) {
               this.toastService.show(res.data.warning, '', ToastState.WARNING, {
@@ -1326,23 +1295,7 @@ export class DynamicFormWidgetComponent
   }
 
   handleDialogClose = () => {
-    this.isLoading = true;
-
-    this.dynamicFormsService
-      .getFormItemWidgetByWidgetId(this.field.widgetID, this.oid)
-      .pipe(
-        take(1),
-        map((resp) => {
-          resp.data.renderFormWidgetData = this.widgetService.getUniqueByOid(
-            resp.data.renderFormWidgetData
-          );
-          return resp;
-        }),
-        finalize(() => (this.isLoading = false))
-      )
-      .subscribe((resp) => {
-        this.selectWidget$ = of(resp.data);
-      });
+    this.refreshWidgetData();
   };
 
   SummaryRowTabs() {

@@ -960,7 +960,13 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
   }
 
   async saveAndNew() {
-    await this.save(true);
+    const saveSuccessful = await this.save(true);
+
+    // Only reset the form if save was successful
+    if (!saveSuccessful) {
+      return;
+    }
+
     this.savedOnce = true;
     // reset text inputs
     for (
@@ -990,17 +996,8 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
           d.formItemID == Object.keys(this.originalDropdownSelection)[index]
       );
       const originalSelection = this.originalDropdownSelection[formItemId];
-      const selectedItem = this.originalDropdownDS[formItemId].filter(
-        (d) => d.value === originalSelection?.toString()
-      );
-      await this.onDropdownValueChanged(
-        selectedItem,
-        formItem.formItemSectionDetail.formItemJavaScript,
-        formItem,
-        false
-      );
 
-      this.resetDropdownComponents(formItem, originalSelection);
+      this.resetDropdownComponent(formItem, originalSelection);
 
       this.widgetDetails[1].data[formItemId].selectedValue = originalSelection;
       if (
@@ -1009,31 +1006,36 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
       )
         this.updateDynamicFormValues(formItem, null);
       else this.updateDynamicFormValues(formItem, originalSelection);
-
-      this.dynamicForm.valueChanges.subscribe();
     }
 
     // reset datepickers
     this.datePickers.forEach((x) => (x.value = ''));
   }
 
-  resetDropdownComponents(formItem: any, originalSelection: string | number) {
+  resetDropdownComponent(formItem: any, originalSelection: string | number) {
     const dropdown = this.dropdowns.find(
       (dropdown) => dropdown.formControlName === formItem.formItemFriendlyName
     );
 
-    dropdown?.setDropdownvalue(originalSelection);
+    if (dropdown) {
+      dropdown.clearDropdown(); // calls dataGrid.instance.clearSelection
+      dropdown.clearSelectBox(); // calls selectBox.instance.clearSelection
+      dropdown.resetSelections(); // calls dropdown.instance.reset and dataGrid.instance.clearFilter
+      dropdown.dataGrid?.instance.selectRows([originalSelection], false); // checks the box for the original selection in the dropdown
+    }
   }
 
   /**
    * When 'Save' button is pressed
-   * @param e
+   * @param {boolean} [saveAndNew=false] - If true, keeps dialog open after save for creating another entry
+   * @returns {Promise<boolean>} Returns true if save was successful, false otherwise
+   * @memberof DynamicPopupComponent
    */
-  async save(saveAndNew = false as boolean) {
+  async save(saveAndNew = false as boolean): Promise<boolean> {
     if (this.changedFormItemKeys.length === 0 && this.dynamicForm.valid) {
       this.showToast('Saved successfully!', '', ToastState.SUCCESS);
       this.dialogRef.close(true);
-      return;
+      return true;
     }
 
     // Validating fields
@@ -1046,11 +1048,9 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
 
       this.showToast(validationMessageError[0]);
 
-      this._debug
-        ? console.debug(validationMessageError, this.popupData)
-        : null;
+      this._debug && console.debug(validationMessageError, this.popupData);
 
-      return;
+      return false;
     }
 
     this._isSaving = true;
@@ -1090,19 +1090,30 @@ export class DynamicPopupComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.dynamicFormsService
-      .saveRenderForm(saveFormData)
-      .subscribe((saveResponse) => {
-        if (saveResponse.success) {
-          this.showToast('Saved successfully!', '', ToastState.SUCCESS);
-          if (!saveAndNew) {
-            this.dialogRef.close(saveResponse.success);
-          }
-          this._isSaving = false;
-        } else {
-          this.showToast('Save not successful');
+    try {
+      const saveResponse = await this.dynamicFormsService
+        .saveRenderForm(saveFormData)
+        .pipe(take(1))
+        .toPromise();
+
+      if (saveResponse.success) {
+        this.showToast('Saved successfully!', '', ToastState.SUCCESS);
+        if (!saveAndNew) {
+          this.dialogRef.close(saveResponse.success);
         }
-      });
+        this._isSaving = false;
+        return true;
+      } else {
+        this.showToast('Save not successful');
+        this._isSaving = false;
+        return false;
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      this.showToast('An error occurred while saving.');
+      this._isSaving = false;
+      return false;
+    }
   }
 
   /**

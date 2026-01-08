@@ -1688,7 +1688,7 @@ export class DynamicFormComponent
           .replace(/[()';]/g, '')
           .replace(/\@FOID/, this.objectId)
           .replace(/\@FOTID/, this.objectTypeId);
-        this.router.navigateByUrl(urlLink);
+        window.open(urlLink, '_blank');
       }
     }
   }

@@ -146,6 +146,23 @@
                 >
                   Download
                 </li>
+                <li
+                  *ngIf="hasEditRights"
+                  mat-menu-item
+                  (keydown.space)="deleteTemplate(data)"
+                  (keydown.enter)="deleteTemplate(data)"
+                  (click)="deleteTemplate(data); $event.preventDefault()"
+                >
+                  Delete
+                </li>
+                <li
+                  mat-menu-item
+                  (keydown.space)="copyTemplate(data)"
+                  (keydown.enter)="copyTemplate(data)"
+                  (click)="copyTemplate(data)"
+                >
+                  Copy
+                </li>
               </ul>
             </mat-menu>
           </div>

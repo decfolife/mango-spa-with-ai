@@ -198,36 +198,13 @@
           *ngIf="
             (data.data.FormItemTypeId === '17' ||
               data.data.FormItemTypeId === '6') &&
-            data.data[data.column.dataField] &&
-            !(
-              imgLoaded &&
-              imgLoaded[data.column.dataField] &&
-              imgLoaded[data.column.dataField][
-                data.data[data.column.dataField]
-              ] &&
-              imgLoaded[data.column.dataField][data.data[data.column.dataField]]
-                .isError
-            )
+            data.data[data.column.dataField]
           "
         >
           <img
             width="300"
             crossorigin="Anonymous"
-            (error)="
-              onImageLoad(
-                data.column.dataField,
-                data.data[data.column.dataField],
-                true
-              )
-            "
-            (load)="
-              onImageLoad(
-                data.column.dataField,
-                data.data[data.column.dataField],
-                false
-              )
-            "
-            src="{{ data.data[data.column.dataField] }}"
+            [src]="getImageUrl(data.data[data.column.dataField]) | async"
           />
         </div>
 

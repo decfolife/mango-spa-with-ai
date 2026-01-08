@@ -15,6 +15,7 @@ import * as DynamicFormsActions from './dynamic-forms.actions';
 import { DynamicFormsService } from '../services/dynamic-forms.service';
 import { Store, select } from '@ngrx/store';
 import * as fromDynamicForms from './dynamic-forms.selectors';
+import { Widget } from '@forms/model/dynamic-forms.interface';
 
 @Injectable()
 export class DynamicFormsEffects {
@@ -327,6 +328,10 @@ export class DynamicFormsEffects {
           .pipe(
             take(1),
             map((result) => {
+              // Format widget data before storing
+              if (result?.data) {
+                result.data = this.formatWidgetData(result.data);
+              }
               return DynamicFormsActions.dynamicFormLoadWidgetByWidgetIdSuccessWithStatus(
                 { widgetId: action.widgetId, apiResponse: result }
               );
@@ -582,4 +587,121 @@ export class DynamicFormsEffects {
       })
     )
   );
+
+  /**
+   * Utility function to remove duplicates by oid
+   * Fixes an issue with displaying duplicate rows. This fix
+   * mimics RemoveDuplicateRowsWhenSecurityApplied in v06.
+   * Items without an oid are always included in the result.
+   * @param data
+   * @returns
+   */
+  private getUniqueByOid(data: any[]): any[] {
+    const itemsWithoutOid: any[] = [];
+    const mapByOid = data.reduce((acc, item) => {
+      if (item.oid !== undefined && item.oid !== null) {
+        acc[item.oid] = item; // Keeps the last occurrence
+      } else {
+        itemsWithoutOid.push(item); // Collect items without oid
+      }
+      return acc;
+    }, {} as Record<number, any>);
+
+    const uniqueItems = [...Object.values(mapByOid), ...itemsWithoutOid];
+    return uniqueItems;
+  }
+
+  /**
+   * Decode HTML entities like &amp; in string values
+   * to prevent showing encoded text in DataGrid/PivotGrid.
+   * @param value The string value to decode
+   * @returns The decoded string
+   */
+  private decodeHtmlEntities(value: string): string {
+    if (typeof value !== 'string') {
+      return value as unknown as string;
+    }
+
+    // Fast check to avoid unnecessary work
+    if (!/&[a-zA-Z#0-9]+;/.test(value)) {
+      return value;
+    }
+
+    // Use browser HTML parser for robust entity decoding
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(value, 'text/html');
+    const decoded = doc.documentElement.textContent ?? value;
+    return decoded;
+  }
+
+  /**
+   * Decode HTML entities in widget row data.
+   * Decoding is done early so all downstream consumers (grids, exports)
+   * receive clean strings.
+   * @param widget The widget containing row data to decode
+   * @returns The widget with decoded row data
+   */
+  private decodeWidgetHtmlEntities(widget: Widget): Widget {
+    const rows = widget?.renderFormWidgetData as Array<Record<string, unknown>>;
+
+    if (rows && rows.length) {
+      for (const row of rows) {
+        // Decode any string property that contains HTML entities
+        for (const key of Object.keys(row)) {
+          const v = row[key];
+          if (typeof v === 'string') {
+            row[key] = this.decodeHtmlEntities(v);
+          }
+        }
+      }
+    }
+
+    return widget;
+  }
+
+  /**
+   * Convert date string fields to Date objects based on column metadata.
+   */
+  private convertDateStrings(widget: any): void {
+    const DATE_COL_ID = '7';
+    const columnFields = widget.columnGroup?.columnFields as Array<any>;
+    const columnRowData = widget?.renderFormWidgetData;
+
+    if (!(columnFields && columnRowData)) {
+      return;
+    }
+
+    const dateFields = columnFields
+      .filter((x) => x.dataFieldDataType === DATE_COL_ID)
+      .map((x) => x.dataFieldTableField?.toLowerCase());
+
+    for (let i = 0; i < columnRowData.length; i++) {
+      for (let j = 0; j < dateFields.length; j++) {
+        if (
+          columnRowData[i][dateFields[j]] &&
+          !Number.isNaN(Date.parse(columnRowData[i][dateFields[j]])) &&
+          columnRowData[i][dateFields[j]].length > 6
+        ) {
+          columnRowData[i][dateFields[j]] = new Date(
+            columnRowData[i][dateFields[j]]
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Format widget data by applying all necessary transformations.
+   * This is called in the effect before storing data.
+   */
+  private formatWidgetData(widget: any): any {
+    if (!widget) return widget;
+
+    widget.renderFormWidgetData = this.getUniqueByOid(
+      widget.renderFormWidgetData
+    );
+    this.convertDateStrings(widget);
+    this.decodeWidgetHtmlEntities(widget);
+    return widget;
+  }
 }

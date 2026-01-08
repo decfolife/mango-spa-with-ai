@@ -1,0 +1,31 @@
+<crem-modal
+  modalTitle="Delete Template"
+  [closeIconVisible]="true"
+  [customFooter]="true"
+  (primaryButtonAction)="onSubmit()"
+  (closeButtonAction)="onClose()"
+>
+  <div modalContent>
+    <div class="form-field">
+      <div class="dynamicLabel">
+        Are you sure you want to delete {{ data }}?
+      </div>
+    </div>
+  </div>
+  <div modalFooter class="footer-content">
+    <div id="buttonTemplate" class="footerRightControls">
+      <crem-button
+        type="secondary"
+        [id]="etlService.getId(componentName, 'cancel-button', 'button')"
+        (click)="onClose()"
+        >Cancel</crem-button
+      >
+      <crem-button
+        type="primary"
+        [id]="etlService.getId(componentName, 'submit-button', 'button')"
+        (click)="onSubmit()"
+        >Ok</crem-button
+      >
+    </div>
+  </div>
+</crem-modal>

@@ -410,6 +410,18 @@ export type CardConfig = {
   dataGridColumnDefinition?: Partial<dataGridColumnDefinition>[];
 
   /**
+   * When true, automatically fills in missing years with zero values for all dimension combinations.
+   * This ensures future commitment tables display the full range (5 or 10 years)
+   * even when no data exists for certain years.
+   *
+   * Works in conjunction with filterInitialValue to determine the year range.
+   * Should be applied BEFORE the modify property processes "Thereafter" calculations.
+   *
+   * @type {boolean}
+   */
+  fillMissingYears?: boolean;
+
+  /**
    * Specifies the columns against which the summary should be calculated.
    *
    * When an array of strings is provided, you can selectively determine which columns

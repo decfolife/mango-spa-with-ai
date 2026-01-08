@@ -1462,7 +1462,16 @@ export class EtlTemplatesDetailsComponent implements OnInit, OnDestroy {
     this.templateForm.get('updateOnly').setValue(e.value);
 
     if (e.value) {
-      if (this.templateDetails.templateTypeId === TemplateTypes.Financials) {
+      const templateTypeIds = [
+        TemplateTypes.Financials,
+        TemplateTypes.Forms,
+        TemplateTypes.Options,
+        TemplateTypes.OptionCharges,
+        TemplateTypes.PortfolioAllocations,
+        TemplateTypes.DiscountRates,
+      ];
+
+      if (templateTypeIds.includes(this.templateDetails.templateTypeId)) {
         this.loadKeyField();
       }
       this.templateForm.get('parentLookupValue').disable();
