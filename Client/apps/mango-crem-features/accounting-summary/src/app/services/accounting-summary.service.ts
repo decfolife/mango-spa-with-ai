@@ -11,15 +11,15 @@ import { exportDataGrid } from 'devextreme/excel_exporter';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { Api } from '@mango/data-models/lib-data-models';
 import { ClassificationTypeName } from '@mango/data-models/lib-data-models';
+import { LeaseDetails } from '@accounting-summary/models/lease-info-response.modal';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccountingSummaryService extends EndpointService {
   private apiUrl: string;
-  private leaseAbstractId: number;
   private navPageId: number;
-  titleLeaseInfoSubject: BehaviorSubject<any>;
+  leaseInfoSubject: BehaviorSubject<any>;
   public jeActionTaken$ = new BehaviorSubject<boolean>(false);
   public newCreatedSchedule = new BehaviorSubject<number>(0);
   public lastApprovedOrExportedDate$ = new BehaviorSubject<Date | null>(null);
@@ -27,39 +27,35 @@ export class AccountingSummaryService extends EndpointService {
   preferenceSavePendingMessage = ' - You have unsaved preference changes.';
   isLocked: boolean;
   isArchived: boolean;
-  portolioSettings: PortfolioSettingsResponse;
+  portfolioSettings: PortfolioSettingsResponse;
   headerRowHeight: number;
   gridHeightPixelCorrection: number;
 
   constructor(protected http: HttpClient, @Optional() facade: MangoAppFacade) {
     super(http, facade);
     this.apiUrl = UtilitiesService.getBaseApiUrl(Api.accountingSummary);
-    const storedTitle = JSON.parse(localStorage.getItem('titleLeaseInfo'));
-    this.titleLeaseInfoSubject = new BehaviorSubject<any>(storedTitle || {});
+    const storedTitle = JSON.parse(sessionStorage.getItem('accSumLeaseInfo'));
+    this.leaseInfoSubject = new BehaviorSubject<any>(storedTitle || {});
+    this.portfolioSettings = this.getSavedPortfolioSettings();
   }
 
   setLeaseAbstractId(leaseId: number) {
-    this.leaseAbstractId = leaseId;
-
-    if (this.leaseAbstractId > 0) {
-      localStorage.setItem(
-        'accSumLeaseAbstractId',
-        this.leaseAbstractId.toString()
-      );
-    } else {
-      const storedLeaseAbstractId = Number(
-        localStorage.getItem('accSumLeaseAbstractId')
-      );
-
-      //if stored lease abstract id is a number.  It should always be one but extra check will not hurt
-      if (!isNaN(storedLeaseAbstractId)) {
-        this.leaseAbstractId = storedLeaseAbstractId;
-      }
-    }
+    const currentLeaseInfo = this.getLeaseInfoFromSession();
+    currentLeaseInfo.leaseAbstractID = leaseId;
+    this.setLeaseInfo(currentLeaseInfo);
   }
 
   getLeaseAbstractId(): number {
-    return this.leaseAbstractId;
+    const leaseInfo = this.getLeaseInfoFromSession();
+    return leaseInfo?.leaseAbstractID || 0;
+  }
+
+  setNavPageId(navPageId: number) {
+    this.navPageId = navPageId;
+  }
+
+  getNavPageId(): number {
+    return this.navPageId;
   }
 
   /**
@@ -82,7 +78,7 @@ export class AccountingSummaryService extends EndpointService {
   }
 
   getTitleInfoFromSubject(): Observable<any> {
-    return this.titleLeaseInfoSubject.asObservable();
+    return this.leaseInfoSubject.asObservable();
   }
 
   delayGridPanelCollapseWhenFilterIsVisible() {
@@ -96,35 +92,20 @@ export class AccountingSummaryService extends EndpointService {
     }
   }
 
-  setNavPageId(navPageId: number) {
-    this.navPageId = navPageId;
-
-    if (this.navPageId > 0) {
-      localStorage.setItem('accSumNavPageId', this.navPageId.toString());
-    } else {
-      const storedNavPageId = Number(localStorage.getItem('accSumNavPageId'));
-
-      //if stored navigation page id is a number.  It should always be one but extra check will not hurt
-      if (!isNaN(storedNavPageId)) {
-        this.navPageId = storedNavPageId;
-      }
-    }
-  }
-
-  getNavPageId(): number {
-    return this.navPageId;
-  }
-
   getLeaseInfo() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetLeaseInformation/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetLeaseInformation/lease/${this.getLeaseAbstractId()}`,
       'getLeaseInfo'
     );
   }
 
   getAccountingEvents() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetAccountingEventsSelector/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetAccountingEventsSelector/lease/${this.getLeaseAbstractId()}`,
       'getAccountingEvents'
     );
   }
@@ -145,21 +126,27 @@ export class AccountingSummaryService extends EndpointService {
 
   getAccountingSummaryRights() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetAccountingSummaryRights/navPage/${this.navPageId}/lease/${this.leaseAbstractId}`,
+      `${this.apiUrl}AccountingSummary/GetAccountingSummaryRights/navPage/${
+        this.navPageId
+      }/lease/${this.getLeaseAbstractId()}`,
       'getAccountingSummaryRights'
     );
   }
 
   getWorkflowStatusInformation() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetWorkflowStatusInformation/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetWorkflowStatusInformation/lease/${this.getLeaseAbstractId()}`,
       'getWorkflowStatusInformation'
     );
   }
 
   getWorkflowStatusHistory() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetWorkflowStatusHistory/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetWorkflowStatusHistory/lease/${this.getLeaseAbstractId()}`,
       'getWorkflowStatusHistory'
     );
   }
@@ -208,14 +195,18 @@ export class AccountingSummaryService extends EndpointService {
 
   getPortfolioSettings() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetPortfolioSettings/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetPortfolioSettings/lease/${this.getLeaseAbstractId()}`,
       'getPortfolioSettings'
     );
   }
 
   getGridPreferences() {
     return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetGridStates/lease/${this.leaseAbstractId}`,
+      `${
+        this.apiUrl
+      }AccountingSummary/GetGridStates/lease/${this.getLeaseAbstractId()}`,
       'getGridStates'
     );
   }
@@ -233,7 +224,7 @@ export class AccountingSummaryService extends EndpointService {
       `${this.apiUrl}AccountingSummary/UpdateWorkflowStatus`,
       'updateWorkflowStatus',
       JSON.stringify({
-        leaseAbstractID: this.leaseAbstractId,
+        leaseAbstractID: this.getLeaseAbstractId(),
         workflowStatusID: workflowStatusId,
         comment: comment,
       })
@@ -260,7 +251,7 @@ export class AccountingSummaryService extends EndpointService {
       `${this.apiUrl}AccountingSummary/UpdateGridStates`,
       'saveGridPreferences',
       JSON.stringify({
-        leaseAbstractID: this.leaseAbstractId,
+        leaseAbstractID: this.getLeaseAbstractId(),
         classificationID: classificationId,
         gridName: gridName,
         columnJson: columnJson,
@@ -273,7 +264,7 @@ export class AccountingSummaryService extends EndpointService {
       `${this.apiUrl}AccountingSummary/ResetGridState`,
       'resetGridState',
       JSON.stringify({
-        leaseAbstractID: this.leaseAbstractId,
+        leaseAbstractID: this.getLeaseAbstractId(),
         classificationID: classificationId,
         gridName: gridName,
       })
@@ -400,10 +391,31 @@ export class AccountingSummaryService extends EndpointService {
     return this.isArchived;
   }
 
-  getSavedPortfolioSettings() {
+  private getSavedPortfolioSettings() {
     return JSON.parse(
-      localStorage.getItem('portfolioSettings') || '{}'
+      sessionStorage.getItem('accSumPortfolioSettings') || '{}'
     ) as PortfolioSettingsResponse;
+  }
+
+  setLeaseInfo(leaseInfo: LeaseDetails) {
+    sessionStorage.setItem('accSumLeaseInfo', JSON.stringify(leaseInfo));
+    this.leaseInfoSubject.next(leaseInfo);
+  }
+
+  getLeaseInfoFromSession(): LeaseDetails {
+    return (
+      this.leaseInfoSubject.value ||
+      JSON.parse(sessionStorage.getItem('accSumLeaseInfo') || '{}')
+    );
+  }
+
+  setPortfolioSettings(settings: PortfolioSettingsResponse) {
+    sessionStorage.setItem('accSumPortfolioSettings', JSON.stringify(settings));
+    this.portfolioSettings = settings;
+  }
+
+  getPortfolioSettingsFromSession(): PortfolioSettingsResponse {
+    return this.portfolioSettings || this.getSavedPortfolioSettings();
   }
 
   exportAccountingEventSummaryReport(scheduleId, fileName: string) {

@@ -8,20 +8,17 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./index.component.scss'],
 })
 export class IndexComponent implements OnInit {
-  @Input() leaseAbstractId: number;
-
-  @Input() navPageId: number;
-
   constructor(
     private accountingSummaryService: AccountingSummaryService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.navPageId = Number(this.route.snapshot.queryParamMap.get('navpageid'));
-    this.leaseAbstractId = Number(this.route.snapshot.queryParamMap.get('oid'));
-
-    this.accountingSummaryService.setNavPageId(this.navPageId);
-    this.accountingSummaryService.setLeaseAbstractId(this.leaseAbstractId);
+    this.accountingSummaryService.setNavPageId(
+      Number(this.route.snapshot.queryParamMap.get('navpageid'))
+    );
+    this.accountingSummaryService.setLeaseAbstractId(
+      Number(this.route.snapshot.queryParamMap.get('oid'))
+    );
   }
 }

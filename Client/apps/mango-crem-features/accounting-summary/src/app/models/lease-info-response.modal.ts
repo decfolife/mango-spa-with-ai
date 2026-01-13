@@ -33,3 +33,14 @@ export interface LeaseInfoResponse {
   estimatedActualResidualValue: number;
   residualComments: string;
 }
+
+export interface LeaseDetails {
+  leaseAbstractID: number;
+  leaseName: string;
+  isLocked: boolean;
+  isArchived: boolean;
+  lockedReason: string;
+  accountingType: string;
+  exchangeRateID: number;
+  leaseRecognitionID: number;
+}

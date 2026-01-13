@@ -77,7 +77,6 @@
       [filterSyncEnabled]="true"
       (onContentReady)="calculateAppliedFilterCount()"
       (onCellPrepared)="onCellPrepared($event)"
-      (onCellHoverChanged)="cellHoverChanged($event)"
       [columnMinWidth]="10"
       [wordWrapEnabled]="true"
     >
@@ -237,14 +236,18 @@
 </div>
 
 <dx-popup
+  id="ba-log-cancellation-popup"
   [width]="400"
   [height]="180"
   [showTitle]="true"
-  title="Confirm Batch Cancellation"
+  titleTemplate="title-item"
   [dragEnabled]="true"
   [hideOnOutsideClick]="false"
   [(visible)]="cancelModalVisible"
 >
+  <div *dxTemplate="let data of 'title-item'">
+    <div class="cancellation-popup-title">Workflow Change History</div>
+  </div>
   <div *dxTemplate="let data of 'content'" class="popup-no-padding">
     <div class="dbl-padding">
       Canceling the batch will remove it from the queue and unlock all related

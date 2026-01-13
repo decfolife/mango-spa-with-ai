@@ -49,7 +49,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
   isAccountingEventEmpty: boolean;
   sendToExcelClicked = false;
   accountingEventSelector: AccountingEventSelector;
-  leaseRecognitionScheduleIDArray: number[];
+  leaseRecognitionScheduleIDs: number[];
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -172,7 +172,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     const selectedOption = event.trim();
 
     selectedOption === 'Send All to Excel'
-      ? this.sendToExcel(this.leaseRecognitionScheduleIDArray)
+      ? this.sendToExcel(this.leaseRecognitionScheduleIDs)
       : this.openConsolidatedReport();
   }
 
@@ -276,7 +276,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
       accountingEventSelector: any
     ]
   ) {
-    this.leaseRecognitionScheduleIDArray = emittedEvent[2]?.map(
+    this.leaseRecognitionScheduleIDs = emittedEvent[2]?.map(
       (item) => item.leaseRecognitionScheduleID
     );
     this.gridState = emittedEvent[1];
@@ -332,7 +332,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
           this.accountingSummaryService.setIsArchived(this.isArchived);
 
           //send data to the title lease info subject so that the title component gets updated. This will save an extra api call to getLeaseInfo.
-          const titleLeaseInfo = {
+          const leaseInfo = {
             leaseAbstractID: this.leaseInfoResponse.leaseAbstractID,
             leaseName: this.leaseInfoResponse.objectName,
             isLocked: this.isLocked,
@@ -343,13 +343,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
             leaseRecognitionID: this.leaseInfoResponse.leaseRecognitionID,
           };
 
-          localStorage.setItem(
-            'titleLeaseInfo',
-            JSON.stringify(titleLeaseInfo)
-          );
-          this.accountingSummaryService.titleLeaseInfoSubject.next(
-            titleLeaseInfo
-          );
+          this.accountingSummaryService.setLeaseInfo(leaseInfo);
           this.rightsInfo = {
             userHasEditLeaseRights:
               userNavPageWithLeaseRightsResponse.data.leaseSecurityType >= 4 &&
@@ -427,10 +421,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
           if (response === null) {
             this.accountingSummaryService.displayContactSystemAdminMessage();
           } else if (response.success) {
-            localStorage.setItem(
-              'portfolioSettings',
-              JSON.stringify(response.data)
-            );
+            this.accountingSummaryService.setPortfolioSettings(response.data);
             this.portfolioSettings = response.data;
           } else {
             this.accountingSummaryService.errorNotify(

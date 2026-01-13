@@ -7,7 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService } from '@mango/core-shared';
+import { DataService, HeaderService } from '@mango/core-shared';
 import {
   ContactRecord,
   MANGO_SPA_DEFAULT_PAGE,
@@ -60,7 +60,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   myControl = new UntypedFormControl();
   inputSubscription$;
   searchModules: Module[];
-  ImageUrl$: Observable<string>;
+  ClientLogo$: Observable<string>;
   currentProfile = 'Default';
   private subs: Subscription[] = [];
   private isDateCalcOpen: boolean = false;
@@ -71,14 +71,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private router: Router,
     private dataService: DataService,
-    private facade: MangoAppFacade
+    private facade: MangoAppFacade,
+    private headerService: HeaderService
   ) {}
 
   ngOnInit() {
     this.setObservables();
     this.getDefaultSearchObjectId();
     this.getSearchModules();
-
+    this.getClientLogo();
     // Set's the default value if search query string exists
     if (this.querySearchParams?.flikeclause) {
       this.myControl.setValue(this.querySearchParams.flikeclause);
@@ -110,6 +111,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
               error
             )
         )
+    );
+  }
+
+  getClientLogo() {
+    this.ClientLogo$ = this.headerService.getClientLogoFile().pipe(
+      filter((blob) => !!blob),
+      map((blob) => URL.createObjectURL(blob)),
+      catchError((error) => {
+        console.error('Error occurred while getting client logo: ', error);
+        return of('');
+      })
     );
   }
 
@@ -155,11 +167,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         ([hasMultipleProfiles, isEmulatedUser]) =>
           hasMultipleProfiles && !isEmulatedUser
       )
-    );
-
-    this.ImageUrl$ = this.facade.clientInfo$.pipe(
-      filter((client) => !!client),
-      map((client) => `${client.imageBaseUrl}${client.logoUri}`)
     );
   }
 

@@ -300,7 +300,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
         return RemeasureType.Renewal;
       case 'Data Correction':
         return RemeasureType.DataCorrection;
-      case 'Rent Review IFRS':
+      case 'Rent Review (IFRS)':
         return RemeasureType.RentReviewIFRS;
       case 'CPI Cumulative Cap Reached':
         return RemeasureType.CPICumulativeCapReached;

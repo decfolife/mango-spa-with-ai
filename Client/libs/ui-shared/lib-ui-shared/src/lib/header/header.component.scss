@@ -25,11 +25,13 @@
     @include costar(font-size, small);
     @include costar(border-radius, small);
     @include costar(background-color, light);
+
     &:focus {
       left: 50%;
       transform: translateX(-50%);
       opacity: 1;
     }
+
     &:active,
     &:focus-within,
     &:focus-visible {
@@ -51,6 +53,7 @@
     flex-direction: row;
     align-items: center;
     padding: 10px;
+
     .glyph {
       width: 143px;
       height: 40px;
@@ -61,6 +64,7 @@
         display: none;
       }
     }
+
     .wordmark {
       @include costar(font-size, h1);
       @include costar(color, primary);
@@ -97,6 +101,7 @@
       width: 100%;
       border: 2px solid map-get($color, color, gray05);
       border: 2px solid var(--costar-color-gray05);
+
       // Activate Focus
       &:active,
       &:focus,
@@ -104,40 +109,49 @@
         border: 2px solid map-get($color, color, primary-light);
         border: 2px solid var(--costar-color-primary-light);
       }
+
       // Direct descendant no matter what is implemented
       .search-input {
         width: 57%;
+
         .mdc-text-field {
           height: 32px !important;
           padding-left: 8px !important;
           padding-right: 8px !important;
+
           .mdc-notched-outline__trailing,
           .mdc-notched-outline__notch,
           .mdc-notched-outline__leading {
             border: none !important;
           }
         }
+
         .mat-mdc-form-field-infix {
           width: 100%;
           padding: 0px !important;
           height: 32px !important;
+
           input {
             width: 400px !important;
           }
         }
       }
+
       .search-type-select {
         height: 28px !important;
         width: 35%;
         font-size: 14px !important;
+
         .mdc-text-field {
           background-color: white !important;
         }
+
         .mdc-line-ripple::before,
         .mdc-line-ripple--active {
           border: none !important;
         }
       }
+
       .submit {
         height: 28px;
         width: 8%;
@@ -148,9 +162,11 @@
         border: none;
         @include costar(background-color, gray06);
         @include costar(transition, fast);
+
         &:hover {
           @include costar(background-color, gray05);
         }
+
         &:active,
         &:focus,
         &:focus-within {
@@ -168,12 +184,13 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+
     // Client Logo
     .client-logo {
       position: relative;
       width: 160px;
       height: 48px;
-      margin-right: 1.5rem;
+      margin-right: 5rem;
 
       .image {
         width: 160px;
@@ -182,6 +199,7 @@
         background-size: contain;
         background-repeat: no-repeat;
       }
+
       .edit {
         top: 0;
         left: 0;
@@ -192,15 +210,18 @@
         position: absolute;
         @include costar(color, primary-light);
         @include costar(transition, faster);
+
         ::ng-deep {
           crem-icon {
             @include costar(margin, 1);
             @include costar(padding, 1);
           }
         }
+
         &:hover {
           opacity: 1;
           @include background-opacity(map-get($color, color, light), 0.9);
+
           ::ng-deep {
             crem-icon {
               @include costar(background-color, light);
@@ -208,6 +229,7 @@
           }
         }
       }
+
       // Activate Focus
       &:active,
       &:focus,
@@ -215,6 +237,7 @@
         .edit {
           opacity: 1;
           @include background-opacity(map-get($color, color, light), 0.9);
+
           ::ng-deep {
             crem-icon {
               border: 2px solid map-get($color, color, primary-light);
@@ -233,6 +256,7 @@
       align-items: center;
       justify-items: center;
       @include costar(margin-right, 3);
+
       > a,
       > button {
         height: 36px;
@@ -245,12 +269,14 @@
         @include costar(border-radius, round, $important: true);
         border: 3px solid map-get($color, color, primary);
         border: 3px solid var(--costar-color-primary);
+
         &:hover {
           @include costar(color, primary-light);
           border: 3px solid map-get($color, color, primary-light);
           border: 3px solid var(--costar-color-primary-light);
           text-decoration: none;
         }
+
         &:active,
         &:focus,
         &:focus-within {
@@ -258,6 +284,7 @@
         }
       }
     }
+
     .resources {
       .indicator {
         // Attach 'Pendo' tooltip to this element
@@ -272,29 +299,36 @@
   // RESPONSIVE DESIGN
   @include media('<desktop-xl') {
     grid-template-columns: repeat(3, 1fr);
+
     .brand {
       .wordmark {
         display: none;
       }
     }
   }
+
   @include media('<=desktop', 'portrait') {
     grid-template-columns: 65px 1fr 45px;
     gap: 1.5rem;
+
     .brand {
       .wordmark {
         display: none;
       }
+
       .glyph {
         width: auto;
         display: none;
+
         &.phone {
           display: block;
         }
       }
     }
+
     .search {
       width: 100%;
+
       ::ng-deep {
         mat-form-field {
           // Hide object type dropdown
@@ -302,6 +336,7 @@
         }
       }
     }
+
     .profile {
       .client-logo,
       .resources {
@@ -309,13 +344,16 @@
       }
     }
   }
+
   @include media('<=desktop', 'landscape') {
     grid-template-columns: 145px 1fr 1fr;
+
     .brand {
       .wordmark {
         display: none;
       }
     }
+
     .search {
       width: 100%;
     }
@@ -329,14 +367,17 @@
     min-width: 210px;
     min-height: 42px;
     @include costar(border, gray04);
+
     ul {
       > li {
         padding: unset !important;
+
         a,
         &.info {
           > span {
             font-size: 14px !important;
           }
+
           min-height: unset !important;
           width: 100%;
           height: 36px;
@@ -347,6 +388,7 @@
           @include costar(transition, faster);
           @include costar(background-color, light);
           border: 2px solid transparent;
+
           &:active,
           &:focus,
           &:focus-within {
@@ -356,6 +398,7 @@
             border: 2px solid map-get($color, color, primary-light);
             border: 2px solid var(--costar-color-primary-light);
           }
+
           &:hover {
             box-shadow: unset;
             @include costar(background-color, gray06, $important: true);
@@ -363,12 +406,14 @@
         }
       }
     }
+
     ul {
       &.details {
         // Use details only for options without links
         @include costar(padding-bottom, 2);
         @include costar(padding-top, 2);
         @include costar(border-bottom, gray03);
+
         li {
           display: flex;
           align-items: center;
@@ -379,10 +424,12 @@
           font-size: 12px;
           @include costar(color, gray02);
           @include costar(line-height, small);
+
           &:hover {
             background-color: unset !important;
           }
         }
+
         li:not(:last-child) {
           @include costar(margin-bottom, 2);
         }

@@ -44,7 +44,10 @@ import {
 import { DatePipe } from '@angular/common';
 import { CheckBoxComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/checkbox';
 import { CompositeDropdownModule } from 'libs/ui-shared/lib-ui-elements/src/lib/composite-dropdown';
-import { LeaseInfoResponse } from '@accounting-summary/models/lease-info-response.modal';
+import {
+  LeaseDetails,
+  LeaseInfoResponse,
+} from '@accounting-summary/models/lease-info-response.modal';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { FunctionalCurrencyRateLookupResponse } from '@accounting-summary/models/functional-currency-rate-lookup.model';
 import {
@@ -122,12 +125,8 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   discountRateSubTitle: string;
   currencySubTitle: string;
   ROUAssetsObtainedSubTitle: string;
-  leaseInformation: LeaseInfoResponse = JSON.parse(
-    localStorage.getItem('titleLeaseInfo') || '{}'
-  );
-  portfolioSettings: PortfolioSettingsResponse = JSON.parse(
-    localStorage.getItem('portfolioSettings') || '{}'
-  );
+  leaseInformation: LeaseDetails;
+  portfolioSettings: PortfolioSettingsResponse;
 
   masterGroupID: number;
   localCurrency: string;
@@ -328,6 +327,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.leaseInformation =
+      this.accountingSummaryService.getLeaseInfoFromSession();
+    this.portfolioSettings =
+      this.accountingSummaryService.getPortfolioSettingsFromSession();
     this.initializePortfolioSettings();
     this.handleFormValueChanges();
 

@@ -181,6 +181,15 @@ export abstract class EndpointService {
     );
   }
 
+  protected callHttpGetBlob(
+    url: string,
+    functionName: string
+  ): Observable<Blob> {
+    return this.http
+      .get(url, { responseType: 'blob' })
+      .pipe(catchError(this.handleError(functionName)));
+  }
+
   protected callHttpPost(
     url: string,
     functionName: string,

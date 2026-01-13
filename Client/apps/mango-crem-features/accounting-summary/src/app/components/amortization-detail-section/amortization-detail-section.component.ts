@@ -156,7 +156,7 @@ export class AmortizationDetailSectionComponent
             this.amortizationDetailsGridData[0]?.scheduleIndex,
           ];
           this.portfolioSettings =
-            this.accountingSummaryService.getSavedPortfolioSettings();
+            this.accountingSummaryService.getPortfolioSettingsFromSession();
           this.isEuroDateFormat = this.userInfo?.useDateEU;
           if (this.isEuroDateFormat) {
             this.dateFormat = 'dd.MM.yyyy';

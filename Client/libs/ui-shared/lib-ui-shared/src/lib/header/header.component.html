@@ -108,7 +108,7 @@
     <button class="client-logo btn-none" aria-label="Edit Logo Image">
       <div
         class="image"
-        [style.background-image]="'url(\'' + (ImageUrl$ | async) + '\')'"
+        [style.background-image]="'url(' + (ClientLogo$ | async) + ')'"
       ></div>
       <span class="edit">
         <crem-icon icon="faPenToSquare" size="sm"></crem-icon>

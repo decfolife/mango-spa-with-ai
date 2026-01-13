@@ -412,6 +412,7 @@ export class BatchLogsComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   actionMenuCallback(item: string, data: any) {
+    this.hoveredRowBatchId = data?.parameterID;
     const actionMap = {
       download: (data: any) => this.exportExcel(data),
       process: (data: any) => this.queueForProcessing(data),
@@ -538,7 +539,7 @@ export class BatchLogsComponent implements AfterViewInit, OnInit, OnDestroy {
 
           const message = result.data.isCancelled
             ? 'Batch Successfully Cancelled.'
-            : `Batch failed to cancel for the following reason: ${result.clientErrorMessage}`;
+            : `Batch failed to cancel for the following reason: ${result.data.errorMessage}`;
 
           const type = result.data.isCancelled ? 'success' : 'error';
 
@@ -560,10 +561,6 @@ export class BatchLogsComponent implements AfterViewInit, OnInit, OnDestroy {
         }
       })
     );
-  }
-
-  cellHoverChanged(event: any) {
-    this.hoveredRowBatchId = event?.key;
   }
 
   private reverseBatch(data: any) {

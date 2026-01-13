@@ -295,9 +295,8 @@ export class ScheduleDetailsComponent
   }
 
   ngOnInit(): void {
-    this.portfolioSettings = JSON.parse(
-      localStorage.getItem('portfolioSettings') || '{}'
-    );
+    this.portfolioSettings =
+      this.accountingSummaryService.getPortfolioSettingsFromSession();
     this.journalEntryProfileRequired =
       this.portfolioSettings?.journalEntryProfileRequired;
 

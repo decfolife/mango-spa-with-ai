@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { CalculateValues } from '@accounting-summary/models/interfaces/calculate-values.interfaces';
 import { AccountingEventPayload } from '@accounting-summary/models/interfaces/save-accounting-event.interfaces';
 import { Message, MessageService } from 'primeng/api';
+import { AccountingSummaryService } from './accounting-summary.service';
 
 @Injectable()
 export class AddEditScheduleService extends EndpointService {
@@ -23,13 +24,13 @@ export class AddEditScheduleService extends EndpointService {
   constructor(
     protected http: HttpClient,
     @Optional() facade: MangoAppFacade,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private accountingSummaryService: AccountingSummaryService
   ) {
     super(http, facade);
     this.apiUrl = UtilitiesService.getBaseApiUrl(Api.accountingSummary);
-    this.leaseAbstractId = Number(
-      localStorage.getItem('accSumLeaseAbstractId')
-    );
+    const leaseInfo = this.accountingSummaryService.getLeaseInfoFromSession();
+    this.leaseAbstractId = Number(leaseInfo.leaseAbstractID);
   }
 
   getCommonDropdowns() {
@@ -43,13 +44,6 @@ export class AddEditScheduleService extends EndpointService {
     return this.callHttpGet(
       `${this.apiUrl}AccountingEvents/GetClassificationSettings/Lease/${this.leaseAbstractId}`,
       'getClassificationSettings'
-    );
-  }
-
-  getPortfolioSettings() {
-    return this.callHttpGet(
-      `${this.apiUrl}AccountingSummary/GetPortfolioSettings/lease/${this.leaseAbstractId}`,
-      'getPortfolioSettings'
     );
   }
 

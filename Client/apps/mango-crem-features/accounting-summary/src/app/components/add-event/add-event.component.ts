@@ -117,9 +117,8 @@ export class AddEventComponent implements OnDestroy, OnInit {
 
   ngOnInit() {
     this.showPayload = environment.showPayload;
-    this.portfolioSettings = JSON.parse(
-      localStorage.getItem('portfolioSettings') || '{}'
-    );
+    this.portfolioSettings =
+      this.accountingSummaryService.getPortfolioSettingsFromSession();
     this.getFormsData();
     this.getCalculateValueData();
     this.populateChargeDateRangeOptions();
@@ -1016,10 +1015,11 @@ export class AddEventComponent implements OnDestroy, OnInit {
     const { leaseRecognitionScheduleId, copiedFromScheduleId } =
       this.getScheduleIdentifiers();
 
+    const leaseInfo = this.accountingSummaryService.getLeaseInfoFromSession();
     return {
       leaseRecognitionScheduleId: leaseRecognitionScheduleId,
       copiedFromScheduleId: copiedFromScheduleId,
-      leaseAbstractId: +localStorage.getItem('accSumLeaseAbstractId'),
+      leaseAbstractId: +leaseInfo.leaseAbstractID,
       classificationId: this.scheduleDetails.classificationId[0],
       remeasureTypeId:
         this.pageMode === 'Edit Event'
@@ -1215,28 +1215,16 @@ export class AddEventComponent implements OnDestroy, OnInit {
    */
   navigateToAccountingSummaryPage(): void {
     this.addEditScheduleService.clearAllToastMessages();
-    this.subscription.add(
-      this.accountingSummaryService.getLeaseInfo().subscribe(
-        (res) => {
-          if (res.success) {
-            const queryParams: { [key: string]: any } = {};
-            queryParams['otid'] = res.data.objectTypeID ?? null;
-            queryParams['oid'] = res.data.leaseAbstractID ?? null;
-            queryParams['ottid'] = res.data.objectTypeTypeID ?? undefined;
-            queryParams['navpageid'] =
-              this.accountingSummaryService.getNavPageId();
-            this.addEventFormService.manualAssetAdjustment$.next(0);
-            this.router.navigate(['/crem/accounting/summary'], {
-              relativeTo: this.activatedRoute,
-              queryParams: queryParams,
-            });
-          }
-        },
-        (error) => {
-          console.error('An error occurred: ', error);
-        }
-      )
-    );
+    const queryParams: { [key: string]: any } = {};
+    queryParams['otid'] = this.queryParams.otid || '';
+    queryParams['oid'] = this.queryParams.oid || '';
+    queryParams['ottid'] = this.queryParams.ottid || '';
+    queryParams['navpageid'] = this.queryParams.navpageid || '';
+    this.addEventFormService.manualAssetAdjustment$.next(0);
+    this.router.navigate(['/crem/accounting/summary'], {
+      relativeTo: this.activatedRoute,
+      queryParams: queryParams,
+    });
   }
 
   private getClassificationSettings() {

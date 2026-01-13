@@ -42,9 +42,7 @@ import { AccountingSummaryService } from '@accounting-summary/services/accountin
   styleUrls: ['./balance-cards-container.component.scss'],
 })
 export class BalanceCardsContainerComponent implements OnInit, OnDestroy {
-  portfolioSettings: PortfolioSettingsResponse = JSON.parse(
-    localStorage.getItem('portfolioSettings') || '{}'
-  );
+  portfolioSettings: PortfolioSettingsResponse;
 
   private subscription$ = new Subject<void>();
   balanceCardForm: FormGroup;
@@ -75,6 +73,8 @@ export class BalanceCardsContainerComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     public formatService: FormattingService
   ) {
+    this.portfolioSettings =
+      this.accountingSummaryService.getPortfolioSettingsFromSession();
     this.initializeBalanceCardsForm();
     this.updateBalanceCardModel(this.balanceCardForm.value);
     this.addEventFormService.accountingEventData$

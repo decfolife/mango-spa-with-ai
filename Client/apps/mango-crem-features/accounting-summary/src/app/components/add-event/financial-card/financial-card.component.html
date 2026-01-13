@@ -10,6 +10,7 @@
         [id]="
           accountingSummaryService.getId(componentName, 'manual-entry', 'popup')
         "
+        (mousedown)="$event.stopPropagation()"
       >
         <crem-input
           [id]="

@@ -133,7 +133,11 @@
           [dropdownPosition]="'right'"
           (mainButtonClick)="sendToExcelMain()"
           (selectedOption)="selectedOption($event)"
-          [disabled]="sendToExcelClicked || isAccountingEventEmpty"
+          [disabled]="
+            sendToExcelClicked ||
+            isAccountingEventEmpty ||
+            !leaseRecognitionScheduleIDs
+          "
           [options]="['Send All to Excel', 'Consolidate']"
         ></crem-split-button>
       </div>

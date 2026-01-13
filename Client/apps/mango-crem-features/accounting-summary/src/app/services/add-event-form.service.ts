@@ -4,14 +4,13 @@ import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-
 import { PreviousAccountingEvent } from '@accounting-summary/models/previous-accounting-event.model';
 import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
 import { TermDateOption } from '@accounting-summary/models/interfaces/schedule-details-form-interfaces';
+import { AccountingSummaryService } from './accounting-summary.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AddEventFormService {
-  portfolioSettings: PortfolioSettingsResponse = JSON.parse(
-    localStorage.getItem('portfolioSettings') || '{}'
-  );
+  portfolioSettings: PortfolioSettingsResponse;
 
   private validationStatesForCalculate = {
     scheduleDetails: true,
@@ -76,12 +75,8 @@ export class AddEventFormService {
     false
   );
 
-  public compoundFrequency$ = new BehaviorSubject<number>(
-    this.portfolioSettings.defaultCompoundFrequencyType
-  );
-  public paymentTiming$ = new BehaviorSubject<number>(
-    this.portfolioSettings.defaultPaymentTimingType
-  );
+  public compoundFrequency$ = new BehaviorSubject<number>(null);
+  public paymentTiming$ = new BehaviorSubject<number>(null);
 
   public isCalculateValuesAllowed$ = new BehaviorSubject<boolean>(false);
   public isSaveAllowed$ = new BehaviorSubject<boolean>(false);
@@ -101,8 +96,14 @@ export class AddEventFormService {
   calculateValuesResponseData$ = this.calculateValuesResponse$;
   overrideOpeningBalance$ = new BehaviorSubject<number>(0);
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  constructor(private accountingSummaryService: AccountingSummaryService) {
+    this.portfolioSettings =
+      this.accountingSummaryService.getPortfolioSettingsFromSession();
+    this.compoundFrequency$.next(
+      this.portfolioSettings?.defaultCompoundFrequencyType
+    );
+    this.paymentTiming$.next(this.portfolioSettings?.defaultPaymentTimingType);
+  }
 
   setaccountingEventData(data: PreviousAccountingEvent) {
     this.accountingEventData$.next(data);

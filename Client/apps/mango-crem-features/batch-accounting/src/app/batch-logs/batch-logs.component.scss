@@ -74,7 +74,7 @@
 
   .dx-popup-wrapper {
     .dx-overlay-content {
-      div.dx-popup-content {
+      .dx-popup-content {
         padding: 0 !important;
       }
     }
@@ -117,11 +117,18 @@
     max-height: 30px;
     padding-bottom: 0px !important;
   }
+
   .search-input-container {
     max-height: 32px;
   }
+
   input {
     background-color: transparent;
     padding-top: 2px !important;
   }
+}
+
+.dx-template-wrapper:has(.cancellation-popup-title) {
+  font-size: 20px;
+  padding: 10px 20px !important;
 }
