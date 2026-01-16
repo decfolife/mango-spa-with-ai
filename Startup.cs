@@ -21,6 +21,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
+using RedisRateLimiting;
 using RedisRateLimiting.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -476,43 +477,33 @@ public class Startup
             // Rate Limit Type - Fixed Window
             if (Configuration.UseInMemoryCaching())
             {
-                options.AddFixedWindowLimiter("fixed", options =>
+                options.AddPolicy("fixed-by-user-and-path", httpContext =>
                 {
-                    options.Window = rateLimitOptions.Window;
-                    options.PermitLimit = rateLimitOptions.PermitLimit;
-                    //options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    //options.QueueLimit = 5;
+                    int contactId = httpContext.User.ContactId();
+                    var path = httpContext.Request.Path.ToString();
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: $"{contactId}:{path}",
+                        factory: _ => rateLimitOptions);
                 });
             } 
             else
             {
-                options.AddRedisFixedWindowLimiter("fixed", (opt) =>
+                options.AddPolicy("fixed-by-user-and-path", httpContext =>
                 {
-                    opt.ConnectionMultiplexerFactory = () => multiplexer;
-                    opt.PermitLimit = rateLimitOptions.PermitLimit;
-                    opt.Window = rateLimitOptions.Window;
+                    int contactId = httpContext.User.ContactId();
+                    var path = httpContext.Request.Path.ToString();
+
+                    return RedisRateLimitPartition.GetFixedWindowRateLimiter(
+                        partitionKey: $"{contactId}_{path}",
+                        factory: _ => new RedisFixedWindowRateLimiterOptions
+                        {
+                            ConnectionMultiplexerFactory = () => multiplexer,
+                            PermitLimit = rateLimitOptions.PermitLimit,
+                            Window = rateLimitOptions.Window
+                        });
                 });
             }
-
-            // Rate Limit Policies
-            options.AddPolicy("fixed-by-user", httpContext =>
-            {
-                int contactId = httpContext.User.ContactId();
-
-                return RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: contactId,
-                    factory: _ => rateLimitOptions);
-            });
-
-            options.AddPolicy("fixed-by-user-and-path", httpContext =>
-            {
-                int contactId = httpContext.User.ContactId();
-                var path = httpContext.Request.Path.ToString();
-
-                return RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: $"{contactId}:{path}",
-                    factory: _ => rateLimitOptions);
-            });
 
             options.OnRejected = async (context, cancellationToken) =>
             {
