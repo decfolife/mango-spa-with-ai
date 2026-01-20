@@ -7,8 +7,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS restore
 WORKDIR /src
 COPY ["MangoSPA.csproj", "."]
 
-# Copy certs from the base image
-# COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# Copy the global NuGet configuration from the base image
+COPY --from=base /root/.nuget /root/.nuget
+COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 RUN dotnet restore "./././MangoSPA.csproj"
 
