@@ -1837,11 +1837,6 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       }
       case 'amortization': {
         this.amortizationCompositeDropdownTouched = true;
-        if (this.financialForm.get('amortizationProfile').value !== null) {
-          this.financialForm.get('overrideAmortizationProfile').enable();
-        } else {
-          this.financialForm.get('overrideAmortizationProfile').disable();
-        }
         break;
       }
       case 'currency': {
