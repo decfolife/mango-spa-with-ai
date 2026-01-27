@@ -62,6 +62,7 @@ public class Startup
         services.AddHttpContextAccessor();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
+        services.AddRequestTimeouts();
 
         ConnectionMultiplexer redisMultiplexer = null;
         if (!Configuration.UseInMemoryCaching())
@@ -196,6 +197,7 @@ public class Startup
         app.UseAntiforgery();
 
         app.UseRateLimiter();
+        app.UseRequestTimeouts();
 
         app.UseEndpoints(endpoints =>
         {
