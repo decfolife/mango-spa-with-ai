@@ -20,7 +20,6 @@ import { ServiceAccountDetailsComponent } from '../service-account-details/servi
 import { UpdateServiceAccountComponent } from '../update-service-account/update-service-account.component';
 import { ClientDeliveryService } from '../../services/client-delivery.service';
 import { UserMaintenanceService } from '../../../../../user-maintenance/src/app/components/user-maintenance/user-maintenance.service';
-import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { ServiceAccount } from '@mango/data-models/lib-data-models';
 import {
   ButtonModule,
@@ -30,6 +29,8 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { LatestSyncInfo } from 'libs/data-models/lib-data-models/src/lib/models/service-account/latest-sync-info.interface';
 import { CremPopoverComponent } from '@mango/ui-shared/lib-ui-elements';
+import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
+import { ToastState } from '@mango/data-models/lib-data-models';
 
 enum Status {
   active = 'active',
@@ -111,7 +112,7 @@ export class ServiceAccountsComponent implements OnDestroy {
     private datepipe: DatePipe,
     private clientDeliveryService: ClientDeliveryService,
     private userMaintenanceService: UserMaintenanceService,
-    private mangoAppFacade: MangoAppFacade
+    private toastService: CremToastService
   ) {
     this.getServiceAccounts();
   }
@@ -121,8 +122,12 @@ export class ServiceAccountsComponent implements OnDestroy {
     this.dataGrid?.instance?.searchByText(searchText);
   }
 
-  openAccountDetails(e): void {
-    if (e.rowType != 'header' && e.column.dataField !== 'Actions') {
+  openAccountDetails(e: any): void {
+    if (
+      e.rowIndex != -1 &&
+      e.rowType != 'header' &&
+      e.column.dataField !== 'Actions'
+    ) {
       this.openServiceAccountDetailsComponentPopup(e.data);
     }
   }
@@ -148,18 +153,19 @@ export class ServiceAccountsComponent implements OnDestroy {
       width: '460px',
       panelClass: 'client-delivery-modal',
       disableClose: true,
+      data: { serviceAccounts: this.allServiceAccounts },
     });
 
     this.subs.push(
       dialogRef
         .afterClosed()
         .pipe(
-          filter((result) => result != null),
-          switchMap((result) =>
-            this.clientDeliveryService.addServiceAccount(result)
-          )
+          filter((res) => !!res),
+          switchMap((res) => this.clientDeliveryService.addServiceAccount(res))
         )
-        .subscribe((_) => this.getServiceAccounts())
+        .subscribe((res) => {
+          if (res && res.success) this.getServiceAccounts(); // Refresh data grid after successful addition of service account
+        })
     );
   }
 
@@ -175,17 +181,29 @@ export class ServiceAccountsComponent implements OnDestroy {
       dialogRef
         .afterClosed()
         .pipe(
-          filter((result) => !!result),
-          switchMap((result) =>
+          filter((res) => !!res),
+          switchMap((res) =>
             this.clientDeliveryService.updateServiceAccount(
-              result.contactEmailAddress,
-              result.contactId,
+              res.contactEmailAddress,
+              res.contactId,
               contactActiveFlg
             )
           ),
           delay(1200)
         )
-        .subscribe((_) => this.getServiceAccounts())
+        .subscribe((res) => {
+          const action = contactActiveFlg ? 'reactivate' : 'deactivate';
+
+          this.toastService.show(
+            res.success
+              ? 'Service account successfully ' + action + 'd.'
+              : 'Failed to ' + action + ' service account.',
+            res.success ? 'Success' : 'Error',
+            res.success ? ToastState.SUCCESS : ToastState.ERROR
+          );
+
+          this.getServiceAccounts(); // Refresh data grid after successful update of service account})
+        })
     );
   }
 
@@ -247,10 +265,23 @@ export class ServiceAccountsComponent implements OnDestroy {
       workbook.xlsx.writeBuffer().then((buffer) => {
         const date = this.datepipe.transform(new Date());
         const fileName = 'ServiceAccounts' + '_' + date + '.xlsx';
-        saveAs(
-          new Blob([buffer], { type: 'application/octet-stream' }),
-          fileName
-        );
+        try {
+          saveAs(
+            new Blob([buffer], { type: 'application/octet-stream' }),
+            fileName
+          );
+          this.toastService.show(
+            'File has been exported successfully.',
+            'Success',
+            ToastState.SUCCESS
+          );
+        } catch (err) {
+          this.toastService.show(
+            'An error occurred while exporting the file.',
+            'Error',
+            ToastState.ERROR
+          );
+        }
       });
     });
   }
@@ -276,13 +307,19 @@ export class ServiceAccountsComponent implements OnDestroy {
 
   private getServiceAccounts() {
     this.subs.push(
-      this.userMaintenanceService
-        .getServiceAccounts()
-        .subscribe((serviceAccounts) => {
-          this.allServiceAccounts = serviceAccounts;
+      this.userMaintenanceService.getServiceAccounts().subscribe((res) => {
+        if (res && res.length > 0) {
+          this.allServiceAccounts = res;
           this.filterServiceAccountData(this.selectedFilter);
           this.searchDataGrid(this.searchText);
-        })
+        } else {
+          this.toastService.show(
+            'An error occurred while fetching service accounts.',
+            'Error',
+            ToastState.ERROR
+          );
+        }
+      })
     );
   }
 

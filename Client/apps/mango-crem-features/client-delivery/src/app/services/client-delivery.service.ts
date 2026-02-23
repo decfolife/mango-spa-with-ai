@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Optional } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { take, switchMap, map, catchError } from 'rxjs/operators';
 import {
   AuthService,
   EndpointService,
@@ -55,22 +56,17 @@ export class ClientDeliveryService extends EndpointService {
     return this.callHttpPost(url, 'AddServiceAccount', request);
   }
 
-  resetPassword(emailAddress: string): Observable<any> {
-    // //TODO: Integrate API call
-    // const url = `${environment.appUrls.clientDelivery}ResetPassword/${emailAddress}`;
-    // return this.callHttpPost(url, 'ResetPassword', {emailAddress})
-    let cKey: string;
-    this.facade.clientKey$.subscribe((clientKey) => {
-      cKey = clientKey;
-    });
-
-    const request = { email: emailAddress, clientKey: cKey };
-
-    this.authService.forceExpirePassword(request).subscribe(
-      () => this.sendRequestSuccess(),
-      (error) => this.sendRequestFailed(error)
+  resetPassword(emailAddress: string): Observable<boolean> {
+    return this.facade.clientKey$.pipe(
+      take(1),
+      switchMap((clientKey) => {
+        const request = { email: emailAddress, clientKey };
+        return this.authService.forceExpirePassword(request).pipe(
+          map(() => true),
+          catchError(() => of(false))
+        );
+      })
     );
-    return of(true);
   }
 
   private sendRequestSuccess() {

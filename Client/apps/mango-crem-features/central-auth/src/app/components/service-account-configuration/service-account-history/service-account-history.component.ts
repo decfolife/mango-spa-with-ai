@@ -47,16 +47,30 @@ export class ServiceAccountHistoryComponent implements OnDestroy {
 
   ngOnInit() {
     this.histories.forEach((e: any) => {
-      if (e.fieldName == 'EndPoint Access')
-        if (e.description.toLocaleLowerCase().startsWith('inbound_'))
-          e.description = e.description.replace('_', ' ');
-        else if (
-          !e.description
-            .toLocaleLowerCase()
-            .replace(/ /g, '')
-            .startsWith('userprovisioning')
-        )
-          e.description = 'OUTBOUND ' + e.description;
+      var endpoint = e.beforeChange != null ? e.beforeChange : e.afterChange;
+      e.fieldName = e.fieldName == 'API Access' ? 'Sites' : e.fieldName;
+
+      if (e.fieldName === 'ScopeName') {
+        e.fieldName = 'Endpoints';
+
+        e.description =
+          endpoint
+            .replace(/-inbound/, ' INBOUND')
+            .replace(/-outbound/, ' OUTBOUND')
+            .replace(/api./, '')
+            .replace(/-/g, ' ')
+            .replace(/(^|\s)\S/g, (match: any) => {
+              return match.toUpperCase();
+            }) + ' endpoint has been updated';
+
+        if (e.beforeChange != null) {
+          e.beforeChange = 'True';
+          e.afterChange = 'False';
+        } else {
+          e.beforeChange = 'False';
+          e.afterChange = 'True';
+        }
+      }
     });
   }
 
