@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../../mango/src/environments/environment.local';
 import { EndpointService, UtilitiesService } from '@mango/core-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { ServiceAccount } from '../../../../../../../libs/data-models/lib-data-models/src/lib/models/service-account/service-account';
@@ -44,19 +43,19 @@ export class UserMaintenanceService extends EndpointService {
   }
 
   syncOnPremToAWS(): Observable<any> {
-    const url = `${this.userMaintenanceUrl}ServiceAccount/SyncOnPremToAWS`;
+    const url = `${this.userMaintenanceUrl}ServiceAccounts/SyncOnPremToAWS`;
     return this.callHttpPost(url, 'SyncOnPremToAWS', {});
   }
 
   getLatestSyncInfo(): Observable<LatestSyncInfo> {
-    const url = `${this.userMaintenanceUrl}ServiceAccount/latestsyncinfo`;
+    const url = `${this.userMaintenanceUrl}ServiceAccounts/latestsyncinfo`;
     return this.callHttpGet(url, 'LastSyncInfo', {}).pipe(
       map((x) => x.data as LatestSyncInfo)
     );
   }
 
   getServiceAccounts(): Observable<ServiceAccount[]> {
-    const url = `${this.userMaintenanceUrl}ServiceAccount/ServiceAccounts`;
+    const url = `${this.userMaintenanceUrl}serviceaccounts`;
     return this.callHttpGet(url, 'GetServiceAccounts').pipe(
       map((x) => x.data as ServiceAccount[])
     );
@@ -65,7 +64,7 @@ export class UserMaintenanceService extends EndpointService {
   getServiceAccountChangeHistory(
     contactId: number
   ): Observable<ServiceAccountHistory[]> {
-    const url = `${this.userMaintenanceUrl}ServiceAccount/ServiceAccountHistory/${contactId}`;
+    const url = `${this.userMaintenanceUrl}serviceaccounts/${contactId}/history`;
     return this.callHttpGet(url, 'GetServiceAccountChangeHistory').pipe(
       map((x) => x.data as ServiceAccountHistory[])
     );

@@ -10,7 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { Observable, Subscription, of } from 'rxjs';
-import { filter, map, switchMap, delay } from 'rxjs/operators';
+import { filter, switchMap, delay } from 'rxjs/operators';
 import 'regenerator-runtime/runtime';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver-es';
@@ -27,7 +27,6 @@ import {
   ModalModule,
   SearchComponent,
 } from '@mango/ui-shared/lib-ui-elements';
-import { LatestSyncInfo } from 'libs/data-models/lib-data-models/src/lib/models/service-account/latest-sync-info.interface';
 import { CremPopoverComponent } from '@mango/ui-shared/lib-ui-elements';
 import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { ToastState } from '@mango/data-models/lib-data-models';
@@ -84,7 +83,7 @@ export class ServiceAccountsComponent implements OnDestroy {
       dataType: null,
     },
     {
-      dataField: 'clientId',
+      dataField: 'oAuthClientID',
       alignment: 'left',
       visible: true,
       dataType: null,
