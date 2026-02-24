@@ -117,6 +117,8 @@ export class AddEditTaskComponent implements OnInit {
   taskTargetEndDateFieldInvalid = false;
   dialogPassedInRef: MatDialogRef<AddEditTaskAssigneesComponent>;
 
+  readonly MAX_DESC_LEN = 2000;
+
   onApplyClick = new EventEmitter<number>();
 
   constructor(
@@ -364,29 +366,49 @@ export class AddEditTaskComponent implements OnInit {
     this.taskWorkflowStatusID = e.length ? e[0].workflowStatusID : null;
   }
 
-  validateAndSaveTask(saveOrApply) {
-    //validate required fields
+  validateAndSaveTask(saveOrApply: string): void {
     this.disableBtn = true;
+
+    // Validate required fields
     this.taskNameFieldInvalid = !this.taskNameTextBox.validate();
     this.taskTargetStartDateFieldInvalid =
       !this.targetStartDatePicker.validate();
     this.taskTargetEndDateFieldInvalid = !this.targetEndDatePicker.validate();
 
-    if (
+    const hasInvalidRequiredFields =
       this.taskNameFieldInvalid ||
       this.taskTargetStartDateFieldInvalid ||
-      this.taskTargetEndDateFieldInvalid
-    ) {
+      this.taskTargetEndDateFieldInvalid;
+
+    const isDescriptionTooLong =
+      (this.taskDescription?.length ?? 0) > this.MAX_DESC_LEN;
+
+    if (hasInvalidRequiredFields || isDescriptionTooLong) {
+      const errorMessages: string[] = [];
+
+      if (hasInvalidRequiredFields) {
+        errorMessages.push('You have left at least one required field empty.');
+      }
+
+      if (isDescriptionTooLong) {
+        errorMessages.push(
+          `The task description has exceeded the maximum character limit of ${this.MAX_DESC_LEN}.`
+        );
+      }
+
+      const bulletedErrors = errorMessages.map((msg) => `• ${msg}`).join('\n');
+
       this.dialogService.alert(
         'Validation Error(s)',
-        'You have left at least one required field empty.\r\n\r\nPlease update and try again.',
+        `${bulletedErrors}\n\nPlease update and try again.`,
         'OK'
       );
+
       this.disableBtn = false;
       return;
-    } else {
-      this.saveTask(saveOrApply);
     }
+
+    this.saveTask(saveOrApply);
   }
 
   saveTask(saveOrApply) {

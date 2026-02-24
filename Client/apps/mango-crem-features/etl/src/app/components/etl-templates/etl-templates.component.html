@@ -130,13 +130,12 @@
             <mat-menu #templatesMoreMenu="matMenu" class="templates-actions">
               <ul role="menu">
                 <li
-                  *ngIf="hasEditRights"
                   mat-menu-item
                   (keydown.space)="editTemplate(data)"
                   (keydown.enter)="editTemplate(data)"
                   (click)="editTemplate(data); $event.preventDefault()"
                 >
-                  Edit
+                  {{ data?.data?.canEdit ? 'Edit' : 'View' }}
                 </li>
                 <li
                   mat-menu-item
@@ -147,11 +146,19 @@
                   Download
                 </li>
                 <li
-                  *ngIf="hasEditRights"
                   mat-menu-item
                   (keydown.space)="deleteTemplate(data)"
                   (keydown.enter)="deleteTemplate(data)"
-                  (click)="deleteTemplate(data); $event.preventDefault()"
+                  [class]="{ disableTitle: !data?.data?.canEdit }"
+                  [ngStyle]="{
+                    cursor: data?.data?.canEdit ? 'pointer' : 'not-allowed',
+                    'pointer-events': data?.data?.canEdit ? 'auto' : 'none',
+                    opacity: data?.data?.canEdit ? 1 : 0.5
+                  }"
+                  (click)="
+                    data?.data?.canEdit && deleteTemplate(data);
+                    $event.preventDefault()
+                  "
                 >
                   Delete
                 </li>

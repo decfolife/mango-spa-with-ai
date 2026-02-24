@@ -297,7 +297,6 @@ export class EtlTemplatesComponent implements OnInit, OnDestroy {
               data.updateOnly = templateDetails.data.updateOnly;
               data.keyFieldDisplayName =
                 templateDetails.data.keyFieldDisplayName;
-              templateDetails.data.modifiedBy = e.data.modifiedBy;
               templateDetails.data.userID = e.data.userID;
               if (
                 templateDetails.data.templateTypeId === 0 &&

@@ -1460,20 +1460,19 @@ export class EtlTemplatesDetailsComponent implements OnInit, OnDestroy {
 
     this.dataRetrieved = false;
     this.templateForm.get('updateOnly').setValue(e.value);
+    const templateTypeIds = [
+      TemplateTypes.Financials,
+      TemplateTypes.Forms,
+      TemplateTypes.Options,
+      TemplateTypes.OptionCharges,
+      TemplateTypes.PortfolioAllocations,
+      TemplateTypes.DiscountRates,
+    ];
 
+    if (templateTypeIds.includes(this.templateDetails.templateTypeId)) {
+      this.loadKeyField();
+    }
     if (e.value) {
-      const templateTypeIds = [
-        TemplateTypes.Financials,
-        TemplateTypes.Forms,
-        TemplateTypes.Options,
-        TemplateTypes.OptionCharges,
-        TemplateTypes.PortfolioAllocations,
-        TemplateTypes.DiscountRates,
-      ];
-
-      if (templateTypeIds.includes(this.templateDetails.templateTypeId)) {
-        this.loadKeyField();
-      }
       this.templateForm.get('parentLookupValue').disable();
       this.loadGrid();
     } else {
@@ -1482,11 +1481,17 @@ export class EtlTemplatesDetailsComponent implements OnInit, OnDestroy {
           (field) => field.dataColumn === 'SourceImportID'
         );
         if (containsSourceImportID) {
+          this.templateForm.get('keyField').setValue('SourceImportID');
           this.templateForm.get('parentLookupValue').setValue('SourceImportID');
+        } else {
+          this.loadGrid();
         }
-        this.templateForm.get('parentLookupValue').enable();
+      } else {
+        this.templateForm.get('keyField').setValue('SourceImportID');
+        this.parentLookups = [];
+        this.templateForm.get('parentLookupValue').setValue('');
       }
-      this.loadGrid();
+      this.templateForm.get('parentLookupValue').enable();
     }
     this.isLoading = false;
   }

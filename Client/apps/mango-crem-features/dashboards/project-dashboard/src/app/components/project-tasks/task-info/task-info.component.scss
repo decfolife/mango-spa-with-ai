@@ -116,6 +116,10 @@
   line-height: 18px;
   word-break: break-all;
   white-space: pre-wrap;
+  min-height: 32px; // same as dx-text-area minHeight in add-edit-task.component.ts
+  max-height: 100px; // same as dx-text-area maxHeight in add-edit-task.component.ts
+  overflow-y: auto;
+  border: 1px solid $gray05;
 }
 
 .tin-morePadding {

@@ -67,6 +67,16 @@
     .dx-texteditor.dx-editor-outlined .dx-texteditor-input {
       max-height: none;
     }
+    .aet-character-counter {
+      text-align: right;
+      font-size: 12px;
+      color: $gray03;
+      margin-top: 4px;
+    }
+
+    .aet-character-limit-exceeded {
+      color: $danger;
+    }
   }
 }
 

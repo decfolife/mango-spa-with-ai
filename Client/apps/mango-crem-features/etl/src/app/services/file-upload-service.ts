@@ -1,23 +1,28 @@
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { EventEmitter, Injectable, Output } from '@angular/core';
-import { ETLService } from '@etl/services/etl.service';
-import { interval, Subject } from 'rxjs';
-import { switchMap, takeUntil, takeWhile } from 'rxjs/operators';
+import { from, interval, of, throwError } from 'rxjs';
+import {
+  catchError,
+  exhaustMap,
+  filter,
+  map,
+  mergeMap,
+  tap,
+  toArray,
+} from 'rxjs/operators';
 import {
   ETLDocImportLongProcess,
   ETLDocumentImportStatus,
 } from '@etl/model/document-import-enums';
+import { ETLService } from './etl.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FileUploadService {
   @Output() public onUploadFinished = new EventEmitter();
-  longProcessCompleted = false;
-  isDocumentImportFailed = false;
   uploadStatus = '';
   uploadProgress = 0;
-  stopSignal = new Subject<void>();
 
   constructor(private etlService: ETLService) {}
 
@@ -30,168 +35,200 @@ export class FileUploadService {
   }
 
   async uploadLoadChunkFileSequentially(file: File): Promise<boolean> {
-    const currentPromiseItems = await this.uploadChunkFiles(file);
-    let canMoveToNextSetp = true;
-
-    const processCompleted: number[] = [];
-    for (let i = 0; i < currentPromiseItems.length; i++) {
-      if (!canMoveToNextSetp) break;
-
-      await this.processChunkFileUploadSequentially(currentPromiseItems[i])
-        .then((results) => {
-          processCompleted.push(i);
-        })
-        .catch((err) => {
-          canMoveToNextSetp = false;
-        });
-    }
-
-    if (
-      canMoveToNextSetp &&
-      processCompleted.length == currentPromiseItems.length
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+    return this.uploadChunkFiles(file);
   }
 
-  async processChunkFileUploadSequentially(currentPromise: () => any) {
-    return await currentPromise();
-  }
-
-  uploadChunkFiles = async (file: File) => {
+  uploadChunkFiles = async (file: File): Promise<boolean> => {
     const filename = file.name;
-    const chunkSize: number = 10 * 1024 * 1024;
-    const totalChunks = Math.ceil(file.size / chunkSize);
-    let start = 0;
-    let chunkIndex = 0;
-    const arrPromiseFns = [];
+    const chunkSizeBytes = 10 * 1024 * 1024;
+    const totalChunks = Math.ceil(file.size / chunkSizeBytes);
+
+    this.uploadStatus = '';
+    this.uploadProgress = 0;
+
+    const loadedByChunk = new Map<number, number>();
+    const updateOverallProgress = () => {
+      let loadedTotal = 0;
+      for (const v of loadedByChunk.values()) loadedTotal += v;
+      this.uploadProgress = file.size
+        ? Math.round((100 * loadedTotal) / file.size)
+        : 100;
+    };
+
+    const buildChunk = (chunkIndex: number) => {
+      const start = chunkIndex * chunkSizeBytes;
+      const end = Math.min(start + chunkSizeBytes, file.size);
+      const chunkBlob = file.slice(start, end);
+      const chunkSize = end - start;
+
+      const formData = new FormData();
+      formData.append('chunkFile', chunkBlob, filename);
+      formData.append('chunkIndex', chunkIndex.toString());
+      formData.append('totalChunks', totalChunks.toString());
+      formData.append('fileName', filename);
+      formData.append('fileSize', file.size.toString());
+
+      return { formData, chunkIndex, chunkSize };
+    };
+
+    const uploadChunkIndex$ = (chunkIndex: number) => {
+      const { formData, chunkSize } = buildChunk(chunkIndex);
+
+      return from(this.etlService.chunkFileUpload(formData)).pipe(
+        mergeMap((http$) => http$),
+        tap((event: any) => {
+          if (!event) return;
+
+          if (event.type === HttpEventType.UploadProgress) {
+            const chunkLoaded = Math.min(event.loaded ?? 0, chunkSize);
+            loadedByChunk.set(chunkIndex, chunkLoaded);
+            updateOverallProgress();
+          }
+
+          if (event.type === HttpEventType.Response) {
+            loadedByChunk.set(chunkIndex, chunkSize);
+            updateOverallProgress();
+            this.onUploadFinished.emit(event.body);
+          }
+        }),
+        filter((event: any) => event?.type === HttpEventType.Response),
+        map(() => true),
+        catchError((err: HttpErrorResponse) => {
+          this.uploadStatus = `Error uploading file. Status: ${err.status} ${err.statusText} Message: ${err.message}`;
+          return throwError(err);
+        })
+      );
+    };
 
     try {
-      while (start < file.size) {
-        const chunk = file.slice(start, start + chunkSize);
-        const formData = new FormData();
-        formData.append('chunkFile', chunk, filename);
-        formData.append('chunkIndex', chunkIndex.toString());
-        formData.append('totalChunks', totalChunks.toString());
-        formData.append('fileName', filename);
-        formData.append('fileSize', file.size.toString());
-        this.onUploadFinished = new EventEmitter();
-        this.uploadProgress = 0;
-        const successmsg = `Successfully completed chunk ${chunkIndex.toString()} in array`;
-        arrPromiseFns.push(
-          () =>
-            new Promise<any>((resolve2) =>
-              setTimeout(async () => {
-                (await this.etlService.chunkFileUpload(formData)).subscribe({
-                  next: (event: {
-                    type: HttpEventType;
-                    loaded: number;
-                    total: number;
-                    body: { data: string };
-                  }) => {
-                    if (event) {
-                      if (event.type === HttpEventType.UploadProgress)
-                        this.uploadProgress = Math.round(
-                          (100 * event.loaded) / event.total
-                        );
-                      else if (event.type === HttpEventType.Response) {
-                        this.onUploadFinished.emit(event.body);
-                        resolve2(successmsg);
-                      }
-                    }
-                  },
-                  error: (err: HttpErrorResponse) => {
-                    this.uploadStatus = `Error uploading file. Status: ${err.status} ${err.statusText} 
-                          Message: ${err.message}`;
-                  },
-                  complete: () => {},
-                });
-              }, 1000)
-            )
-        );
-        (start += chunkSize), chunkIndex++;
+      const lastIndex = totalChunks - 1;
+
+      // Phase 1: upload 0..lastIndex-1 with 2 in parallel
+      if (lastIndex > 0) {
+        const indices = Array.from({ length: lastIndex }, (_, i) => i);
+
+        await from(indices)
+          .pipe(
+            mergeMap((i) => uploadChunkIndex$(i), 2),
+            toArray()
+          )
+          .toPromise();
       }
-      return arrPromiseFns;
-    } catch (error) {
-      console.log(error);
+
+      // Phase 2: upload last chunk by itself
+      if (lastIndex >= 0) {
+        await uploadChunkIndex$(lastIndex).toPromise();
+      }
+
+      this.uploadProgress = 100;
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  handleLongProcessPooling(processName: ETLDocImportLongProcess) {
-    let milliseconds: number = 0.01 * 60 * 1000;
+  isProcessCompleted(
+    statusId: ETLDocumentImportStatus,
+    processName: ETLDocImportLongProcess
+  ): boolean {
+    switch (processName) {
+      case ETLDocImportLongProcess.UPLOADEXTRACTFILES:
+        return (
+          statusId === ETLDocumentImportStatus.FILESEXTRACTED ||
+          statusId === ETLDocumentImportStatus.FILESVALIDATED
+        );
+      case ETLDocImportLongProcess.VALIDATEFILES:
+        return statusId === ETLDocumentImportStatus.FILESVALIDATED;
+      case ETLDocImportLongProcess.VALIDTEMPLATE:
+        return statusId === ETLDocumentImportStatus.TEMPLATEVALIDATED;
+      case ETLDocImportLongProcess.MAPTOOBJECTS:
+        return statusId === ETLDocumentImportStatus.PROCESSCOMPLETED;
+      default:
+        return false;
+    }
+  }
+
+  // Get the status that indicates the process failed and reverted to previous step
+  getPreviousStepStatus(
+    processName: ETLDocImportLongProcess
+  ): ETLDocumentImportStatus | null {
+    switch (processName) {
+      case ETLDocImportLongProcess.VALIDATEFILES:
+        return ETLDocumentImportStatus.FILESUPLOADED;
+      case ETLDocImportLongProcess.VALIDTEMPLATE:
+        return ETLDocumentImportStatus.FILESVALIDATED;
+      case ETLDocImportLongProcess.MAPTOOBJECTS:
+        return ETLDocumentImportStatus.TEMPLATEVALIDATED;
+      default:
+        // ETLDocImportLongProcess.UPLOADEXTRACTFILES does not have a previous step.
+        // If it errors out, it will be set to NOTSTARTED which is handled separately in handleLongProcessPolling
+        return null;
+    }
+  }
+
+  handleLongProcessPolling(processName: ETLDocImportLongProcess) {
+    const milliseconds = 1000 * 2; // Poll for status every 2 seconds
+
+    const previousStepStatus = this.getPreviousStepStatus(processName);
+
     return new Promise<ETLDocumentImportStatus>((resolve, reject) => {
-      interval(milliseconds)
+      const subscription = interval(milliseconds)
         .pipe(
-          switchMap(() => this.etlService.getDocumentImportStatus()),
-          takeWhile((response: { success: boolean; data: any }) => {
-            milliseconds = 0.5 * 60 * 1000;
-            switch (processName) {
-              case ETLDocImportLongProcess.UPLOADEXTRACTFILES:
-                return (
-                  response.data.StatusId !==
-                  ETLDocumentImportStatus.FILESEXTRACTED &&                   
-                  response.data.StatusId !==
-                  ETLDocumentImportStatus.FILESVALIDATED
-                );
-              case ETLDocImportLongProcess.VALIDATEFILES:
-                return (
-                  response.data.StatusId !==
-                  ETLDocumentImportStatus.FILESVALIDATED
-                );
-              case ETLDocImportLongProcess.VALIDTEMPLATE:
-                return (
-                  response.data.StatusId !==
-                  ETLDocumentImportStatus.TEMPLATEVALIDATED
-                );
-              case ETLDocImportLongProcess.MAPTOOBJECTS:
-                return (
-                  response.data.StatusId !==
-                  ETLDocumentImportStatus.PROCESSCOMPLETED
-                );
-            }
-          }, true),
-          takeUntil(this.stopSignal)
+          // ExhaustMap ensures only one inner observable is active at a time
+          // Ex: Polling every 2 seconds but a request is taking longer than 2 seconds,
+          // wait until that request completes before sending another. In other words,
+          // poll at most every two seconds.
+          exhaustMap(() =>
+            this.etlService.getDocumentImportStatus().pipe(
+              catchError((err) => {
+                console.warn('[Polling] API error, will retry:', err);
+                return of(null);
+              })
+            )
+          )
         )
         .subscribe({
           next: (response) => {
-            let processCompleted = false;
-            switch (processName) {
-              case ETLDocImportLongProcess.UPLOADEXTRACTFILES:
-                processCompleted =
-                  response.data.StatusId ===
-                  ETLDocumentImportStatus.FILESEXTRACTED ||
-                  response.data.StatusId ===
-                  ETLDocumentImportStatus.FILESVALIDATED;
-                break;
-              case ETLDocImportLongProcess.VALIDATEFILES:
-                processCompleted =
-                  response.data.StatusId ===
-                  ETLDocumentImportStatus.FILESVALIDATED;
-                break;
-              case ETLDocImportLongProcess.VALIDTEMPLATE:
-                processCompleted =
-                  response.data.StatusId ===
-                  ETLDocumentImportStatus.TEMPLATEVALIDATED;
-                break;
-              case ETLDocImportLongProcess.MAPTOOBJECTS:
-                processCompleted =
-                  response.data.StatusId ===
-                  ETLDocumentImportStatus.PROCESSCOMPLETED;
-                break;
+            const resp = response as { success: boolean; data: any } | null;
+            // Skip invalid responses (but allow StatusId 0)
+            if (
+              !resp?.data ||
+              (resp.data.StatusId === undefined && resp.data.StatusId !== 0)
+            ) {
+              return;
             }
-            if (processCompleted) {
-              this.longProcessCompleted = true;
-              this.stopSignal.next();
-              this.stopSignal.complete();
-              return resolve(response.data.StatusId);
+
+            const statusId: ETLDocumentImportStatus = resp.data.StatusId;
+
+            // Check if process was cancelled
+            if (statusId === ETLDocumentImportStatus.NOTSTARTED) {
+              console.warn('[Polling] Process Cancelled');
+              subscription.unsubscribe();
+              reject('Process Cancelled');
+              return;
+            }
+
+            // Check if the process was set back to the last good step
+            if (previousStepStatus && statusId <= previousStepStatus) {
+              subscription.unsubscribe();
+              console.error(
+                '[Polling] Process Cancelled or Reverted',
+                statusId,
+                previousStepStatus
+              );
+              reject('Process Cancelled or Reverted');
+              return;
+            }
+
+            if (this.isProcessCompleted(statusId, processName)) {
+              subscription.unsubscribe();
+              resolve(statusId);
             }
           },
-          complete: () => {
-            //console.log('interval Observable completed')
+          error: (err) => {
+            console.error('[Polling] Error:', err);
+            reject(`Error occurred. - ${err}`);
           },
-          error: (err) => reject(`Error occurred. - ${err}`),
         });
     });
   }

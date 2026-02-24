@@ -379,6 +379,7 @@
       <h4 class="aet-description-label label">Description</h4>
       <dx-text-area
         [(value)]="taskDescription"
+        [valueChangeEvent]="'input'"
         [minHeight]="32"
         [maxHeight]="100"
         [autoResizeEnabled]="true"
@@ -388,6 +389,14 @@
         }"
       >
       </dx-text-area>
+      <div
+        class="aet-character-counter"
+        [ngClass]="{
+          'aet-character-limit-exceeded': taskDescription?.length > MAX_DESC_LEN
+        }"
+      >
+        {{ taskDescription?.length || 0 }} / {{ MAX_DESC_LEN }}
+      </div>
     </div>
 
     <ng-template #NotApplicableSpan>

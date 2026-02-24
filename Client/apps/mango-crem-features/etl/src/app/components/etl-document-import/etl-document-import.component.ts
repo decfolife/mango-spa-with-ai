@@ -91,7 +91,11 @@ export class EtlDocumentImportComponent {
   msgInvalidTemplate =
     'Template is not valid, please verify you are loading the Document Mapping template.';
   msgErrorMapDocumentToObject =
-    'Error occured when mapping document to object.';
+    'Error occurred when mapping document to object.';
+  msgErrorValidateTemplate = 'Error occurred when validating template.';
+  msgErrorUploadExtractFiles =
+    'Error occurred when uploading or extracting files.';
+  msgErrorValidateFiles = 'Error occurred when validating files.';
   msgSuccess = 'Document Import Completed Successfully';
   msgNoFiles = 'No files found in sFTP site';
 
@@ -388,79 +392,102 @@ export class EtlDocumentImportComponent {
   }
 
   private waitTillTemplateValidated() {
-    const validateTemplatePoolingResult =
-      this.fileUploadService.handleLongProcessPooling(
-        ETLDocImportLongProcess.VALIDTEMPLATE
-      );
-
-    validateTemplatePoolingResult.then((fileReadyStatus) => {
-      if (
-        this.fileUploadService.longProcessCompleted &&
-        fileReadyStatus == ETLDocumentImportStatus.TEMPLATEVALIDATED
-      ) {
-        this.templateValidating = false;
-        this.isTemplateValid = true;
-        this.templateValidationCompleted = true;
-        this.getTemplateValidationResults();
-      } else if (this.fileUploadService.isDocumentImportFailed) {
-        this.uploadStatus = fileReadyStatus.toString();
-      }
-    });
+    this.fileUploadService
+      .handleLongProcessPolling(ETLDocImportLongProcess.VALIDTEMPLATE)
+      .then((status) => {
+        if (status === ETLDocumentImportStatus.TEMPLATEVALIDATED) {
+          this.templateValidating = false;
+          this.isTemplateValid = true;
+          this.templateValidationCompleted = true;
+          this.getTemplateValidationResults();
+        }
+      })
+      .catch(() => {
+        this.toastService.show(
+          this.msgErrorValidateTemplate,
+          '',
+          ToastState.ERROR,
+          {
+            maxWidth: this.toastMaxWidth,
+            duration: this.toastDuration,
+          }
+        );
+        this.refreshPage();
+      });
   }
 
   private waitTillFilesValidated() {
-    const uploadExtractFilePoolresults =
-      this.fileUploadService.handleLongProcessPooling(
-        ETLDocImportLongProcess.UPLOADEXTRACTFILES
-      );
+    this.fileUploadService
+      .handleLongProcessPolling(ETLDocImportLongProcess.UPLOADEXTRACTFILES)
+      .then((status) => {
+        // If already validated, skip to showing results
+        if (status === ETLDocumentImportStatus.FILESVALIDATED) {
+          this.showFilesValidatinResult();
+          return;
+        }
 
-    uploadExtractFilePoolresults.then((fileReadyStatus) => {
-      if (
-        this.fileUploadService.longProcessCompleted &&
-        fileReadyStatus == ETLDocumentImportStatus.FILESEXTRACTED
-      ) {
-        this.displayFileValidatingMsg();
-        const validateFilesPoolResults =
-          this.fileUploadService.handleLongProcessPooling(
-            ETLDocImportLongProcess.VALIDATEFILES
-          );
-
-        validateFilesPoolResults.then((fileReadyStatus) => {
-          if (
-            this.fileUploadService.longProcessCompleted &&
-            fileReadyStatus == ETLDocumentImportStatus.FILESVALIDATED
-          ) {
-            this.showFilesValidatinResult();
-          } else if (this.fileUploadService.isDocumentImportFailed) {
-            this.uploadStatus = fileReadyStatus.toString();
+        if (status === ETLDocumentImportStatus.FILESEXTRACTED) {
+          this.displayFileValidatingMsg();
+          this.fileUploadService
+            .handleLongProcessPolling(ETLDocImportLongProcess.VALIDATEFILES)
+            .then((validateStatus) => {
+              if (validateStatus === ETLDocumentImportStatus.FILESVALIDATED) {
+                this.showFilesValidatinResult();
+              }
+            })
+            .catch(() => {
+              this.toastService.show(
+                this.msgErrorValidateFiles,
+                '',
+                ToastState.ERROR,
+                {
+                  maxWidth: this.toastMaxWidth,
+                  duration: this.toastDuration,
+                }
+              );
+              this.refreshPage();
+            });
+        }
+      })
+      .catch(() => {
+        this.toastService.show(
+          this.msgErrorUploadExtractFiles,
+          '',
+          ToastState.ERROR,
+          {
+            maxWidth: this.toastMaxWidth,
+            duration: this.toastDuration,
           }
-        });
-      } else if (this.fileUploadService.isDocumentImportFailed) {
-        this.uploadStatus = fileReadyStatus.toString();
-      }
-    });
+        );
+        this.refreshPage();
+      });
   }
 
   private waitTillMapToObjectsCompleted() {
-    const mapToObjectsPoolingResults =
-      this.fileUploadService.handleLongProcessPooling(
-        ETLDocImportLongProcess.MAPTOOBJECTS
-      );
-
-    mapToObjectsPoolingResults.then((fileReadyStatus) => {
-      if (
-        this.fileUploadService.longProcessCompleted &&
-        fileReadyStatus == ETLDocumentImportStatus.PROCESSCOMPLETED
-      ) {
-        this.executingCompleted = true;
-
-        this.toastService.show(this.msgSuccess, '', ToastState.SUCCESS, {
-          maxWidth: this.toastMaxWidth,
-          duration: this.toastDuration,
-        });
+    this.fileUploadService
+      .handleLongProcessPolling(ETLDocImportLongProcess.MAPTOOBJECTS)
+      .then((status) => {
+        if (status === ETLDocumentImportStatus.PROCESSCOMPLETED) {
+          this.executingCompleted = true;
+          this.toastService.show(this.msgSuccess, '', ToastState.SUCCESS, {
+            maxWidth: this.toastMaxWidth,
+            duration: this.toastDuration,
+          });
+          this.refreshPage();
+        }
+      })
+      .catch(() => {
+        this.toastService.show(
+          this.msgErrorMapDocumentToObject,
+          '',
+          ToastState.ERROR,
+          {
+            maxWidth: this.toastMaxWidth,
+            duration: this.toastDuration,
+          }
+        );
         this.refreshPage();
-      }
-    });
+      });
   }
 
   private refreshFileUploader(): void {

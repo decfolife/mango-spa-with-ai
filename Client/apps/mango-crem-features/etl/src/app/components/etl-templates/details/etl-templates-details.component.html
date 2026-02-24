@@ -37,7 +37,7 @@
               (click)="onCancel(); $event.preventDefault()"
               [id]="etlService.getId(componentName, 'cancel', 'button')"
             >
-              <span>Cancel</span>
+              <span> {{ templateDetails.canEdit ? 'Cancel' : 'Back' }}</span>
             </crem-button>
           </div>
           <div class="more" *ngIf="!templateForm.get('isLocked').value">
@@ -47,7 +47,8 @@
                 !templateForm.valid ||
                 templateForm.pristine ||
                 !dataRetrieved ||
-                isSaving
+                isSaving ||
+                !templateDetails.canEdit
               "
               [id]="etlService.getId(componentName, 'apply', 'button')"
               (click)="onSave(true); $event.preventDefault()"
@@ -62,7 +63,8 @@
                 !templateForm.valid ||
                 templateForm.pristine ||
                 !dataRetrieved ||
-                isSaving
+                isSaving ||
+                !templateDetails.canEdit
               "
               [id]="etlService.getId(componentName, 'save', 'button')"
               (click)="onSave(false); $event.preventDefault()"
