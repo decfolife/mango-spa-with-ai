@@ -165,7 +165,11 @@ export class DynamicFormLeaseVerificationComponent
         )
         .subscribe((res: ApiResponse) => {
           if (res && res.success) {
+            // API returns array of available workflow status options
             this.workFlowStatus = res.data;
+            this.selectedWorkflowStatus = res.data.filter(
+              (wf) => wf.isSelectedStep == 1
+            )[0].wfsID;
           } else {
             this.toastService.show(
               'An error occurred. If the problem persists, please contact support.',
@@ -188,7 +192,7 @@ export class DynamicFormLeaseVerificationComponent
           this.data.formId,
           this.data.objectId,
           this.data.objectTypeId,
-          this.selectedWorkflowStatus
+          this.data.objectTypeTypeId
         )
         .subscribe((res: ApiResponse) => {
           if (res && res.success) {

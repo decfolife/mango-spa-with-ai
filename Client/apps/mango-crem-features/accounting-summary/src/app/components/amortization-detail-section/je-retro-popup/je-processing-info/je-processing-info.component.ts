@@ -236,6 +236,12 @@ export class JeProcessingInfoComponent
         }
         break;
     }
+
+    if (!this.jeProcessingPopupData.allowJEProcessing) {
+      this.isButtonDisabled = true;
+      this.disableBtnReason =
+        'This action cannot take place because JE processing is not allowed for this period';
+    }
   }
 
   actionButton() {

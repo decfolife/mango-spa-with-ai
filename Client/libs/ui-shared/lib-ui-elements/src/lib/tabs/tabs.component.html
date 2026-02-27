@@ -1,5 +1,6 @@
-<ul class="tabs-nav">
+<ul class="tabs-nav" role="tablist">
   <li
+    role="tab"
     tabindex="0"
     class="tab-item__link"
     *ngFor="let tab of tabs"
@@ -8,6 +9,8 @@
     [class.active]="tab.active"
     [class.disabled]="tab.disabled"
     [attr.id]="tab.id || null"
+    [attr.aria-selected]="tab.active"
+    [attr.aria-controls]="'tabpanel-' + (tab.id || i)"
   >
     <a>{{ tab.title }}</a>
   </li>

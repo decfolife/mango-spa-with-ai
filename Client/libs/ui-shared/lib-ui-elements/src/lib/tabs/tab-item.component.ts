@@ -13,7 +13,15 @@ import { Component, Input } from '@angular/core';
   selector: 'crem-tab-item',
   imports: [CommonModule],
   template: `
-    <div *ngIf="active" class="tab-content" [ngStyle]="{ height: height }">
+    <div
+      *ngIf="active"
+      class="tab-content"
+      role="tabpanel"
+      tabindex="0"
+      [attr.id]="'tabpanel-' + id"
+      [attr.aria-labelledby]="id"
+      [ngStyle]="{ height: height }"
+    >
       <ng-content></ng-content>
     </div>
   `,
@@ -27,8 +35,8 @@ import { Component, Input } from '@angular/core';
       ),
       transition('* => enter', [
         style({
-          display: 'block',
           opacity: 0,
+          display: 'block',
         }),
         animate('0.3s'),
       ]),

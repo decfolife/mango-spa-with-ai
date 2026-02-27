@@ -10,6 +10,7 @@ import {
   LoaderModule,
   ModalModule,
   CremEmptyStateComponent,
+  CardModule,
 } from '@mango/ui-shared/lib-ui-elements';
 import { MatDividerModule } from '@angular/material/divider';
 
@@ -27,6 +28,7 @@ import { MatDividerModule } from '@angular/material/divider';
     CremTabItemComponent,
     CremEmptyStateComponent,
     SkeletonModule,
+    CardModule,
   ],
 })
 export class IndexModule {}

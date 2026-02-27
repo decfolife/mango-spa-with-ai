@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
-
+import { IconModule } from '../icon';
 export interface CustomEmptyStateTexts {
   title: string;
   subTitle: string;
@@ -15,7 +15,15 @@ export interface CustomEmptyStateTexts {
       <h2 class="h2 color-gray02">
         {{ customTexts?.title }}
       </h2>
+      <crem-icon
+        *ngIf="type === 'Error occurred'"
+        class="fa-lg"
+        size="10x"
+        [color]="color"
+        icon="faExclamationTriangle"
+      ></crem-icon>
       <img
+        *ngIf="type !== 'Error occurred'"
         [src]="imageSrc || './assets/empty-state/not-found.jpg'"
         [attr.alt]="customTexts?.imgAlt || 'No results found'"
         class="main-image"
@@ -25,7 +33,7 @@ export interface CustomEmptyStateTexts {
       </p>
     </div>
   `,
-  imports: [CommonModule],
+  imports: [CommonModule, IconModule],
   styleUrls: ['./empty-state.component.scss'],
 })
 export class CremEmptyStateComponent implements OnInit {
@@ -33,13 +41,19 @@ export class CremEmptyStateComponent implements OnInit {
     | 'Object not found'
     | 'No Results'
     | 'Unauthorized'
-    | 'Forbidden';
+    | 'Forbidden'
+    | 'Error occurred';
   @Input() customTexts?: CustomEmptyStateTexts;
   @Input() imageSrc?: string;
+  @Input() color?: string; // only used for error icon color
 
   ngOnInit() {
     if (!this.type) {
       this.type = 'Object not found'; // Default type
+    }
+
+    if (!this.color) {
+      this.color = 'dark'; // Default color
     }
 
     switch (this.type) {
@@ -48,6 +62,15 @@ export class CremEmptyStateComponent implements OnInit {
           title: 'Object Not Found',
           subTitle: 'We couldn’t find the object you were looking for.',
           imgAlt: 'No object found',
+        };
+        break;
+      }
+      case 'Error occurred': {
+        this.customTexts = this.customTexts || {
+          title: 'An Error Occurred',
+          subTitle:
+            'Something went wrong. Please try again later or contact support.',
+          imgAlt: 'Unauthorized',
         };
         break;
       }

@@ -147,7 +147,7 @@
           [id]="accountingSummaryService.getId(componentName, 'add', 'button')"
           type="primary"
           (click)="addEvent($event)"
-          [disabled]="isAddButtonDisabled"
+          [disabled]="isAddButtonDisabled || summaryServiceLock"
           (mouseenter)="onMouseEnter()"
           (mouseleave)="onMouseLeave()"
           >Add

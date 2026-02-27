@@ -11,6 +11,45 @@
   (dragEndAction)="getDragPosition($event)"
 >
   <div modalContent id="addTaskNoteModal-content">
+    <div *ngIf="notesList.length > 0" class="previous-notes">
+      <span class="notes-header">Previous Notes</span>
+      <button
+        *ngIf="notesList.length > 1"
+        type="button"
+        class="clickable"
+        [attr.aria-expanded]="showAll"
+        (click)="showAll = !showAll"
+      >
+        Show {{ showAll ? 'fewer' : 'more' }}
+      </button>
+      <div *ngIf="!showAll" class="previous-note">
+        <strong
+          >{{ notesList[0].commonNoteCreatorName
+          }}{{ notesList[0].creator }}</strong
+        >
+        | {{ notesList[0].commonNoteType }} |
+        <ng-container *ngIf="notesList[0].commonNoteDateCreated">
+          {{ formatRelativeTime(notesList[0].commonNoteDateCreated) }}
+        </ng-container>
+        | {{ notesList[0].commonNoteDateCreated | date }} |
+        <div class="note-content">
+          {{ convertBRToCarriageReturns(notesList[0].note) }}
+        </div>
+      </div>
+      <div *ngIf="showAll">
+        <div *ngFor="let note of notesList" class="note-header">
+          <strong>{{ note.commonNoteCreatorName }}{{ note.creator }}</strong> |
+          {{ note.commonNoteType }} |
+          <ng-container *ngIf="notesList[0].commonNoteDateCreated">
+            {{ formatRelativeTime(note.commonNoteDateCreated) }}
+          </ng-container>
+          | {{ note.commonNoteDateCreated | date }}:
+          <div class="note-content">
+            {{ convertBRToCarriageReturns(note.note) }}
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="div-noteTypeDropdown">
       <crem-input-label
         id="noteTypeDropdownLabel"
@@ -47,7 +86,7 @@
       <dx-text-area
         id="noteTextArea"
         [value]="commonNoteText"
-        [height]="382"
+        [height]="notesList.length > 0 ? 160 : 380"
         [maxLength]="maxCommonNoteTextLength"
         [inputAttr]="{
           'aria-label': 'Add Note Text',

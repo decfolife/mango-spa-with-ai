@@ -12,6 +12,7 @@ import {
   SelectedTab,
 } from '@mango/ui-shared/lib-ui-elements';
 import { ToastState } from '@mango/data-models/lib-data-models';
+import { ContentReadyEvent, RowClickEvent } from 'devextreme/ui/data_grid';
 
 @Component({
   selector: 'mango-quick-search',
@@ -27,6 +28,8 @@ export class IndexComponent implements OnInit {
   private _skeletonInstances = 1;
   flikeclause: string;
   fmodule: number;
+  emptyState = false;
+  emptyType = 'Object not found';
 
   constructor(
     private router: Router,
@@ -55,9 +58,14 @@ export class IndexComponent implements OnInit {
         } else {
           this.searchResults = [];
           this.loading = false;
+          this.emptyState = true;
         }
       },
       (error: any) => {
+        this.searchResults = [];
+        this.loading = false;
+        this.emptyState = true;
+        this.emptyType = 'Error occurred';
         const message = 'Error occurred while getting Quick Search Results ';
         console.error('An error occurred: ', message, error);
         this._toaster.show(
@@ -73,7 +81,7 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  contentReady(event: any) {
+  contentReady(event: ContentReadyEvent) {
     if (event.component.columnOption('OID', 'visible')) {
       event.component.columnOption('OID', 'visible', false);
     }
@@ -84,21 +92,38 @@ export class IndexComponent implements OnInit {
   }
 
   getSearchResultsData(flikeclause: string, objectId: number) {
+    this.emptyState = false;
+    this.emptyType = 'Object not found';
     this.quickSearchService
       .getQuickSearchResults(flikeclause, objectId)
       .subscribe(
         (res: any) => {
           if (res.success) {
-            if (res.data.listOfSearchResults.length) {
-              this.searchResults = res.data.listOfSearchResults.filter(
-                (object) => object.results.length
-              );
-              this.loading = false;
+            if (res.data.listOfSearchResults.length > 0) {
+              this.searchResults =
+                res.data.listOfSearchResults.filter(
+                  (object) => object.results.length
+                ) ?? [];
+              this.emptyState = this.searchResults.length === 0;
+            } else {
+              this.searchResults = [];
+              this.emptyState = true;
+              this.emptyType = 'Error occurred';
             }
+            this.loading = false;
+          } else {
+            this.searchResults = [];
+            this.emptyState = true;
+            this.emptyType = 'Error occurred';
+            this.loading = false;
           }
         },
 
         (error: any) => {
+          this.searchResults = [];
+          this.emptyState = true;
+          this.emptyType = 'Error occurred';
+          this.loading = false;
           const message = 'Error occurred while getting Quick Search Results ';
           console.error('An error occurred: ', message, error);
           this._toaster.show(
@@ -114,18 +139,41 @@ export class IndexComponent implements OnInit {
       );
   }
 
-  onRowClick(event: any) {
-    const res = this.searchResults.filter((searchResult) => {
-      if (searchResult.objectTypeType === this.selectedTab.title) return true;
-    });
+  onRowClick(event: RowClickEvent): void {
+    const rowData = event.data;
+    let objectResult: quickSearchResults | undefined;
 
-    const otid = parseInt(res[0].objectTypeId);
-    this.router.navigate(['/v06/Forms/RenderForm.aspx'], {
-      queryParams: { oid: event.data.OID, otid: otid, ottid: event.data.OTID },
-    });
+    // If selected tab is not "All", use the tab to find the object type
+    if (this.selectedTab && this.selectedTab.title !== 'All') {
+      objectResult = this.searchResults.find(
+        (searchResult) => searchResult.objectTypeType === this.selectedTab.title
+      );
+    } else {
+      objectResult = this.searchResults.find((result) =>
+        result.results.some((item) => item === rowData)
+      );
+    }
+
+    if (objectResult) {
+      const otid = +objectResult.objectTypeId;
+      this.router.navigate(['/v06/Forms/RenderForm.aspx'], {
+        queryParams: {
+          oid: rowData.OID,
+          otid: otid,
+          ottid: rowData.OTID,
+        },
+      });
+    }
   }
 
   onSelectedTabChange(e: SelectedTab) {
     this.selectedTab = e;
+  }
+
+  scrollToSection(elementId: string): void {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 }

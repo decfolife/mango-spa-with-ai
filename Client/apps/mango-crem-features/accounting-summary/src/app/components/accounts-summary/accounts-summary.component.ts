@@ -50,13 +50,23 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
   sendToExcelClicked = false;
   accountingEventSelector: AccountingEventSelector;
   leaseRecognitionScheduleIDs: number[];
+  summaryServiceLock = false;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
     public router: Router,
     private activatedRoute: ActivatedRoute,
     public addEditScheduleService: AddEditScheduleService
-  ) {}
+  ) {
+    this.subscription.add(
+      this.accountingSummaryService.lockAddButton.subscribe((lockAddButton) => {
+        this.summaryServiceLock = lockAddButton;
+        this.disableBtnReason = this.summaryServiceLock
+          ? 'Accounting Event modification in progress.'
+          : this.disableBtnReason;
+      })
+    );
+  }
 
   ngOnInit(): void {
     this.getUserInfo();

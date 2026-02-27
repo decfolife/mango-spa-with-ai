@@ -32,3 +32,21 @@
 .note-body-container {
   @include costar(padding-top, 5);
 }
+
+.notes-header {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.previous-notes {
+  height: 200px;
+  overflow: auto;
+}
+
+.clickable {
+  color: #0559b3;
+  font-weight: 400;
+  @include costar(margin-left, 4);
+  background: none;
+  border: none;
+}

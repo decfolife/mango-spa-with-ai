@@ -142,6 +142,7 @@ export class NotesListComponent implements OnInit, OnDestroy {
       dragPosition: this.dragPosition,
       objectId: this.objectId,
       objectTypeId: this.objectTypeId,
+      includeNoteHistory: false,
     };
     this.addupdateOpenDialog(dataToAddNote);
   }

@@ -66,7 +66,7 @@ import CheckBox from 'devextreme/ui/check_box';
 import { ExportDevexDatagridService } from '@mango/core-shared';
 import { AddCompanyModalComponent } from '@mango/ui-shared/lib-ui-shared';
 import { AddContactModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-contact-modal/add-contact-modal.component';
-import { ObjectType, RequestType } from '@mango/data-models/lib-data-models';
+import { ObjectType } from '@mango/data-models/lib-data-models';
 import { AddNoteComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-note/add-note.component';
 
 type VBBool = boolean | string;
@@ -282,7 +282,6 @@ export class ListPageComponent implements OnInit, OnDestroy {
   private _showDeleteButton = true;
   private _showHeaderFilter = true;
 
-  private hasListener = false;
   private unmodifiedOriginalListView: ListView = null;
   public initializingApplication = true;
   private isCurrentViewRemoved = false;
@@ -1132,9 +1131,14 @@ export class ListPageComponent implements OnInit, OnDestroy {
     this.isButtonClick = true;
     const objectId = cellNav?.objectId;
     const objectTypeId = cellNav?.objectTypeId;
+    const objectTypeTypeId = cellNav?.objectTypeTypeId;
+    let noteTypeId = null;
+    if (cellNav?.urlLink?.includes('isNoteType=')) {
+      noteTypeId = cellNav.urlLink.split('isNoteType=')[1].split('&')[0];
+    }
     if (cellNav.fieldType === FieldType.PopupWindow) {
       this.saveStateToSession();
-      this.openNotesModal(objectId, objectTypeId);
+      this.openNotesModal(objectId, objectTypeId, objectTypeTypeId, noteTypeId);
       return;
     }
 
@@ -1584,12 +1588,14 @@ export class ListPageComponent implements OnInit, OnDestroy {
         const closeButton =
           choosers[i].getElementsByClassName('dx-closebutton')[0];
 
-        if (closeButton && !this.hasListener) {
-          closeButton.addEventListener('click', () => {
-            this.columnChooserClosed();
-          });
-
-          this.hasListener = true;
+        if (closeButton) {
+          closeButton.addEventListener(
+            'click',
+            () => {
+              this.columnChooserClosed();
+            },
+            { once: true }
+          );
         }
       }
     }, 100);
@@ -2963,10 +2969,12 @@ export class ListPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  openNotesModal(objectId, objectTypeId) {
+  openNotesModal(objectId, objectTypeId, objectTypeTypeId, noteTypeId) {
     const dataForNote = {
       objectId: objectId,
       objectTypeId: objectTypeId,
+      objectTypeTypeID: objectTypeTypeId,
+      noteTypeId: noteTypeId,
     };
 
     const dialogRef = this.dialog.open(AddNoteComponent, {

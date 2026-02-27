@@ -1,4 +1,11 @@
-import { Component, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  Inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   ButtonModule,
@@ -9,6 +16,7 @@ import {
   ModalModule,
 } from '@mango/ui-shared/lib-ui-elements';
 import { NotesService } from '@reminders-list/shared/services/notes.service';
+import { NotesService as ListNoteService } from 'apps/mango-crem-features/list-pages/src/app/components/listpage/notes/notes.service';
 import { MangoDialogService } from 'libs/core-shared/src/lib/services/mango-dialog.service';
 import { Observable, Subscription, of } from 'rxjs';
 import {
@@ -23,6 +31,8 @@ import { CommonModule } from '@angular/common';
 import { DashboardService } from '@project-dashboard/services/dashboard.service';
 import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { ToastState } from '@mango/data-models/lib-data-models';
+import { formatDistanceToNow } from 'date-fns';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'mango-add-note',
@@ -41,7 +51,7 @@ import { ToastState } from '@mango/data-models/lib-data-models';
     ModalModule,
     InputHintComponent,
   ],
-  providers: [NotesService],
+  providers: [NotesService, ListNoteService],
 })
 export class AddNoteComponent implements OnInit, OnDestroy {
   @ViewChild('NoteTypeDropdown') cremDropdown: DropdownComponent;
@@ -52,6 +62,8 @@ export class AddNoteComponent implements OnInit, OnDestroy {
   modalId: 'addNoteModal';
   subs: Subscription[] = [];
   noteTypesList: any[] = [];
+  notesList: any[] = [];
+  showAll = false;
   selectedNoteTypeId: number;
   commonNoteText: string;
   characterCountText: string;
@@ -64,34 +76,53 @@ export class AddNoteComponent implements OnInit, OnDestroy {
   addNoteResult: any;
   disableSaveBtn = false;
   isInEditMode = false;
+  includeNoteHistory: boolean = null;
+  noteTypeFilter = null;
   private noteId: number;
   private objectId: number;
   private objectTypeId: number;
+  private objectTypeTypeID: number;
   private editNoteNoteTypeid: number;
 
   constructor(
     private notesService: NotesService,
+    private listNotesService: ListNoteService,
     private dashboardService: DashboardService,
     private dialogService: MangoDialogService,
     public dialogRef: MatDialogRef<AddNoteComponent>,
     private toastService: CremToastService,
+    private router: Router,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.noteId = data.noteId;
     this.dragPosition = data.dragPosition;
     this.objectId = data.objectId;
     this.objectTypeId = data.objectTypeId;
+    this.objectTypeTypeID = data?.objectTypeTypeID || 0;
+    this.noteTypeFilter = data?.noteTypeId || 0;
     this.commonNoteText = data?.commonNoteText;
     this.editNoteNoteTypeid = data?.selectedNoteTypeId;
+    this.includeNoteHistory = data?.includeNoteHistory;
   }
 
   ngOnInit() {
+    console.log('ActivatedRoute', this.router.url);
     this.setTitle();
     this.updateAddNoteResult();
     this.getCommonNoteTypes();
     this.setCharacterCountText();
     if (this.noteId > 0) {
       this.isInEditMode = true;
+    }
+    if (
+      this.includeNoteHistory === undefined ||
+      this.includeNoteHistory === null
+    ) {
+      if (!this.isInEditMode) {
+        this.getNoteHistory();
+      }
+    } else if (this.includeNoteHistory) {
+      this.getNoteHistory();
     }
   }
 
@@ -129,6 +160,15 @@ export class AddNoteComponent implements OnInit, OnDestroy {
     this.characterCountText = `${
       this.maxCommonNoteTextLength - textLength
     } characters remaining`;
+  }
+
+  formatRelativeTime(date: string | Date): string {
+    if (!date) return '';
+    try {
+      return formatDistanceToNow(new Date(date), { addSuffix: true });
+    } catch {
+      return '';
+    }
   }
 
   saveNote() {
@@ -199,6 +239,10 @@ export class AddNoteComponent implements OnInit, OnDestroy {
     this.selectedNoteTypeId = e[0].commonNoteTypeID;
   }
 
+  convertBRToCarriageReturns(source: string) {
+    return source.replace(/<br\s*[\/]?>/gi, '\n');
+  }
+
   getDragPosition(e) {
     this.dragPosition = e.source.getFreeDragPosition();
     this.updateAddNoteResult();
@@ -232,6 +276,53 @@ export class AddNoteComponent implements OnInit, OnDestroy {
           );
         }
       })
+    );
+  }
+
+  private getNoteHistory() {
+    //List pages do not use navpageid in the route. The list page service uses a different stored procedure for note history. It makes fewer checks against the user.
+    //Using the list page service for those notes reduces the number of failures when loading history.
+    //A notes API would be a better long term solution.
+    if (this.router.url.includes('navpageid')) {
+      this.getObjectNoteHistory();
+    } else {
+      this.getCommonNoteHistory();
+    }
+  }
+
+  private getObjectNoteHistory() {
+    this.subs.push(
+      this.notesService
+        .getObjectNotes(this.objectId, this.objectTypeId, this.objectTypeTypeID)
+        .subscribe((res) => {
+          if (!!res && res.success) {
+            this.notesList = res.data.notes;
+          } else {
+            this.dialogService.alert(
+              'Get Previous Notes Error',
+              'There was an issue with getting the note history. Please contact the system administrator.',
+              'OK'
+            );
+          }
+        })
+    );
+  }
+
+  private getCommonNoteHistory() {
+    this.subs.push(
+      this.listNotesService
+        .getNotes(this.objectId, this.objectTypeId, this.noteTypeFilter)
+        .subscribe((res) => {
+          if (!!res && res.success) {
+            this.notesList = res.data.commonNotes;
+          } else {
+            this.dialogService.alert(
+              'Get Previous Notes Error',
+              'There was an issue with getting the note history. Please contact the system administrator.',
+              'OK'
+            );
+          }
+        })
     );
   }
 

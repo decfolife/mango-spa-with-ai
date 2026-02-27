@@ -25,6 +25,7 @@ export class AccountingSummaryService extends EndpointService {
   public lastApprovedOrExportedDate$ = new BehaviorSubject<Date | null>(null);
   public isAmortizationDataLoaded$ = new BehaviorSubject<boolean>(false);
   preferenceSavePendingMessage = ' - You have unsaved preference changes.';
+  public lockAddButton = new BehaviorSubject<boolean>(false);
   isLocked: boolean;
   isArchived: boolean;
   portfolioSettings: PortfolioSettingsResponse;
@@ -381,6 +382,12 @@ export class AccountingSummaryService extends EndpointService {
 
   setIsArchived(isArchived: boolean) {
     this.isArchived = isArchived;
+  }
+
+  setLockAddButton(lock: boolean) {
+    if (this.lockAddButton.value !== lock) {
+      this.lockAddButton.next(lock);
+    }
   }
 
   getIsLocked() {

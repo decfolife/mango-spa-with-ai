@@ -1096,7 +1096,7 @@ export class DynamicFormSectionComponent
         const result = { ...dataItem };
         /// images
         if (['7', '17'].some((typeId) => result.formItemTypeID === typeId)) {
-          // convert form item answer (file-path) into an emedded image uri
+          // convert form item answer (file-path) into an embedded image uri
           if (isTruthy(result.formItemAnswer)) {
             result.formItemAnswer = await this.createEmbeddedImage(
               result.formItemAnswer

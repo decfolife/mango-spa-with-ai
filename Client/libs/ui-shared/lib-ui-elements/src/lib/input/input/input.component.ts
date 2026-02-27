@@ -109,7 +109,7 @@ export class InputComponent
   @Input() placeholder?: string = '';
   @Input() required?: boolean;
   @Input() minLengthField?: number = 0;
-  @Input() maxLengthField?: number = 255;
+  @Input() maxLengthField?: number | null = 255;
   @Input() allowScrolling?: boolean = false;
   @Input() rows?: number;
   @Input() cols?: number;
@@ -267,7 +267,7 @@ export class InputComponent
       return this.emailRegex.test(this.value);
     }
     if (
-      this.maxLengthField &&
+      this.maxLengthField !== null &&
       !!this.value &&
       this.value.length > this.maxLengthField
     ) {
