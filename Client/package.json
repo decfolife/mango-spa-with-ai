@@ -42,11 +42,13 @@
     "build:ops:mango": "node --max_old_space_size=8192 ./node_modules/@angular/cli/bin/ng build mango --configuration=ops",
     "build:stage:mango": "node --max_old_space_size=8192 ./node_modules/@angular/cli/bin/ng build mango --configuration=stage",
     "build:prod:mango": "node --max_old_space_size=8192 ./node_modules/@angular/cli/bin/ng build mango --configuration=prod",
+    "build:dr:mango": "node --max_old_space_size=8192 ./node_modules/@angular/cli/bin/ng build mango --configuration=dr",
     "build:dev:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=dev && node build-element.js central-auth",
     "build:test:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=test && node build-element.js central-auth",
     "build:ops:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=ops && node build-element.js central-auth",
     "build:stage:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=stage && node build-element.js central-auth",
-    "build:prod:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=prod && node build-element.js central-auth"
+    "build:prod:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=prod && node build-element.js central-auth",
+    "build:dr:microcomponent-central-auth": "ng build mango-crem-features-central-auth --configuration=dr && node build-element.js central-auth"
   },
   "private": true,
   "lint-staged": {

@@ -279,6 +279,40 @@
               "maximumError": "1mb"
             }
           ]
+        },
+        "dr": {
+          "optimization": {
+            "scripts": true,
+            "styles": {
+              "minify": true,
+              "inlineCritical": false
+            },
+            "fonts": false
+          },
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "buildOptimizer": true,
+          "fileReplacements": [
+            {
+              "replace": "apps/mango/src/environments/environment.local.ts",
+              "with": "apps/mango/src/environments/environment.dr.ts"
+            }
+          ],
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "20mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "160kb",
+              "maximumError": "1mb"
+            }
+          ]
         }
       },
       "defaultConfiguration": "dev"
@@ -307,6 +341,9 @@
         },
         "prod": {
           "browserTarget": "mango:build:prod"
+        },
+        "dr": {
+          "browserTarget": "mango:build:dr"
         }
       }
     },
