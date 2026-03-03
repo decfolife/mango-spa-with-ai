@@ -307,7 +307,7 @@ export class ServiceAccountsComponent implements OnDestroy {
   private getServiceAccounts() {
     this.subs.push(
       this.userMaintenanceService.getServiceAccounts().subscribe((res) => {
-        if (res && res.length > 0) {
+        if (res && res.length >= 0) {
           this.allServiceAccounts = res;
           this.filterServiceAccountData(this.selectedFilter);
           this.searchDataGrid(this.searchText);
