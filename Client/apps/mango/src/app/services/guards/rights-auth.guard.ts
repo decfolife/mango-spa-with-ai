@@ -55,10 +55,13 @@ export class RightsAuthGuard implements CanActivate {
       return of(true);
     }
 
-    let queryParams = urlParts[1].toLowerCase().split('&');
-    let objTypeId = queryParams
-      .find((qp) => qp.indexOf('otid') >= 0)
-      .split('=')[1];
+    const queryParams = new URLSearchParams(urlParts[1].toLowerCase());
+
+    const objTypeId = queryParams.get('otid');
+    if (!objTypeId) {
+      return of(true);
+    }
+
     let objTypeIdIndex = [1, 2, 3, 4, 5, 11, 161].findIndex(
       (num) => num === Number(objTypeId)
     );
