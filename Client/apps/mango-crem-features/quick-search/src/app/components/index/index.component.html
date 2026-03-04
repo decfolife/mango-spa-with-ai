@@ -11,53 +11,6 @@
     [selectedTabIndex]="selectedTab?.index"
     (selectedTab)="onSelectedTabChange($event)"
   >
-    <crem-tab-item
-      *ngIf="fmodule === '99'"
-      [title]="'All'"
-      id="quick-search-all-objects"
-    >
-      <div class="search-results-navigation">
-        <ng-container *ngFor="let object of searchResults; index as i">
-          <button
-            (click)="scrollToSection('quick-search-' + object.objectTypeType)"
-            [attr.aria-label]="'Go to ' + object.objectTypeType + ' section'"
-          >
-            {{ object.objectTypeType }}
-          </button>
-        </ng-container>
-      </div>
-      <div class="search-results-grid-container">
-        <ng-container *ngFor="let object of searchResults; index as i">
-          <crem-card
-            [id]="'quick-search-' + object.objectTypeType"
-            [title]="object.objectTypeType + ' (' + object.results.length + ')'"
-          >
-            <dx-data-grid
-              [dataSource]="object.results"
-              [showColumnLines]="false"
-              [showRowLines]="false"
-              [showBorders]="false"
-              [rowAlternationEnabled]="true"
-              [allowColumnResizing]="true"
-              [allowColumnReordering]="true"
-              [columnAutoWidth]="true"
-              [columnMinWidth]="10"
-              [wordWrapEnabled]="true"
-              [height]="'auto'"
-              (onContentReady)="contentReady($event)"
-              (onRowClick)="onRowClick($event)"
-            >
-              <dxo-header-filter [visible]="true">
-                <dxo-search [enabled]="true"></dxo-search>
-              </dxo-header-filter>
-              <dxo-sorting mode="multiple"></dxo-sorting>
-              <dxo-paging [enabled]="false"></dxo-paging>
-            </dx-data-grid>
-          </crem-card>
-        </ng-container>
-      </div>
-    </crem-tab-item>
-
     <ng-container *ngFor="let object of searchResults; index as i">
       <crem-tab-item
         [title]="object.objectTypeType"

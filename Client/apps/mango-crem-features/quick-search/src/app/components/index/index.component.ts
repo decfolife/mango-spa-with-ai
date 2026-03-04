@@ -139,41 +139,18 @@ export class IndexComponent implements OnInit {
       );
   }
 
-  onRowClick(event: RowClickEvent): void {
-    const rowData = event.data;
-    let objectResult: quickSearchResults | undefined;
+  onRowClick(event: any) {
+    const res = this.searchResults.filter((searchResult) => {
+      if (searchResult.objectTypeType === this.selectedTab.title) return true;
+    });
 
-    // If selected tab is not "All", use the tab to find the object type
-    if (this.selectedTab && this.selectedTab.title !== 'All') {
-      objectResult = this.searchResults.find(
-        (searchResult) => searchResult.objectTypeType === this.selectedTab.title
-      );
-    } else {
-      objectResult = this.searchResults.find((result) =>
-        result.results.some((item) => item === rowData)
-      );
-    }
-
-    if (objectResult) {
-      const otid = +objectResult.objectTypeId;
-      this.router.navigate(['/v06/Forms/RenderForm.aspx'], {
-        queryParams: {
-          oid: rowData.OID,
-          otid: otid,
-          ottid: rowData.OTID,
-        },
-      });
-    }
+    const otid = parseInt(res[0].objectTypeId);
+    this.router.navigate(['/v06/Forms/RenderForm.aspx'], {
+      queryParams: { oid: event.data.OID, otid: otid, ottid: event.data.OTID },
+    });
   }
 
   onSelectedTabChange(e: SelectedTab) {
     this.selectedTab = e;
-  }
-
-  scrollToSection(elementId: string): void {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   }
 }
