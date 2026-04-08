@@ -3,6 +3,10 @@
   flex-direction: column;
   height: 100%;
 
+  .page-header {
+    border-bottom: 1px solid #c5c5c5;
+  }
+
   &__error {
     margin: 24px;
     padding: 16px;
@@ -17,7 +21,7 @@
 
   &__grid-container {
     flex: 1;
-    padding: 16px 24px 24px;
+    overflow: hidden;
 
     dx-data-grid {
       height: 100%;
