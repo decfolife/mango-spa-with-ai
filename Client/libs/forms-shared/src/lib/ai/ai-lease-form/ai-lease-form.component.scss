@@ -1,0 +1,52 @@
+.ai-lease-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &__header {
+    flex-shrink: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__back-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 24px;
+    padding: 16px;
+    background-color: #fdecea;
+    border-radius: 4px;
+    color: #c62828;
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__sections {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px 32px;
+  }
+}

@@ -18,6 +18,7 @@ import { BreadcrumbsComponent } from '../breadcrumbs/breadcrumbs.component';
 import { CostarSuiteHeaderModule } from 'libs/ui-shared/lib-ui-shared/src/lib/costar-suite-header/costar-suite-header.module';
 import { DisplayBreadcrumbsModule } from 'libs/ui-shared/lib-ui-shared/src/lib/spa-breadcrumbs/display-breadcrumbs/display-breadcrumbs.module';
 import { HeaderComponent } from '@forms/render-form/header/header.component';
+import { AiSidebarModule } from '@mango/forms-shared';
 
 @NgModule({
   declarations: [CremComponent, BreadcrumbsComponent],
@@ -36,6 +37,7 @@ import { HeaderComponent } from '@forms/render-form/header/header.component';
     HeaderComponent,
     FieldHistoryComponent,
     FieldHistoryDirective,
+    AiSidebarModule,
   ],
   exports: [CremComponent],
 })

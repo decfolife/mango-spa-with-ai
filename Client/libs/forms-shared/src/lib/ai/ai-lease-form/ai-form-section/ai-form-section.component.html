@@ -1,0 +1,117 @@
+<div class="ai-form-section" [class.ai-form-section--collapsed]="!isExpanded">
+
+  <div class="ai-form-section__header" (click)="toggleExpanded()">
+    <span class="ai-form-section__title">{{ section.title }}</span>
+    <mat-icon class="ai-form-section__chevron">
+      {{ isExpanded ? 'expand_less' : 'expand_more' }}
+    </mat-icon>
+  </div>
+
+  <div class="ai-form-section__body" *ngIf="isExpanded" [formGroup]="formGroup">
+
+    <!-- Fields Grid -->
+    <div class="ai-form-section__fields">
+      <div
+        class="ai-form-section__field"
+        *ngFor="let field of section.fields"
+      >
+        <label class="ai-form-section__field-label">{{ field.label }}</label>
+
+        <!-- View mode -->
+        <div *ngIf="!editMode" class="ai-form-section__field-value">
+          {{ formatDisplayValue(field) }}
+        </div>
+
+        <!-- Edit mode: text / number / currency / percent -->
+        <mat-form-field
+          *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
+          appearance="outline"
+          class="ai-form-section__field-input"
+        >
+          <input
+            matInput
+            [formControlName]="field.key"
+            [type]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
+          />
+        </mat-form-field>
+
+        <!-- Edit mode: date -->
+        <mat-form-field
+          *ngIf="editMode && field.type === 'date'"
+          appearance="outline"
+          class="ai-form-section__field-input"
+        >
+          <input matInput [matDatepicker]="picker" [formControlName]="field.key" />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Edit mode: boolean -->
+        <mat-checkbox
+          *ngIf="editMode && field.type === 'boolean'"
+          [formControlName]="field.key"
+          class="ai-form-section__field-checkbox"
+        ></mat-checkbox>
+
+        <!-- Citation -->
+        <div *ngIf="field.citation" class="ai-form-section__citation">
+          <mat-icon class="ai-form-section__citation-icon">format_quote</mat-icon>
+          <span>{{ field.citation }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rent Schedule Sub-table -->
+    <ng-container *ngIf="rentSchedule">
+
+      <div class="ai-form-section__subtable-header">Base Rent Schedule</div>
+      <dx-data-grid
+        class="ai-form-section__subtable"
+        [dataSource]="rentSchedule.scheduleItems"
+        [showBorders]="true"
+        [showColumnLines]="false"
+        [showRowLines]="true"
+        [rowAlternationEnabled]="true"
+        [wordWrapEnabled]="false"
+      >
+        <dxo-load-panel [enabled]="false"></dxo-load-panel>
+        <dxo-paging [enabled]="false"></dxo-paging>
+        <ng-container *ngFor="let col of rentScheduleColumns">
+          <dxi-column
+            [dataField]="col.dataField"
+            [caption]="col.caption"
+            [dataType]="col.dataType"
+            [format]="col.format"
+            [width]="col.width"
+          ></dxi-column>
+        </ng-container>
+      </dx-data-grid>
+
+      <ng-container *ngIf="hasAbatements()">
+        <div class="ai-form-section__subtable-header">Rent Abatements</div>
+        <dx-data-grid
+          class="ai-form-section__subtable"
+          [dataSource]="rentSchedule.abatementItems"
+          [showBorders]="true"
+          [showColumnLines]="false"
+          [showRowLines]="true"
+          [rowAlternationEnabled]="true"
+        >
+          <dxo-load-panel [enabled]="false"></dxo-load-panel>
+          <dxo-paging [enabled]="false"></dxo-paging>
+          <ng-container *ngFor="let col of abatementColumns">
+            <dxi-column
+              [dataField]="col.dataField"
+              [caption]="col.caption"
+              [dataType]="col.dataType"
+              [format]="col.format"
+              [width]="col.width"
+            ></dxi-column>
+          </ng-container>
+        </dx-data-grid>
+      </ng-container>
+
+    </ng-container>
+
+  </div>
+</div>

@@ -1,0 +1,41 @@
+.ai-list-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &__error {
+    margin: 24px;
+    padding: 16px;
+    background-color: #fdecea;
+    border-radius: 4px;
+    color: #c62828;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__grid-container {
+    flex: 1;
+    padding: 16px 24px 24px;
+
+    dx-data-grid {
+      height: 100%;
+    }
+  }
+}
+
+// Clickable row style
+::ng-deep .dx-datagrid-rowsview .dx-row {
+  cursor: pointer;
+}
+
+.ai-list-page__row-link {
+  color: var(--color-primary, #005dab);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

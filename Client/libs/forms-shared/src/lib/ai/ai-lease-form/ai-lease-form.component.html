@@ -1,0 +1,82 @@
+<crem-skeleton
+  *ngIf="isLoading"
+  type="card"
+  [instances]="4"
+></crem-skeleton>
+
+<div *ngIf="!isLoading" class="ai-lease-form">
+
+  <div class="ai-lease-form__header">
+    <crem-page-header
+      [pageTitle]="pageTitle"
+      [tabTitle]="pageTitle"
+      [showListOrMapViewButtons]="false"
+      [showSettingsButton]="false"
+      [customActions]="true"
+    >
+      <div actions class="ai-lease-form__actions">
+        <button
+          mat-stroked-button
+          class="ai-lease-form__back-btn"
+          (click)="navigateBack()"
+          type="button"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          Back to List
+        </button>
+
+        <ng-container *ngIf="!errorMessage">
+          <ng-container *ngIf="!editMode">
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="toggleEditMode()"
+              type="button"
+              id="ai-form-edit-btn"
+            >
+              Edit
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="editMode">
+            <button
+              mat-stroked-button
+              (click)="onCancel()"
+              type="button"
+              id="ai-form-cancel-btn"
+            >
+              Cancel
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="onSave()"
+              type="button"
+              id="ai-form-save-btn"
+            >
+              Save
+            </button>
+          </ng-container>
+        </ng-container>
+      </div>
+    </crem-page-header>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="errorMessage" class="ai-lease-form__error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <!-- Form sections -->
+  <div *ngIf="!errorMessage" class="ai-lease-form__sections" [formGroup]="form">
+    <mango-ai-form-section
+      *ngFor="let section of sections; let i = index"
+      [section]="section"
+      [formGroup]="getSectionFormGroup(section.key)"
+      [editMode]="editMode"
+      [isExpanded]="true"
+    ></mango-ai-form-section>
+  </div>
+
+</div>

@@ -1,4 +1,5 @@
 import { CommonModule, Location } from '@angular/common';
+import { AiSidebarService } from '../../ai/ai-sidebar/ai-sidebar.service';
 import {
   Component,
   ElementRef,
@@ -257,8 +258,13 @@ export class DynamicFormComponent
     private titleService: Title,
     private fileService: FilesService,
     private navService: MangoNavigationService,
-    private ref: ChangeDetectorRef
+    private ref: ChangeDetectorRef,
+    private aiSidebarService: AiSidebarService
   ) {}
+
+  toggleAiSidebar(): void {
+    this.aiSidebarService.toggle();
+  }
 
   tryPreventChangeLoss(): Observable<boolean> {
     return this.changedFormItemKeys.length

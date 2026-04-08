@@ -1,0 +1,108 @@
+<div class="ai-sidebar" [class.ai-sidebar--open]="isOpen">
+
+  <!-- Header -->
+  <div class="ai-sidebar__header">
+    <div class="ai-sidebar__title">
+      <mat-icon class="ai-sidebar__title-icon">psychology</mat-icon>
+      <span>AI Lease Summary</span>
+    </div>
+    <button
+      mat-icon-button
+      class="ai-sidebar__close-btn"
+      (click)="close()"
+      aria-label="Close AI Summary"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="ai-sidebar__loading">
+    <crem-skeleton type="card" [instances]="3"></crem-skeleton>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!isLoading && errorMessage" class="ai-sidebar__error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading && !errorMessage && sections.length" class="ai-sidebar__content">
+
+    <div *ngFor="let section of sections" class="ai-sidebar__section">
+
+      <!-- Section header -->
+      <div class="ai-sidebar__section-header" (click)="toggleSection(section)">
+        <span class="ai-sidebar__section-title">{{ section.title }}</span>
+        <mat-icon class="ai-sidebar__section-chevron">
+          {{ section.isExpanded ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+      </div>
+
+      <!-- Section fields -->
+      <div *ngIf="section.isExpanded" class="ai-sidebar__section-body">
+        <div *ngFor="let field of section.fields" class="ai-sidebar__field">
+          <span class="ai-sidebar__field-label">{{ field.label }}</span>
+          <span class="ai-sidebar__field-value">{{ field.value }}</span>
+          <div *ngIf="field.citation" class="ai-sidebar__citation">
+            <mat-icon class="ai-sidebar__citation-icon">format_quote</mat-icon>
+            <span>{{ field.citation }}</span>
+          </div>
+        </div>
+
+        <!-- Rent schedule table (inside Rent section) -->
+        <ng-container *ngIf="section.title === 'Rent' && rentScheduleItems.length">
+          <div class="ai-sidebar__subtable-label">Base Rent Schedule</div>
+          <dx-data-grid
+            class="ai-sidebar__subtable"
+            [dataSource]="rentScheduleItems"
+            [showBorders]="true"
+            [showColumnLines]="false"
+            [showRowLines]="true"
+            [rowAlternationEnabled]="true"
+            [wordWrapEnabled]="false"
+          >
+            <dxo-load-panel [enabled]="false"></dxo-load-panel>
+            <dxo-paging [enabled]="false"></dxo-paging>
+            <ng-container *ngFor="let col of rentScheduleColumns">
+              <dxi-column
+                [dataField]="col.dataField"
+                [caption]="col.caption"
+                [dataType]="col.dataType"
+                [format]="col.format"
+                [width]="col.width"
+              ></dxi-column>
+            </ng-container>
+          </dx-data-grid>
+
+          <ng-container *ngIf="hasAbatements()">
+            <div class="ai-sidebar__subtable-label">Rent Abatements</div>
+            <dx-data-grid
+              class="ai-sidebar__subtable"
+              [dataSource]="abatementItems"
+              [showBorders]="true"
+              [showColumnLines]="false"
+              [showRowLines]="true"
+              [rowAlternationEnabled]="true"
+            >
+              <dxo-load-panel [enabled]="false"></dxo-load-panel>
+              <dxo-paging [enabled]="false"></dxo-paging>
+              <ng-container *ngFor="let col of abatementColumns">
+                <dxi-column
+                  [dataField]="col.dataField"
+                  [caption]="col.caption"
+                  [dataType]="col.dataType"
+                  [format]="col.format"
+                  [width]="col.width"
+                ></dxi-column>
+              </ng-container>
+            </dx-data-grid>
+          </ng-container>
+        </ng-container>
+
+      </div>
+    </div>
+
+  </div>
+</div>

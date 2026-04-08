@@ -1,0 +1,114 @@
+<crem-skeleton
+  *ngIf="isLoading"
+  type="card"
+  [instances]="4"
+></crem-skeleton>
+
+<div *ngIf="!isLoading" class="ai-list-page">
+  <crem-page-header
+    [pageTitle]="'AI Lease Abstractions'"
+    [tabTitle]="'AI Lease Abstractions'"
+    [showListOrMapViewButtons]="false"
+    [showSettingsButton]="false"
+    [customActions]="false"
+  ></crem-page-header>
+
+  <div *ngIf="errorMessage" class="ai-list-page__error">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="!errorMessage" class="ai-list-page__grid-container">
+    <dx-data-grid
+      id="aiLeaseListGrid"
+      [dataSource]="leases"
+      [showBorders]="true"
+      [showColumnLines]="false"
+      [showRowLines]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [wordWrapEnabled]="false"
+      keyExpr="id"
+      (onRowClick)="onRowClick($event)"
+    >
+      <dxo-load-panel [enabled]="false"></dxo-load-panel>
+      <dxo-paging [pageSize]="25"></dxo-paging>
+      <dxo-pager
+        [showPageSizeSelector]="true"
+        [allowedPageSizes]="[10, 25, 50, 100]"
+        [showInfo]="true"
+      ></dxo-pager>
+      <dxo-filter-row [visible]="true"></dxo-filter-row>
+      <dxo-header-filter [visible]="true"></dxo-header-filter>
+      <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+
+      <dxi-column
+        dataField="tenant"
+        caption="Tenant"
+        [minWidth]="150"
+        cellTemplate="tenantLinkTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="landlord"
+        caption="Landlord"
+        [minWidth]="150"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="address"
+        caption="Address"
+        [minWidth]="200"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="leaseType"
+        caption="Lease Type"
+        [width]="120"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="startDate"
+        caption="Start Date"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="120"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="endDate"
+        caption="End Date"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="120"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="squareFootage"
+        caption="Sq Ft"
+        dataType="number"
+        [format]="{ type: 'fixedPoint', precision: 0 }"
+        [width]="120"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="effectiveRent"
+        caption="Effective Rent ($/SF)"
+        dataType="number"
+        [format]="{ type: 'currency', precision: 2 }"
+        [width]="160"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="abstractionDate"
+        caption="Abstraction Date"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="140"
+      ></dxi-column>
+
+      <div *dxTemplate="let cell of 'tenantLinkTemplate'">
+        <a class="ai-list-page__row-link">{{ cell.data.tenant }}</a>
+      </div>
+    </dx-data-grid>
+  </div>
+</div>

@@ -45,6 +45,19 @@
             >
             </mango-alerts-root>
 
+            <!-- AI Summary Sidebar toggle -->
+            <crem-button
+              *ngIf="
+                isRenderForm &&
+                form.get('objectType').value.toLowerCase().trim() === 'lease'
+              "
+              id="df-aiSummaryBtn"
+              [text]="'AI Summary'"
+              [btnStyle]="'flat'"
+              [color]="'secondary'"
+              (click)="toggleAiSidebar(); $event.preventDefault()"
+            ></crem-button>
+
             <!-- Design Mode -->
             <crem-button
               [dataId]

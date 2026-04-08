@@ -325,6 +325,21 @@ export const routes: Routes = [
               breadCrumb: { append: true },
             },
           },
+          {
+            path: 'ai-abstractions',
+            title: 'AI Lease Abstractions',
+            loadChildren: () =>
+              import('@mango/forms-shared').then((mod) => mod.AiModule),
+            data: {
+              moduleId: 1,
+              currentSubApp: MangoSubApps.LIST_PAGES,
+              breadCrumb: {
+                label: 'AI Abstractions',
+                append: true,
+                activeLink: 'AI Abstractions',
+              },
+            },
+          },
         ],
       },
 
