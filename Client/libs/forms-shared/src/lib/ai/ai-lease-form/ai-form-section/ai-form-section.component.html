@@ -9,7 +9,7 @@
 
   <div class="ai-form-section__body" *ngIf="isExpanded" [formGroup]="formGroup">
 
-    <!-- Fields Grid -->
+    <!-- Fields List -->
     <div class="ai-form-section__fields">
       <div
         class="ai-form-section__field"
@@ -17,46 +17,48 @@
       >
         <label class="ai-form-section__field-label">{{ field.label }}</label>
 
-        <!-- View mode -->
-        <div *ngIf="!editMode" class="ai-form-section__field-value">
-          {{ formatDisplayValue(field) }}
-        </div>
+        <div class="ai-form-section__field-content">
+          <!-- View mode -->
+          <div *ngIf="!editMode" class="ai-form-section__field-value">
+            {{ formatDisplayValue(field) }}
+          </div>
 
-        <!-- Edit mode: text / number / currency / percent -->
-        <mat-form-field
-          *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
-          appearance="outline"
-          class="ai-form-section__field-input"
-        >
-          <input
-            matInput
+          <!-- Edit mode: text / number / currency / percent -->
+          <mat-form-field
+            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
+            appearance="outline"
+            class="ai-form-section__field-input"
+          >
+            <input
+              matInput
+              [formControlName]="field.key"
+              [type]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
+            />
+          </mat-form-field>
+
+          <!-- Edit mode: date -->
+          <mat-form-field
+            *ngIf="editMode && field.type === 'date'"
+            appearance="outline"
+            class="ai-form-section__field-input"
+          >
+            <input matInput [matDatepicker]="picker" [formControlName]="field.key" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Edit mode: boolean -->
+          <mat-checkbox
+            *ngIf="editMode && field.type === 'boolean'"
             [formControlName]="field.key"
-            [type]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
-          />
-        </mat-form-field>
+            class="ai-form-section__field-checkbox"
+          ></mat-checkbox>
 
-        <!-- Edit mode: date -->
-        <mat-form-field
-          *ngIf="editMode && field.type === 'date'"
-          appearance="outline"
-          class="ai-form-section__field-input"
-        >
-          <input matInput [matDatepicker]="picker" [formControlName]="field.key" />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-
-        <!-- Edit mode: boolean -->
-        <mat-checkbox
-          *ngIf="editMode && field.type === 'boolean'"
-          [formControlName]="field.key"
-          class="ai-form-section__field-checkbox"
-        ></mat-checkbox>
-
-        <!-- Citation -->
-        <div *ngIf="field.citation" class="ai-form-section__citation">
-          <mat-icon class="ai-form-section__citation-icon">format_quote</mat-icon>
-          <span>{{ field.citation }}</span>
+          <!-- Citation -->
+          <div *ngIf="field.citation" class="ai-form-section__citation">
+            <mat-icon class="ai-form-section__citation-icon">format_quote</mat-icon>
+            <span>{{ field.citation }}</span>
+          </div>
         </div>
       </div>
     </div>
