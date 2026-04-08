@@ -3,15 +3,19 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
 import { DxDataGridModule } from 'devextreme-angular';
-import { SkeletonModule } from '@mango/ui-shared/lib-ui-elements';
-import { PageHeaderComponent } from '@mango/ui-shared/lib-ui-elements';
+import {
+  ButtonModule,
+  DatePickerModule,
+  FieldHistoryComponent,
+  IconModule,
+  InputComponent,
+  InputLabelComponent,
+  SkeletonModule,
+  PageHeaderComponent,
+} from '@mango/ui-shared/lib-ui-elements';
 import { AiLeaseFormComponent } from './ai-lease-form.component';
 import { AiFormSectionComponent } from './ai-form-section/ai-form-section.component';
 
@@ -22,13 +26,15 @@ import { AiFormSectionComponent } from './ai-form-section/ai-form-section.compon
     ReactiveFormsModule,
     RouterModule,
     MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatCheckboxModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
+    MatIconModule,
     DxDataGridModule,
+    ButtonModule,
+    DatePickerModule,
+    FieldHistoryComponent,
+    IconModule,
+    InputComponent,
+    InputLabelComponent,
     SkeletonModule,
     PageHeaderComponent,
   ],

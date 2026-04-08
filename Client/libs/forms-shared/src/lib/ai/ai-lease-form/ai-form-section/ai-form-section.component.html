@@ -2,9 +2,9 @@
 
   <div class="ai-form-section__header" (click)="toggleExpanded()">
     <span class="ai-form-section__title">{{ section.title }}</span>
-    <mat-icon class="ai-form-section__chevron">
-      {{ isExpanded ? 'expand_less' : 'expand_more' }}
-    </mat-icon>
+    <button type="button" mat-icon-button class="ai-form-section__expand-btn">
+      <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
   </div>
 
   <div class="ai-form-section__body" *ngIf="isExpanded" [formGroup]="formGroup">
@@ -15,37 +15,47 @@
         class="ai-form-section__field"
         *ngFor="let field of section.fields"
       >
-        <label class="ai-form-section__field-label">{{ field.label }}</label>
-
-        <div class="ai-form-section__field-content">
-          <!-- View mode -->
-          <div *ngIf="!editMode" class="ai-form-section__field-value">
-            {{ formatDisplayValue(field) }}
+        <!-- Label container: history icon + label text -->
+        <div class="ai-form-section__field-label">
+          <div class="ai-form-section__field-history">
+            <crem-field-history
+              [helpTextID]="'ai-helpText-' + field.key"
+              [visible]="false"
+              dateFormat="MM/dd/yyyy"
+              [dataSource]="null"
+              [displayIcon]="'infoHistoryIcon'"
+              [showFieldName]="false"
+            ></crem-field-history>
           </div>
+          <crem-input-label
+            class="df-formSection-fieldLabel"
+            [label]="field.label"
+          ></crem-input-label>
+        </div>
+
+        <!-- Field content -->
+        <div class="ai-form-section__field-content">
+
+          <!-- View mode -->
+          <crem-input-label
+            *ngIf="!editMode"
+            [label]="formatDisplayValue(field)"
+          ></crem-input-label>
 
           <!-- Edit mode: text / number / currency / percent -->
-          <mat-form-field
+          <crem-input
             *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
-            appearance="outline"
-            class="ai-form-section__field-input"
-          >
-            <input
-              matInput
-              [formControlName]="field.key"
-              [type]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
-            />
-          </mat-form-field>
+            [inputType]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
+            [formControlName]="field.key"
+          ></crem-input>
 
           <!-- Edit mode: date -->
-          <mat-form-field
+          <crem-date-picker
             *ngIf="editMode && field.type === 'date'"
-            appearance="outline"
-            class="ai-form-section__field-input"
-          >
-            <input matInput [matDatepicker]="picker" [formControlName]="field.key" />
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
+            [formControlName]="field.key"
+            dateFormat="MM/dd/yyyy"
+            [useMaskBehavior]="false"
+          ></crem-date-picker>
 
           <!-- Edit mode: boolean -->
           <mat-checkbox
@@ -56,7 +66,7 @@
 
           <!-- Citation -->
           <div *ngIf="field.citation" class="ai-form-section__citation">
-            <mat-icon class="ai-form-section__citation-icon">format_quote</mat-icon>
+            <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
             <span>{{ field.citation }}</span>
           </div>
         </div>

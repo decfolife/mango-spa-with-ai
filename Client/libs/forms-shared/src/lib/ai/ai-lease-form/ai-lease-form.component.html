@@ -15,47 +15,32 @@
       [customActions]="true"
     >
       <div actions class="ai-lease-form__actions">
-        <button
-          mat-stroked-button
-          class="ai-lease-form__back-btn"
+        <crem-button
+          type="secondary"
+          [icon]="'faArrowLeft'"
           (click)="navigateBack()"
-          type="button"
-        >
-          <mat-icon>arrow_back</mat-icon>
-          Back to List
-        </button>
+        >Back to List</crem-button>
 
         <ng-container *ngIf="!errorMessage">
           <ng-container *ngIf="!editMode">
-            <button
-              mat-flat-button
-              color="primary"
-              (click)="toggleEditMode()"
-              type="button"
+            <crem-button
+              type="primary"
               id="ai-form-edit-btn"
-            >
-              Edit
-            </button>
+              (click)="toggleEditMode()"
+            >Edit</crem-button>
           </ng-container>
 
           <ng-container *ngIf="editMode">
-            <button
-              mat-stroked-button
-              (click)="onCancel()"
-              type="button"
+            <crem-button
+              type="secondary"
               id="ai-form-cancel-btn"
-            >
-              Cancel
-            </button>
-            <button
-              mat-flat-button
-              color="primary"
-              (click)="onSave()"
-              type="button"
+              (click)="onCancel()"
+            >Cancel</crem-button>
+            <crem-button
+              type="primary"
               id="ai-form-save-btn"
-            >
-              Save
-            </button>
+              (click)="onSave()"
+            >Save</crem-button>
           </ng-container>
         </ng-container>
       </div>
@@ -64,7 +49,7 @@
 
   <!-- Error state -->
   <div *ngIf="errorMessage" class="ai-lease-form__error">
-    <mat-icon>error_outline</mat-icon>
+    <crem-icon icon="faCircleExclamation"></crem-icon>
     <p>{{ errorMessage }}</p>
   </div>
 

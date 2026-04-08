@@ -15,7 +15,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px;
+    padding: 8px 8px 8px 16px;
     background: #ffffff;
     border-bottom: 1px solid #bfbfbf;
     cursor: pointer;
@@ -30,10 +30,10 @@
     font-size: 14px;
     font-weight: 600;
     color: #000000;
+    flex: 1;
   }
 
-  &__chevron {
-    font-size: 20px;
+  &__expand-btn {
     color: #666;
   }
 
@@ -59,33 +59,22 @@
   }
 
   &__field-label {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 42%;
     flex-shrink: 0;
     padding-right: 16px;
-    padding-top: 2px;
-    font-size: 13px;
-    font-weight: 400;
-    color: #555555;
-    word-break: break-word;
+    min-height: 30px;
+  }
+
+  &__field-history {
+    flex-shrink: 0;
   }
 
   &__field-content {
     flex: 1;
     min-width: 0;
-  }
-
-  &__field-value {
-    font-size: 14px;
-    font-weight: 500;
-    color: #000000;
-    min-height: 20px;
-    word-break: break-word;
-  }
-
-  &__field-input {
-    width: 100%;
-    margin-top: -4px;
+    padding-top: 2px;
   }
 
   &__field-checkbox {
@@ -104,15 +93,6 @@
     font-size: 11px;
     color: #5a4a00;
     line-height: 1.4;
-  }
-
-  &__citation-icon {
-    font-size: 13px;
-    height: 13px;
-    width: 13px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    color: #c99700;
   }
 
   &__subtable-header {
