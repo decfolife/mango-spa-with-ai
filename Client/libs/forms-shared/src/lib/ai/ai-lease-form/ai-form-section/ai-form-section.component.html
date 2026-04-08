@@ -1,62 +1,71 @@
-<div class="ai-form-section" [class.ai-form-section--collapsed]="!isExpanded">
+<mat-card class="ai-form-section df-sectionCard view-mode" [class.edit-mode]="editMode" [class.view-mode]="!editMode">
 
-  <div class="ai-form-section__header" (click)="toggleExpanded()">
-    <span class="ai-form-section__title">{{ section.title }}</span>
-    <mat-icon class="ai-form-section__chevron">
-      {{ isExpanded ? 'expand_less' : 'expand_more' }}
-    </mat-icon>
-  </div>
+  <mat-card-header class="df-sectionHeader" (click)="toggleExpanded()">
+    <mat-card-title>{{ section.title }}</mat-card-title>
+    <button type="button" mat-icon-button class="btn-expand" (click)="toggleExpanded(); $event.stopPropagation()">
+      <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
+  </mat-card-header>
 
-  <div class="ai-form-section__body" *ngIf="isExpanded" [formGroup]="formGroup">
+  <mat-card-content class="df-sectionContent" *ngIf="isExpanded" [formGroup]="formGroup">
 
     <!-- Fields List -->
-    <div class="ai-form-section__fields">
+    <div class="df-formSection-columnList">
       <div
-        class="ai-form-section__field"
+        class="field-container df-formSection-field"
         *ngFor="let field of section.fields"
       >
-        <label class="ai-form-section__field-label">{{ field.label }}</label>
-
-        <div class="ai-form-section__field-content">
-          <!-- View mode -->
-          <div *ngIf="!editMode" class="ai-form-section__field-value">
-            {{ formatDisplayValue(field) }}
+        <!-- Label container: history icon + label text -->
+        <div class="df-formSection-labelContainer">
+          <div class="df-infoHistoryData">
+            <crem-field-history
+              [helpTextID]="'ai-helpText-' + field.key"
+              [visible]="false"
+              dateFormat="MM/dd/yyyy"
+              [dataSource]="null"
+              [displayIcon]="'infoHistoryIcon'"
+              [showFieldName]="false"
+            ></crem-field-history>
           </div>
+          <crem-input-label
+            class="df-formSection-fieldLabel"
+            [label]="field.label"
+          ></crem-input-label>
+        </div>
+
+        <!-- Field content -->
+        <div class="field-content df-formSection-fieldContent">
+
+          <!-- View mode -->
+          <crem-input-label
+            *ngIf="!editMode"
+            [label]="formatDisplayValue(field)"
+          ></crem-input-label>
 
           <!-- Edit mode: text / number / currency / percent -->
-          <mat-form-field
+          <crem-input
             *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
-            appearance="outline"
-            class="ai-form-section__field-input"
-          >
-            <input
-              matInput
-              [formControlName]="field.key"
-              [type]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
-            />
-          </mat-form-field>
+            [inputType]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
+            [formControlName]="field.key"
+          ></crem-input>
 
           <!-- Edit mode: date -->
-          <mat-form-field
+          <crem-date-picker
             *ngIf="editMode && field.type === 'date'"
-            appearance="outline"
-            class="ai-form-section__field-input"
-          >
-            <input matInput [matDatepicker]="picker" [formControlName]="field.key" />
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
+            [formControlName]="field.key"
+            dateFormat="MM/dd/yyyy"
+            [useMaskBehavior]="false"
+          ></crem-date-picker>
 
           <!-- Edit mode: boolean -->
           <mat-checkbox
             *ngIf="editMode && field.type === 'boolean'"
             [formControlName]="field.key"
-            class="ai-form-section__field-checkbox"
           ></mat-checkbox>
 
           <!-- Citation -->
-          <div *ngIf="field.citation" class="ai-form-section__citation">
-            <mat-icon class="ai-form-section__citation-icon">format_quote</mat-icon>
+          <div *ngIf="field.citation" class="ai-citation">
+            <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
             <span>{{ field.citation }}</span>
           </div>
         </div>
@@ -66,9 +75,9 @@
     <!-- Rent Schedule Sub-table -->
     <ng-container *ngIf="rentSchedule">
 
-      <div class="ai-form-section__subtable-header">Base Rent Schedule</div>
+      <div class="ai-subtable-header">Base Rent Schedule</div>
       <dx-data-grid
-        class="ai-form-section__subtable"
+        class="ai-subtable"
         [dataSource]="rentSchedule.scheduleItems"
         [showBorders]="true"
         [showColumnLines]="false"
@@ -90,9 +99,9 @@
       </dx-data-grid>
 
       <ng-container *ngIf="hasAbatements()">
-        <div class="ai-form-section__subtable-header">Rent Abatements</div>
+        <div class="ai-subtable-header">Rent Abatements</div>
         <dx-data-grid
-          class="ai-form-section__subtable"
+          class="ai-subtable"
           [dataSource]="rentSchedule.abatementItems"
           [showBorders]="true"
           [showColumnLines]="false"
@@ -115,5 +124,6 @@
 
     </ng-container>
 
-  </div>
-</div>
+  </mat-card-content>
+
+</mat-card>
