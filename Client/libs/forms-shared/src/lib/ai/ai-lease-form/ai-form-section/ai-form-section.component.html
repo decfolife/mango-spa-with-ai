@@ -1,7 +1,25 @@
 <mat-card class="ai-form-section df-sectionCard view-mode" [class.edit-mode]="editMode" [class.view-mode]="!editMode">
 
   <mat-card-header class="df-sectionHeader" (click)="toggleExpanded()">
-    <mat-card-title>{{ section.title }}</mat-card-title>
+    <mat-card-title
+      #menuTrigger="matMenuTrigger"
+      [matMenuTriggerFor]="sectionLabelMenu"
+      (mouseenter)="openSectionLabelMenu()"
+      (mouseleave)="closeSectionLabelMenu()"
+    >{{ section.title }}</mat-card-title>
+
+    <mat-menu #sectionLabelMenu="matMenu" [hasBackdrop]="false">
+      <div
+        (mouseenter)="sectionLabelMenuEntered = true"
+        (mouseleave)="sectionLabelMenuLeave()"
+        class="df-sectionLabelMenu"
+      >
+        <a mat-menu-item>Section Edit</a>
+        <a mat-menu-item>Form Item Details</a>
+        <a mat-menu-item>Behaviors</a>
+      </div>
+    </mat-menu>
+
     <button type="button" mat-icon-button class="btn-expand" (click)="toggleExpanded(); $event.stopPropagation()">
       <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
     </button>

@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { DxDataGridModule } from 'devextreme-angular';
 import {
   ButtonModule,
@@ -30,6 +31,7 @@ import { AiFormSectionComponent } from './ai-form-section/ai-form-section.compon
     MatCardModule,
     MatCheckboxModule,
     MatIconModule,
+    MatMenuModule,
     DxDataGridModule,
     ButtonModule,
     DatePickerModule,

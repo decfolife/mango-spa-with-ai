@@ -17,16 +17,22 @@
     <p>{{ errorMessage }}</p>
   </div>
 
-  <div *ngIf="!errorMessage" class="ai-list-page__grid-container">
+  <div *ngIf="!errorMessage" class="list-page-data-grid-wrapper">
     <dx-data-grid
       id="aiLeaseListGrid"
+      class="list-page-data-grid"
       [dataSource]="leases"
-      [showBorders]="true"
+      [showBorders]="false"
       [showColumnLines]="false"
       [showRowLines]="true"
       [rowAlternationEnabled]="true"
       [hoverStateEnabled]="true"
       [wordWrapEnabled]="false"
+      [allowColumnReordering]="true"
+      [allowColumnResizing]="true"
+      columnResizingMode="widget"
+      [columnAutoWidth]="true"
+      [height]="'100%'"
       keyExpr="id"
       (onRowClick)="onRowClick($event)"
     >
@@ -36,10 +42,12 @@
         [showPageSizeSelector]="true"
         [allowedPageSizes]="[10, 25, 50, 100]"
         [showInfo]="true"
+        [showNavigationButtons]="true"
       ></dxo-pager>
-      <dxo-filter-row [visible]="true"></dxo-filter-row>
-      <dxo-header-filter [visible]="true"></dxo-header-filter>
+      <dxo-header-filter [visible]="true" [allowSearch]="true"></dxo-header-filter>
       <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      <dxo-sorting mode="multiple"></dxo-sorting>
+      <dxo-export [enabled]="true" [fileName]="'AI Lease Abstractions'"></dxo-export>
 
       <dxi-column
         dataField="tenant"
@@ -107,7 +115,7 @@
       ></dxi-column>
 
       <div *dxTemplate="let cell of 'tenantLinkTemplate'">
-        <a class="ai-list-page__row-link">{{ cell.data.tenant }}</a>
+        <a class="grid-link">{{ cell.data.tenant }}</a>
       </div>
     </dx-data-grid>
   </div>
