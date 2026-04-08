@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { DxDataGridModule } from 'devextreme-angular';
@@ -26,6 +27,7 @@ import { AiFormSectionComponent } from './ai-form-section/ai-form-section.compon
     ReactiveFormsModule,
     RouterModule,
     MatButtonModule,
+    MatCardModule,
     MatCheckboxModule,
     MatIconModule,
     DxDataGridModule,

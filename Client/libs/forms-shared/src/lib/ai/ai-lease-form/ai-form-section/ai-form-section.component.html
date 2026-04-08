@@ -1,23 +1,23 @@
-<div class="ai-form-section" [class.ai-form-section--collapsed]="!isExpanded">
+<mat-card class="ai-form-section df-sectionCard view-mode" [class.edit-mode]="editMode" [class.view-mode]="!editMode">
 
-  <div class="ai-form-section__header" (click)="toggleExpanded()">
-    <span class="ai-form-section__title">{{ section.title }}</span>
-    <button type="button" mat-icon-button class="ai-form-section__expand-btn">
+  <mat-card-header class="df-sectionHeader" (click)="toggleExpanded()">
+    <mat-card-title>{{ section.title }}</mat-card-title>
+    <button type="button" mat-icon-button class="btn-expand" (click)="toggleExpanded(); $event.stopPropagation()">
       <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
     </button>
-  </div>
+  </mat-card-header>
 
-  <div class="ai-form-section__body" *ngIf="isExpanded" [formGroup]="formGroup">
+  <mat-card-content class="df-sectionContent" *ngIf="isExpanded" [formGroup]="formGroup">
 
     <!-- Fields List -->
-    <div class="ai-form-section__fields">
+    <div class="df-formSection-columnList">
       <div
-        class="ai-form-section__field"
+        class="field-container df-formSection-field"
         *ngFor="let field of section.fields"
       >
         <!-- Label container: history icon + label text -->
-        <div class="ai-form-section__field-label">
-          <div class="ai-form-section__field-history">
+        <div class="df-formSection-labelContainer">
+          <div class="df-infoHistoryData">
             <crem-field-history
               [helpTextID]="'ai-helpText-' + field.key"
               [visible]="false"
@@ -34,7 +34,7 @@
         </div>
 
         <!-- Field content -->
-        <div class="ai-form-section__field-content">
+        <div class="field-content df-formSection-fieldContent">
 
           <!-- View mode -->
           <crem-input-label
@@ -61,11 +61,10 @@
           <mat-checkbox
             *ngIf="editMode && field.type === 'boolean'"
             [formControlName]="field.key"
-            class="ai-form-section__field-checkbox"
           ></mat-checkbox>
 
           <!-- Citation -->
-          <div *ngIf="field.citation" class="ai-form-section__citation">
+          <div *ngIf="field.citation" class="ai-citation">
             <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
             <span>{{ field.citation }}</span>
           </div>
@@ -76,9 +75,9 @@
     <!-- Rent Schedule Sub-table -->
     <ng-container *ngIf="rentSchedule">
 
-      <div class="ai-form-section__subtable-header">Base Rent Schedule</div>
+      <div class="ai-subtable-header">Base Rent Schedule</div>
       <dx-data-grid
-        class="ai-form-section__subtable"
+        class="ai-subtable"
         [dataSource]="rentSchedule.scheduleItems"
         [showBorders]="true"
         [showColumnLines]="false"
@@ -100,9 +99,9 @@
       </dx-data-grid>
 
       <ng-container *ngIf="hasAbatements()">
-        <div class="ai-form-section__subtable-header">Rent Abatements</div>
+        <div class="ai-subtable-header">Rent Abatements</div>
         <dx-data-grid
-          class="ai-form-section__subtable"
+          class="ai-subtable"
           [dataSource]="rentSchedule.abatementItems"
           [showBorders]="true"
           [showColumnLines]="false"
@@ -125,5 +124,6 @@
 
     </ng-container>
 
-  </div>
-</div>
+  </mat-card-content>
+
+</mat-card>
