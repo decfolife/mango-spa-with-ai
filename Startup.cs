@@ -1,5 +1,6 @@
 using Mango.MangoSPA;
 using MangoSPA.Extensions;
+using MangoSPA.Services;
 using MangoSPA.Middleware;
 using MangoSPA.Models;
 using MangoSPA.Services;
@@ -417,7 +418,9 @@ public class Startup
         });
 
         services.AddScoped<ICacheService, CacheService>()
-                .AddScoped<ISessionService, SessionService>();
+                .AddScoped<ISessionService, SessionService>()
+                .AddScoped<IAiAbstractionRepository, AiAbstractionRepository>()
+                .AddScoped<IAiDocumentStorageService, AiDocumentStorageService>();
     }
 
     // Configure data protection to use the same key ring and app identifier persisted to Redis.

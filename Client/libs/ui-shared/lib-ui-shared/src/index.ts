@@ -16,3 +16,5 @@ export * from './lib/crem-list-views/crem-share-view-popup';
 export * from './lib/add-company-modal/add-company-modal.component';
 export * from './lib/add-supplier-modal/add-supplier-modal.component';
 export * from './lib/add-equipment-modal/add-equipment-modal.component';
+export * from './lib/add-ai-lease-modal/add-ai-lease-modal.component';
+export * from './lib/add-ai-lease-modal/add-ai-lease-modal.module';

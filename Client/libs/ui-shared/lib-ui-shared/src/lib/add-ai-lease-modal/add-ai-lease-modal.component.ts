@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { DataService } from '@mango/core-shared';
 import { ToastState, VALIDATION_ERROR } from '@mango/data-models/lib-data-models';
 import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
+import { AiLeaseService } from '@mango/forms-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
 import { DashboardService } from '@project-dashboard/services/dashboard.service';
@@ -17,6 +18,7 @@ import { AddLeaseModalComponent } from '../add-lease-modal/add-lease-modal.compo
 })
 export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
   selectedFiles: File[] = [];
+  isSubmitting = false;
 
   // Extensions blocked for security — executable / script / system file types
   private readonly BLOCKED_EXTENSIONS = new Set([
@@ -29,10 +31,11 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     public override dialogRef: MatDialogRef<AddAiLeaseModalComponent>,
     formWizardService: FormWizardService,
     dashboardService: DashboardService,
-    router: Router,
+    private readonly router: Router,
     dataService: DataService,
-    toastService: CremToastService,
+    private readonly toastService: CremToastService,
     facade: MangoAppFacade,
+    private readonly aiLeaseService: AiLeaseService,
     @Inject(MAT_DIALOG_DATA)
     public override data: {
       objectTypeName: string;
@@ -101,36 +104,65 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
   }
 
-  override save(e: any): void {
-    if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
-      this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
-        position: 'bottom right',
-        maxWidth: '350px',
-      });
-      return;
-    }
-    super.save(e);
-  }
-
-  override saveAndNew(e: any): void {
-    if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
-      this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
-        position: 'bottom right',
-        maxWidth: '350px',
-      });
-      return;
-    }
-    super.saveAndNew(e);
-  }
-
+  /** Launch: post to AI abstractions API, then navigate to the abstraction form. */
   override launch(e: any): void {
-    if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
+    if (!this.addLeaseFormGroup.valid) {
       this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
         position: 'bottom right',
         maxWidth: '350px',
       });
       return;
     }
-    super.launch(e);
+
+    if (!this.selectedFiles.length) {
+      this.toastService.show('At least one lease document is required.', '', ToastState.ERROR, {
+        position: 'bottom right',
+        maxWidth: '350px',
+      });
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const formData = new FormData();
+    formData.append('buildingId', String(this.selectedBuilding ?? this.data.objectId ?? 0));
+    formData.append('includesAmendments', String(this.addLeaseFormGroup.get('includesAmendments')?.value ?? false));
+    formData.append('abstractionNotes', this.addLeaseFormGroup.get('abstractionNotes')?.value ?? '');
+    if (this.selectedAccountingType) {
+      formData.append('accountingType', this.selectedAccountingType);
+    }
+
+    this.selectedFiles.forEach((file) => formData.append('files', file, file.name));
+
+    this.aiLeaseService.createAbstraction(formData).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        this.dialogRef.close();
+        this.router.navigate(['/ai-abstractions', response.abstractionId]);
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.toastService.show(
+          'Failed to submit AI abstraction request. Please try again.',
+          '',
+          ToastState.ERROR,
+          { position: 'bottom right', maxWidth: '350px' }
+        );
+      },
+    });
+  }
+
+  // Save/SaveAndNew are not relevant for the AI abstraction flow — show informational toast
+  override save(_e: any): void {
+    this.toastService.show(
+      'Use "Launch" to submit for AI abstraction.',
+      '',
+      ToastState.WARNING,
+      { position: 'bottom right', maxWidth: '350px' }
+    );
+  }
+
+  override saveAndNew(_e: any): void {
+    this.save(_e);
   }
 }

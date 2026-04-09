@@ -4,7 +4,7 @@
 }
 
 .ai-sidebar {
-  width: 0; // controlled by [style.width] when open
+  width: 0;
   height: 100%;
   background: #ffffff;
   border-left: 1px solid #e0e0e0;
@@ -13,22 +13,9 @@
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s ease-in-out;
-  position: relative;
 
-  // ── Resize handle ─────────────────────────────────────────────────────────
-
-  &__resize-handle {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 6px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 1;
-
-    &:hover {
-      background: rgba(26, 35, 126, 0.15);
-    }
+  &--open {
+    width: 420px;
   }
 
   // ── Header ───────────────────────────────────────────────────────────────
@@ -190,82 +177,6 @@
     color: #c99700;
   }
 
-  // ── Expense cards ────────────────────────────────────────────────────────
-
-  &__expense-service-type {
-    font-size: 11px;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    padding: 8px 16px 4px;
-  }
-
-  &__expense-card {
-    margin: 0 12px 10px;
-    padding: 12px 14px;
-    border: 1px solid #d8d8d8;
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-
-    &__name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1a1a2e;
-      margin-bottom: 3px;
-    }
-
-    &__payor {
-      font-size: 13px;
-      color: #444;
-      margin-bottom: 8px;
-    }
-
-    &__citation {
-      border-top: 1px solid #eeeeee;
-      padding-top: 8px;
-      margin-top: 4px;
-    }
-
-    &__citation-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: #555;
-      margin-bottom: 4px;
-    }
-
-    &__citation-text {
-      font-size: 12px;
-      color: #444;
-      line-height: 1.5;
-      margin: 0 0 6px;
-    }
-
-    &__copy-btn {
-      display: flex;
-      align-items: center;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      color: #888;
-      float: right;
-      margin-top: -24px;
-
-      &:hover {
-        color: #1a237e;
-      }
-
-      mat-icon {
-        font-size: 15px;
-        height: 15px;
-        width: 15px;
-      }
-    }
-  }
-
   // ── Subtables ────────────────────────────────────────────────────────────
 
   &__subtable-label {
@@ -279,6 +190,5 @@
 
   &__subtable {
     margin: 0 16px 8px;
-    width: calc(100% - 32px);
   }
 }

@@ -279,40 +279,15 @@
     >Cancel</crem-button>
 
     <crem-button
-      type="secondary"
-      id="add_ai_lease_modal__save_btn"
-      (click)="save($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
-    >
-      <span>{{ saveClicked ? 'Saving' : 'Save' }}</span>
-    </crem-button>
-
-    <crem-button
-      type="secondary"
-      id="add_ai_lease_modal__savenew_btn"
-      (click)="saveAndNew($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
-      [dataId]="'save_new'"
-    >
-      <span>{{ saveClicked ? 'Saving' : 'Save & New' }}</span>
-    </crem-button>
-
-    <crem-button
       id="add_ai_lease_modal__launch_btn"
       type="primary"
       (click)="launch($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
+      [disabled]="isSubmitting"
+      [icon]="isSubmitting ? 'faSpinner' : ''"
+      [iconPack]="isSubmitting ? 'solid' : ''"
+      [iconAnimation]="isSubmitting ? 'spin' : ''"
     >
-      <span>{{ saveClicked ? 'Saving' : 'Launch' }}</span>
+      <span>{{ isSubmitting ? 'Submitting...' : 'Launch AI Abstraction' }}</span>
     </crem-button>
   </div>
 </crem-modal>

@@ -1,8 +1,24 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseListItem } from '../models/ai-form.model';
+
+export interface AiAbstractionDetail {
+  abstractionId: number;
+  buildingId: number;
+  status: 'Pending' | 'Processing' | 'Complete' | 'Error' | 'Cancelled';
+  errorMessage?: string;
+  inputJson: string;
+  aiOutputJson?: string;
+  createdDate: string;
+  completedDate?: string;
+}
+
+export interface CreateAiAbstractionResponse {
+  abstractionId: number;
+}
 
 const MOCK_LEASE_LIST: AiLeaseListItem[] = [
   {
@@ -423,14 +439,63 @@ const MOCK_AI_OUTPUTS: { [id: number]: IAIOutput } = {
 
 @Injectable({ providedIn: 'root' })
 export class AiLeaseService {
-  private readonly SIMULATED_DELAY_MS = 800;
+  private readonly API_BASE = '/ai-abstractions';
 
-  getLeaseList(): Observable<AiLeaseListItem[]> {
-    return of(MOCK_LEASE_LIST).pipe(delay(this.SIMULATED_DELAY_MS));
+  constructor(private readonly http: HttpClient) {}
+
+  // ── Real API methods ──────────────────────────────────────────────────────
+
+  /**
+   * Submit a new AI abstraction request (modal form + files).
+   */
+  createAbstraction(formData: FormData): Observable<CreateAiAbstractionResponse> {
+    return this.http.post<CreateAiAbstractionResponse>(this.API_BASE, formData);
   }
 
+  /**
+   * Get full abstraction detail by ID.
+   * Returns the parsed IAIOutput when status = 'Complete', null otherwise.
+   */
+  getAbstractionById(id: number): Observable<AiAbstractionDetail | null> {
+    return this.http.get<AiAbstractionDetail>(`${this.API_BASE}/${id}`);
+  }
+
+  /**
+   * List AI abstractions for a building.
+   */
+  getAbstractionList(buildingId: number): Observable<AiAbstractionDetail[]> {
+    return this.http.get<AiAbstractionDetail[]>(`${this.API_BASE}?buildingId=${buildingId}`);
+  }
+
+  // ── Convenience wrapper for the form page ─────────────────────────────────
+
+  /**
+   * Returns the IAIOutput from a completed abstraction.
+   * Falls back to mock data for IDs 1–5 so development works without a DB.
+   */
   getLeaseById(id: number): Observable<IAIOutput | null> {
-    const data = MOCK_AI_OUTPUTS[id] ?? null;
-    return of(data).pipe(delay(this.SIMULATED_DELAY_MS));
+    // Keep mock data for dev IDs 1–5
+    if (MOCK_AI_OUTPUTS[id] !== undefined) {
+      return of(MOCK_AI_OUTPUTS[id]).pipe(delay(400));
+    }
+
+    return this.getAbstractionById(id).pipe(
+      map((detail) => {
+        if (!detail || detail.status !== 'Complete' || !detail.aiOutputJson) {
+          return null;
+        }
+        try {
+          return JSON.parse(detail.aiOutputJson) as IAIOutput;
+        } catch {
+          return null;
+        }
+      })
+    );
+  }
+
+  // ── Mock list (used until the list page is wired to a real building ID) ───
+
+  getLeaseList(): Observable<AiLeaseListItem[]> {
+    return of(MOCK_LEASE_LIST).pipe(delay(400));
   }
 }
