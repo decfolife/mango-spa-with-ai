@@ -128,8 +128,30 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     formData.append('buildingId', String(this.selectedBuilding ?? this.data.objectId ?? 0));
     formData.append('includesAmendments', String(this.addLeaseFormGroup.get('includesAmendments')?.value ?? false));
     formData.append('abstractionNotes', this.addLeaseFormGroup.get('abstractionNotes')?.value ?? '');
-    if (this.selectedAccountingType) {
-      formData.append('accountingType', this.selectedAccountingType);
+
+    if (this.selectedPortfolio != null) {
+      formData.append('portfolioId', String(this.selectedPortfolio));
+    }
+    if (this.selectedPremise != null) {
+      formData.append('premiseId', String(this.selectedPremise));
+    }
+    if (this.selectedPremiseType != null) {
+      formData.append('premiseTypeId', String(this.selectedPremiseType));
+    }
+    if (this.addNewPremise) {
+      formData.append('newPremiseName', this.addLeaseFormGroup.get('newPremiseName')?.value ?? '');
+    }
+    if (this.selectedTemplate != null) {
+      formData.append('leaseTemplateId', String(this.selectedTemplate));
+    }
+    if (this.selectedAccountingType != null) {
+      formData.append('accountingType', String(this.selectedAccountingType));
+    }
+    if (this.selectedMeasurement != null) {
+      formData.append('measurementUnitId', String(this.selectedMeasurement));
+    }
+    if (this.selectedParentLease != null) {
+      formData.append('parentLeaseId', String(this.selectedParentLease));
     }
 
     this.selectedFiles.forEach((file) => formData.append('files', file, file.name));

@@ -2,13 +2,25 @@ namespace MangoSPA.Models.Ai;
 
 /// <summary>
 /// Form data sent when creating a new AI lease abstraction.
+/// All values match what the Add AI Lease modal collects via getRenderSelect dropdowns.
 /// Files are submitted alongside this as multipart/form-data.
 /// </summary>
 public class CreateAiAbstractionRequest
 {
+    // ── Core identifiers ────────────────────────────────────────────────────
     public int BuildingId { get; set; }
     public int? PortfolioId { get; set; }
-    public string? AccountingType { get; set; }
+    public int? PremiseId { get; set; }
+    public int? PremiseTypeId { get; set; }
+    public string? NewPremiseName { get; set; }
+
+    // ── Lease configuration (mirrors Add Lease modal dropdowns) ─────────────
+    public int? LeaseTemplateId { get; set; }       // getRenderSelect 56
+    public string? AccountingType { get; set; }     // getRenderSelect 127
+    public int? MeasurementUnitId { get; set; }     // getRenderSelect 20
+    public int? ParentLeaseId { get; set; }         // getRenderSelect 112
+
+    // ── AI abstraction specific ──────────────────────────────────────────────
     public bool IncludesAmendments { get; set; }
     public string? AbstractionNotes { get; set; }
 }
