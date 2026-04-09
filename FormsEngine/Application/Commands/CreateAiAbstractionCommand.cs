@@ -86,14 +86,17 @@ public class CreateAiAbstractionCommandHandler : IRequestHandler<CreateAiAbstrac
             });
 
             var abstractionId = await connection.ExecuteScalarAsync<int>(
-                "spCreateAiAbstraction",
+                """
+                INSERT INTO dbo.AILeaseAbstractions (BuildingID, CreatedByUserID, InputJson)
+                OUTPUT INSERTED.AbstractionID
+                VALUES (@BuildingId, @CreatedByUserId, @InputJson)
+                """,
                 new
                 {
                     BuildingId = request.BuildingId,
                     CreatedByUserId = _currentUserService.UserId,
                     InputJson = inputJson,
-                },
-                commandType: CommandType.StoredProcedure);
+                });
 
             var basePath = _configuration["FileStorage:AiDocumentsBasePath"] ?? Path.GetTempPath();
 
@@ -111,7 +114,12 @@ public class CreateAiAbstractionCommandHandler : IRequestHandler<CreateAiAbstrac
                     await file.CopyToAsync(stream, cancellationToken);
 
                     await connection.ExecuteAsync(
-                        "spAddAiAbstractionDocument",
+                        """
+                        INSERT INTO dbo.AIAbstractionDocuments
+                            (AbstractionID, OriginalFileName, StoredFileName, ShareFolderPath, FileSizeBytes, MimeType, SortOrder, UploadedByUserID)
+                        VALUES
+                            (@AbstractionId, @OriginalFileName, @StoredFileName, @ShareFolderPath, @FileSizeBytes, @MimeType, @SortOrder, @UploadedByUserId)
+                        """,
                         new
                         {
                             AbstractionId = abstractionId,
@@ -122,8 +130,7 @@ public class CreateAiAbstractionCommandHandler : IRequestHandler<CreateAiAbstrac
                             MimeType = file.ContentType,
                             SortOrder = i,
                             UploadedByUserId = _currentUserService.UserId,
-                        },
-                        commandType: CommandType.StoredProcedure);
+                        });
                 }
                 catch (Exception ex)
                 {

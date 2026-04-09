@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Contracts.HTTP.Microservice;
@@ -39,13 +38,20 @@ public class GetAiAbstractionsListQueryHandler : IRequestHandler<GetAiAbstractio
         try
         {
             var data = await connection.QueryAsync(
-                "spGetAiAbstractionsByBuilding",
-                new
-                {
-                    BuildingId = request.BuildingId,
-                    @UserID = _currentUserService.UserId,
-                },
-                commandType: CommandType.StoredProcedure);
+                """
+                SELECT
+                    AbstractionID,
+                    BuildingID,
+                    [Status],
+                    AI_Tenant       AS AiTenant,
+                    AI_LeaseEndDate AS AiLeaseEndDate,
+                    CreatedDate
+                FROM dbo.AILeaseAbstractions
+                WHERE BuildingID = @BuildingId
+                  AND [Status] <> 'Cancelled'
+                ORDER BY CreatedDate DESC
+                """,
+                new { BuildingId = request.BuildingId });
 
             return new ApiResponse(true, data);
         }

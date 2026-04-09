@@ -418,9 +418,7 @@ public class Startup
         });
 
         services.AddScoped<ICacheService, CacheService>()
-                .AddScoped<ISessionService, SessionService>()
-                .AddScoped<IAiAbstractionRepository, AiAbstractionRepository>()
-                .AddScoped<IAiDocumentStorageService, AiDocumentStorageService>();
+                .AddScoped<ISessionService, SessionService>();
     }
 
     // Configure data protection to use the same key ring and app identifier persisted to Redis.

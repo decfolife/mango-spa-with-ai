@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Contracts.HTTP.Microservice;
@@ -39,9 +38,20 @@ public class GetAiAbstractionQueryHandler : IRequestHandler<GetAiAbstractionQuer
         try
         {
             var data = await connection.QueryFirstOrDefaultAsync(
-                "spGetAiAbstractionById",
-                new { AbstractionId = request.AbstractionId },
-                commandType: CommandType.StoredProcedure);
+                """
+                SELECT
+                    AbstractionID,
+                    BuildingID,
+                    [Status],
+                    ErrorMessage,
+                    InputJson,
+                    AIOutputJson AS AiOutputJson,
+                    CreatedDate,
+                    CompletedDate
+                FROM dbo.AILeaseAbstractions
+                WHERE AbstractionID = @AbstractionId
+                """,
+                new { AbstractionId = request.AbstractionId });
 
             if (data == null)
                 return new ApiResponse(false, "Abstraction not found.");
