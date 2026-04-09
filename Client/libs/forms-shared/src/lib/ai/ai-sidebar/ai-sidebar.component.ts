@@ -118,6 +118,10 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
     return this.abatementItems.length > 0;
   }
 
+  copyCitation(text: string): void {
+    navigator.clipboard?.writeText(text);
+  }
+
   // ─── Resize ──────────────────────────────────────────────────────────────────
 
   onResizeStart(event: MouseEvent): void {
@@ -232,7 +236,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
             value: this.formatPayor(data.expenses?.operatingExpenses?.value),
             citation: data.expenses?.operatingExpenses?.citation,
           },
-          { label: 'CAM', value: this.formatPayor(data.expenses?.cam?.value), citation: data.expenses?.cam?.citation },
+          { label: 'Common Area Maintenance', value: this.formatPayor(data.expenses?.cam?.value), citation: data.expenses?.cam?.citation },
           { label: 'Insurance', value: this.formatPayor(data.expenses?.insurance?.value) },
           { label: 'Taxes', value: this.formatPayor(data.expenses?.taxes?.value) },
           { label: 'Water', value: this.formatPayor(data.expenses?.water?.value) },

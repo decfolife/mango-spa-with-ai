@@ -45,14 +45,48 @@
 
       <!-- Section fields -->
       <div *ngIf="section.isExpanded" class="ai-sidebar__section-body">
-        <div *ngFor="let field of section.fields" class="ai-sidebar__field">
-          <span class="ai-sidebar__field-label">{{ field.label }}</span>
-          <span class="ai-sidebar__field-value">{{ field.value }}</span>
-          <div *ngIf="field.citation" class="ai-sidebar__citation">
-            <mat-icon class="ai-sidebar__citation-icon">format_quote</mat-icon>
-            <span>{{ field.citation }}</span>
+
+        <!-- Expenses section: card-per-expense layout -->
+        <ng-container *ngIf="section.title === 'Expenses'; else defaultFieldList">
+          <div *ngFor="let field of section.fields">
+
+            <!-- Service Type shown as a plain label, not a card -->
+            <div *ngIf="field.label === 'Service Type' && field.value !== '—'" class="ai-sidebar__expense-service-type">
+              {{ field.value }}
+            </div>
+
+            <!-- Each other expense rendered as a card -->
+            <div *ngIf="field.label !== 'Service Type' && field.value !== '—'" class="ai-sidebar__expense-card">
+              <div class="ai-sidebar__expense-card__name">{{ field.label }}</div>
+              <div class="ai-sidebar__expense-card__payor">{{ field.value }}</div>
+              <div *ngIf="field.citation" class="ai-sidebar__expense-card__citation">
+                <span class="ai-sidebar__expense-card__citation-label">Citation:</span>
+                <p class="ai-sidebar__expense-card__citation-text">{{ field.citation }}</p>
+                <button
+                  class="ai-sidebar__expense-card__copy-btn"
+                  (click)="copyCitation(field.citation)"
+                  title="Copy citation"
+                  type="button"
+                >
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+            </div>
+
           </div>
-        </div>
+        </ng-container>
+
+        <!-- Default field layout for all other sections -->
+        <ng-template #defaultFieldList>
+          <div *ngFor="let field of section.fields" class="ai-sidebar__field">
+            <span class="ai-sidebar__field-label">{{ field.label }}</span>
+            <span class="ai-sidebar__field-value">{{ field.value }}</span>
+            <div *ngIf="field.citation" class="ai-sidebar__citation">
+              <mat-icon class="ai-sidebar__citation-icon">format_quote</mat-icon>
+              <span>{{ field.citation }}</span>
+            </div>
+          </div>
+        </ng-template>
 
         <!-- Rent schedule table (inside Rent section) -->
         <ng-container *ngIf="section.title === 'Rent' && rentScheduleItems.length">
