@@ -41,6 +41,16 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
 
   override setupAddLeaseFormGroup(): void {
     super.setupAddLeaseFormGroup();
+
+    // These fields are populated by the AI from the lease PDF — remove required validation
+    ['tenantName', 'leaseType', 'currencyTypeList', 'beginDate', 'endDate'].forEach((field) => {
+      const ctrl = this.addLeaseFormGroup.get(field);
+      if (ctrl) {
+        ctrl.clearValidators();
+        ctrl.updateValueAndValidity();
+      }
+    });
+
     this.addLeaseFormGroup.addControl('includesAmendments', new FormControl(false));
     this.addLeaseFormGroup.addControl('abstractionNotes', new FormControl(''));
     this.addLeaseFormGroup.addControl('leaseDocument', new FormControl(null, Validators.required));
