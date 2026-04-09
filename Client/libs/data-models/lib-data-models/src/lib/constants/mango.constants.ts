@@ -57,6 +57,8 @@ export const PREMISE_WIZARD_OTID = 2;
 export const BUILDING_WIZARD_OTID = 3;
 //Constant for Add Lease
 export const LEASE_WIZARD_OTID = 4;
+//Constant for Add AI Lease Abstraction
+export const AI_LEASE_WIZARD_OTID = 9998;
 
 //Constants for Add Supplier
 export const RENDER_SELECT_TEMPLATE_ID = 132;

@@ -50,6 +50,13 @@
       >
         {{ item.moduleDesc }}
       </button>
+      <button
+        *ngIf="objectTypeId == '4'"
+        mat-menu-item
+        (click)="showAddAiLeasePopup(); $event.preventDefault()"
+      >
+        AI Lease Abstraction
+      </button>
     </mat-menu>
   </ng-container>
   <!-- container only displays on specific list pages other than has ObjectTypeId 2,3,4 -->
