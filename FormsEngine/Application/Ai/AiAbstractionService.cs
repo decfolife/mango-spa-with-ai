@@ -29,20 +29,7 @@ public class AiAbstractionService : IAiAbstractionService
 
     public async Task<int> CreateAbstractionAsync(CreateAiAbstractionCommand command, int userId, CancellationToken cancellationToken)
     {
-        var inputJson = JsonSerializer.Serialize(new
-        {
-            command.BuildingId,
-            command.PortfolioId,
-            command.PremiseId,
-            command.PremiseTypeId,
-            command.NewPremiseName,
-            command.LeaseTemplateId,
-            command.AccountingType,
-            command.MeasurementUnitId,
-            command.ParentLeaseId,
-            command.IncludesAmendments,
-            command.AbstractionNotes,
-        });
+        var inputJson = JsonSerializer.Serialize(command);
 
         var abstractionId = await _repository.CreateAsync(command.BuildingId, userId, inputJson);
 

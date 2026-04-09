@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Contracts.HTTP.Microservice;
@@ -29,7 +30,8 @@ public class CreateAiAbstractionCommand : IRequest<ApiResponse>
     public bool IncludesAmendments { get; set; }
     public string? AbstractionNotes { get; set; }
 
-    // ── File uploads ─────────────────────────────────────────────────────────
+    // ── File uploads — excluded from InputJson serialization ─────────────────
+    [JsonIgnore]
     public List<IFormFile> Files { get; set; } = new();
 }
 
