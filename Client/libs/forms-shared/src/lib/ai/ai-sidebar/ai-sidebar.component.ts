@@ -39,15 +39,15 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   private readonly MAX_WIDTH = 800;
 
   readonly rentScheduleColumns = [
-    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'monthlyBaseRent', caption: 'Monthly Rent', dataType: 'number', format: { type: 'currency', precision: 0 }, width: 120 },
+    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'monthlyBaseRent', caption: 'Monthly Rent', dataType: 'number', format: { type: 'currency', precision: 0 } },
   ];
 
   readonly abatementColumns = [
-    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'discountAmount', caption: 'Amount', dataType: 'number', format: { type: 'currency', precision: 0 }, width: 110 },
+    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'discountAmount', caption: 'Amount', dataType: 'number', format: { type: 'currency', precision: 0 } },
   ];
 
   private readonly destroy$ = new Subject<void>();
