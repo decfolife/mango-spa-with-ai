@@ -1,4 +1,7 @@
-<div class="ai-sidebar" [class.ai-sidebar--open]="isOpen">
+<div class="ai-sidebar" [class.ai-sidebar--open]="isOpen" [style.width]="isOpen ? (currentWidth + 'px') : '0'">
+
+  <!-- Drag-resize handle on left edge -->
+  <div class="ai-sidebar__resize-handle" (mousedown)="onResizeStart($event)"></div>
 
   <!-- Header -->
   <div class="ai-sidebar__header">

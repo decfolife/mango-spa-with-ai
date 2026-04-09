@@ -1,24 +1,33 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+interface SidebarState {
+  isOpen: boolean;
+  leaseId: number | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AiSidebarService {
-  private readonly isOpenSubject = new BehaviorSubject<boolean>(false);
-  readonly isOpen$ = this.isOpenSubject.asObservable();
+  private readonly stateSubject = new BehaviorSubject<SidebarState>({ isOpen: false, leaseId: null });
+  readonly state$ = this.stateSubject.asObservable();
+  readonly isOpen$ = this.state$.pipe(map((s) => s.isOpen));
 
-  toggle(): void {
-    this.isOpenSubject.next(!this.isOpenSubject.value);
+  toggle(leaseId?: number): void {
+    const { isOpen, leaseId: currentId } = this.stateSubject.value;
+    this.stateSubject.next({ isOpen: !isOpen, leaseId: leaseId !== undefined ? leaseId : currentId });
   }
 
-  open(): void {
-    this.isOpenSubject.next(true);
+  open(leaseId?: number): void {
+    const currentId = this.stateSubject.value.leaseId;
+    this.stateSubject.next({ isOpen: true, leaseId: leaseId !== undefined ? leaseId : currentId });
   }
 
   close(): void {
-    this.isOpenSubject.next(false);
+    this.stateSubject.next({ isOpen: false, leaseId: null });
   }
 
   get isOpen(): boolean {
-    return this.isOpenSubject.value;
+    return this.stateSubject.value.isOpen;
   }
 }

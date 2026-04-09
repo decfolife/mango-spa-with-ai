@@ -1,7 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, switchMap, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 import { AiSidebarService } from './ai-sidebar.service';
@@ -30,6 +30,13 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   sections: SidebarSection[] = [];
   rentScheduleItems: any[] = [];
   abatementItems: any[] = [];
+  currentWidth = 420;
+
+  private isDragging = false;
+  private dragStartX = 0;
+  private dragStartWidth = 0;
+  private readonly MIN_WIDTH = 250;
+  private readonly MAX_WIDTH = 800;
 
   readonly rentScheduleColumns = [
     { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
@@ -52,26 +59,28 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // React to sidebar open/close + route oid changes together
     combineLatest([
-      this.aiSidebarService.isOpen$,
+      this.aiSidebarService.state$,
       this.route.queryParams,
     ])
       .pipe(
         takeUntil(this.destroy$),
         distinctUntilChanged(
-          ([prevOpen, prevParams], [nextOpen, nextParams]) =>
-            prevOpen === nextOpen && prevParams['oid'] === nextParams['oid']
+          ([prevState, prevParams], [nextState, nextParams]) =>
+            prevState.isOpen === nextState.isOpen &&
+            prevState.leaseId === nextState.leaseId &&
+            prevParams['oid'] === nextParams['oid']
         )
       )
-      .subscribe(([open, params]) => {
-        this.isOpen = open;
-        const oid = params['oid'] ? Number(params['oid']) : null;
+      .subscribe(([state, params]) => {
+        this.isOpen = state.isOpen;
+        // Prefer explicit leaseId from service (AI abstraction route),
+        // fall back to ?oid= query param (dynamic form route)
+        const oid = state.leaseId ?? (params['oid'] ? Number(params['oid']) : null);
 
-        if (open && oid) {
+        if (state.isOpen && oid) {
           this.loadData(oid);
-        } else if (!open) {
-          // Reset data when closed so stale data doesn't flash on next open
+        } else if (!state.isOpen) {
           this.sections = [];
           this.rentScheduleItems = [];
           this.abatementItems = [];
@@ -96,6 +105,35 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   hasAbatements(): boolean {
     return this.abatementItems.length > 0;
   }
+
+  // ─── Resize ──────────────────────────────────────────────────────────────────
+
+  onResizeStart(event: MouseEvent): void {
+    this.isDragging = true;
+    this.dragStartX = event.clientX;
+    this.dragStartWidth = this.currentWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    event.preventDefault();
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    if (!this.isDragging) return;
+    // Sidebar is on the right edge; dragging left (smaller clientX) increases width
+    const delta = this.dragStartX - event.clientX;
+    this.currentWidth = Math.min(this.MAX_WIDTH, Math.max(this.MIN_WIDTH, this.dragStartWidth + delta));
+  }
+
+  @HostListener('document:mouseup')
+  onMouseUp(): void {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  // ─── Data ────────────────────────────────────────────────────────────────────
 
   private loadData(oid: number): void {
     this.isLoading = true;

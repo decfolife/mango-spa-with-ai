@@ -4,7 +4,7 @@
 }
 
 .ai-sidebar {
-  width: 0;
+  width: 0; // controlled by [style.width] when open
   height: 100%;
   background: #ffffff;
   border-left: 1px solid #e0e0e0;
@@ -13,9 +13,22 @@
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s ease-in-out;
+  position: relative;
 
-  &--open {
-    width: 420px;
+  // ── Resize handle ─────────────────────────────────────────────────────────
+
+  &__resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 1;
+
+    &:hover {
+      background: rgba(26, 35, 126, 0.15);
+    }
   }
 
   // ── Header ───────────────────────────────────────────────────────────────

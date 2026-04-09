@@ -71,7 +71,7 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void {
-    this.aiSidebarService.toggle();
+    this.aiSidebarService.toggle(this.leaseId);
   }
 
   expandAll(): void {
