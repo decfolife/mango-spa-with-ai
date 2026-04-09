@@ -6,6 +6,7 @@ import { switchMap, takeUntil } from 'rxjs/operators';
 import { AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
+import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
 
 @Component({
   selector: 'mango-ai-lease-form',
@@ -15,6 +16,7 @@ import { AiLeaseService } from '../services/ai-lease.service';
 export class AiLeaseFormComponent implements OnInit, OnDestroy {
   form: FormGroup = new FormGroup({});
   sections: AiFormSection[] = [];
+  sectionsExpanded: boolean[] = [];
   isLoading = true;
   editMode = false;
   errorMessage: string | null = null;
@@ -26,7 +28,8 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly aiLeaseService: AiLeaseService
+    private readonly aiLeaseService: AiLeaseService,
+    private readonly aiSidebarService: AiSidebarService
   ) {}
 
   ngOnInit(): void {
@@ -48,6 +51,7 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
             return;
           }
           this.sections = this.buildSections(data);
+          this.sectionsExpanded = this.sections.map(() => true);
           this.form = this.buildFormGroup(this.sections);
           if (data.basics?.tenant?.value) {
             this.pageTitle = `AI Lease Abstraction — ${data.basics.tenant.value}`;
@@ -64,6 +68,22 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  toggleSidebar(): void {
+    this.aiSidebarService.toggle();
+  }
+
+  expandAll(): void {
+    this.sectionsExpanded = this.sectionsExpanded.map(() => true);
+  }
+
+  collapseAll(): void {
+    this.sectionsExpanded = this.sectionsExpanded.map(() => false);
+  }
+
+  scrollToTop(): void {
+    document.getElementById('df-formContainer-formContainer')?.scrollIntoView({ behavior: 'smooth' });
   }
 
   toggleEditMode(): void {

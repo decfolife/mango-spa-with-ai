@@ -20,6 +20,7 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { AiLeaseFormComponent } from './ai-lease-form.component';
 import { AiFormSectionComponent } from './ai-form-section/ai-form-section.component';
+import { AiSidebarModule } from '../ai-sidebar/ai-sidebar.module';
 
 @NgModule({
   declarations: [AiLeaseFormComponent, AiFormSectionComponent],
@@ -41,6 +42,7 @@ import { AiFormSectionComponent } from './ai-form-section/ai-form-section.compon
     InputLabelComponent,
     SkeletonModule,
     PageHeaderComponent,
+    AiSidebarModule,
   ],
   exports: [AiLeaseFormComponent],
 })
