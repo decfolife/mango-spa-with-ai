@@ -1,7 +1,8 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest, Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { DxDataGridComponent } from 'devextreme-angular';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 import { AiSidebarService } from './ai-sidebar.service';
@@ -24,6 +25,8 @@ interface SidebarSection {
   styleUrls: ['./ai-sidebar.component.scss'],
 })
 export class AiSidebarComponent implements OnInit, OnDestroy {
+  @ViewChildren(DxDataGridComponent) dataGrids: QueryList<DxDataGridComponent>;
+
   isOpen = false;
   isLoading = false;
   errorMessage: string | null = null;
@@ -37,6 +40,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   private dragStartWidth = 0;
   private readonly MIN_WIDTH = 250;
   private readonly MAX_WIDTH = 800;
+  private resizeObserver: ResizeObserver;
 
   readonly rentScheduleColumns = [
     { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy' },
@@ -55,10 +59,17 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   constructor(
     private readonly aiSidebarService: AiSidebarService,
     private readonly aiLeaseService: AiLeaseService,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly el: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
+    // Repaint grids whenever the sidebar's width changes (drag or open/close transition)
+    this.resizeObserver = new ResizeObserver(() => {
+      this.dataGrids?.forEach((grid) => grid.instance?.repaint());
+    });
+    this.resizeObserver.observe(this.el.nativeElement);
+
     combineLatest([
       this.aiSidebarService.state$,
       this.route.queryParams,
@@ -90,6 +101,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
   }
