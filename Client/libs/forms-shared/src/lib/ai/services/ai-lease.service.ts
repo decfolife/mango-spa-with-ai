@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
+import { Api, ApiResponse } from '@mango/data-models/lib-data-models';
+import { UtilitiesService } from '@mango/core-shared';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseListItem } from '../models/ai-form.model';
 
@@ -439,32 +441,28 @@ const MOCK_AI_OUTPUTS: { [id: number]: IAIOutput } = {
 
 @Injectable({ providedIn: 'root' })
 export class AiLeaseService {
-  private readonly API_BASE = '/ai-abstractions';
+  private readonly apiUrl = UtilitiesService.getBaseApiUrl(Api.formWizard);
 
   constructor(private readonly http: HttpClient) {}
 
   // ── Real API methods ──────────────────────────────────────────────────────
 
-  /**
-   * Submit a new AI abstraction request (modal form + files).
-   */
   createAbstraction(formData: FormData): Observable<CreateAiAbstractionResponse> {
-    return this.http.post<CreateAiAbstractionResponse>(this.API_BASE, formData);
+    return this.http.post<ApiResponse>(`${this.apiUrl}AiAbstractions/CreateAiAbstraction`, formData).pipe(
+      map((res) => res.data as CreateAiAbstractionResponse)
+    );
   }
 
-  /**
-   * Get full abstraction detail by ID.
-   * Returns the parsed IAIOutput when status = 'Complete', null otherwise.
-   */
   getAbstractionById(id: number): Observable<AiAbstractionDetail | null> {
-    return this.http.get<AiAbstractionDetail>(`${this.API_BASE}/${id}`);
+    return this.http.get<ApiResponse>(`${this.apiUrl}AiAbstractions/GetAiAbstractionById`, { params: { abstractionId: id } }).pipe(
+      map((res) => res.data as AiAbstractionDetail ?? null)
+    );
   }
 
-  /**
-   * List AI abstractions for a building.
-   */
   getAbstractionList(buildingId: number): Observable<AiAbstractionDetail[]> {
-    return this.http.get<AiAbstractionDetail[]>(`${this.API_BASE}?buildingId=${buildingId}`);
+    return this.http.get<ApiResponse>(`${this.apiUrl}AiAbstractions/GetAiAbstractionsByBuilding`, { params: { buildingId } }).pipe(
+      map((res) => res.data as AiAbstractionDetail[])
+    );
   }
 
   // ── Convenience wrapper for the form page ─────────────────────────────────
