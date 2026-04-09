@@ -1,5 +1,9 @@
-.ai-sidebar {
+:host {
+  display: block;
   flex-shrink: 0;
+}
+
+.ai-sidebar {
   width: 0;
   height: 100%;
   background: #ffffff;
