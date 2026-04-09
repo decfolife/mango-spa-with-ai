@@ -3,13 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common.Contracts.HTTP.Microservice;
 using Common.Enums;
-using Dapper;
-using FormsEngine.Application.Common.Interfaces;
 using Infrastructure.Services;
 using MediatR;
-using Microsoft.Data.SqlClient;
 
-namespace FormsEngine.Application.Queries;
+namespace FormsEngine.Application.Ai;
 
 public class GetAiAbstractionsListQuery : IRequest<ApiResponse>
 {
@@ -18,41 +15,25 @@ public class GetAiAbstractionsListQuery : IRequest<ApiResponse>
 
 public class GetAiAbstractionsListQueryHandler : IRequestHandler<GetAiAbstractionsListQuery, ApiResponse>
 {
-    readonly IClientsDbConnectionProvider _dbProvider;
+    readonly IAiAbstractionService _service;
     readonly ILogDirectService _logger;
     readonly ICurrentUserService _currentUserService;
 
     public GetAiAbstractionsListQueryHandler(
-        IClientsDbConnectionProvider dbProvider,
+        IAiAbstractionService service,
         ILogDirectService logger,
         ICurrentUserService currentUserService)
     {
-        _dbProvider = dbProvider;
+        _service = service;
         _logger = logger;
         _currentUserService = currentUserService;
     }
 
     public async Task<ApiResponse> Handle(GetAiAbstractionsListQuery request, CancellationToken cancellationToken)
     {
-        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         try
         {
-            var data = await connection.QueryAsync(
-                """
-                SELECT
-                    AbstractionID,
-                    BuildingID,
-                    [Status],
-                    AI_Tenant       AS AiTenant,
-                    AI_LeaseEndDate AS AiLeaseEndDate,
-                    CreatedDate
-                FROM dbo.AILeaseAbstractions
-                WHERE BuildingID = @BuildingId
-                  AND [Status] <> 'Cancelled'
-                ORDER BY CreatedDate DESC
-                """,
-                new { BuildingId = request.BuildingId });
-
+            var data = await _service.GetAbstractionsListAsync(request.BuildingId);
             return new ApiResponse(true, data);
         }
         catch (Exception ex)

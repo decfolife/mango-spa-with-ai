@@ -3,13 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common.Contracts.HTTP.Microservice;
 using Common.Enums;
-using Dapper;
-using FormsEngine.Application.Common.Interfaces;
 using Infrastructure.Services;
 using MediatR;
-using Microsoft.Data.SqlClient;
 
-namespace FormsEngine.Application.Queries;
+namespace FormsEngine.Application.Ai;
 
 public class GetAiAbstractionQuery : IRequest<ApiResponse>
 {
@@ -18,41 +15,25 @@ public class GetAiAbstractionQuery : IRequest<ApiResponse>
 
 public class GetAiAbstractionQueryHandler : IRequestHandler<GetAiAbstractionQuery, ApiResponse>
 {
-    readonly IClientsDbConnectionProvider _dbProvider;
+    readonly IAiAbstractionService _service;
     readonly ILogDirectService _logger;
     readonly ICurrentUserService _currentUserService;
 
     public GetAiAbstractionQueryHandler(
-        IClientsDbConnectionProvider dbProvider,
+        IAiAbstractionService service,
         ILogDirectService logger,
         ICurrentUserService currentUserService)
     {
-        _dbProvider = dbProvider;
+        _service = service;
         _logger = logger;
         _currentUserService = currentUserService;
     }
 
     public async Task<ApiResponse> Handle(GetAiAbstractionQuery request, CancellationToken cancellationToken)
     {
-        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         try
         {
-            var data = await connection.QueryFirstOrDefaultAsync(
-                """
-                SELECT
-                    AbstractionID,
-                    BuildingID,
-                    [Status],
-                    ErrorMessage,
-                    InputJson,
-                    AIOutputJson AS AiOutputJson,
-                    CreatedDate,
-                    CompletedDate
-                FROM dbo.AILeaseAbstractions
-                WHERE AbstractionID = @AbstractionId
-                """,
-                new { AbstractionId = request.AbstractionId });
-
+            var data = await _service.GetAbstractionAsync(request.AbstractionId);
             if (data == null)
                 return new ApiResponse(false, "Abstraction not found.");
 
