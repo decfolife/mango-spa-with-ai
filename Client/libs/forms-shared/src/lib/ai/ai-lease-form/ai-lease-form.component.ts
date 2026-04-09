@@ -1,12 +1,54 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
-import { AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, switchMap, takeUntil } from 'rxjs/operators';
+import { AiDropdownItem, AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
+import { FormWizardService } from '@micro-components/services/form-wizard.service';
+import { RequestType } from '@forms/model/enums/render-selects.enums';
+
+// ── Static dropdown option lists ─────────────────────────────────────────────
+
+const DEAL_TYPE_OPTIONS: AiDropdownItem[] = [
+  { id: 'New', name: 'New' },
+  { id: 'Renewal', name: 'Renewal' },
+  { id: 'Expansion', name: 'Expansion' },
+  { id: 'Sublease', name: 'Sublease' },
+  { id: 'Extension', name: 'Extension' },
+  { id: 'Termination', name: 'Termination' },
+  { id: 'Other', name: 'Other' },
+];
+
+const SPACE_USE_OPTIONS: AiDropdownItem[] = [
+  { id: 'Office', name: 'Office' },
+  { id: 'Retail', name: 'Retail' },
+  { id: 'Industrial', name: 'Industrial' },
+  { id: 'Medical', name: 'Medical' },
+  { id: 'Mixed Use', name: 'Mixed Use' },
+  { id: 'Data Center', name: 'Data Center' },
+  { id: 'Other', name: 'Other' },
+];
+
+const SERVICE_TYPE_OPTIONS: AiDropdownItem[] = [
+  { id: 'Full Service Gross', name: 'Full Service Gross' },
+  { id: 'Modified Gross', name: 'Modified Gross' },
+  { id: 'NNN', name: 'NNN (Triple Net)' },
+  { id: 'Net', name: 'Net' },
+  { id: 'Modified Net', name: 'Modified Net' },
+  { id: 'Gross', name: 'Gross' },
+  { id: 'Other', name: 'Other' },
+];
+
+const PAYOR_OPTIONS: AiDropdownItem[] = [
+  { id: 'tenant', name: 'Tenant' },
+  { id: 'landlord', name: 'Landlord' },
+  { id: 'shared', name: 'Shared' },
+  { id: 'pro-rata', name: 'Pro-Rata' },
+  { id: 'n/a', name: 'N/A' },
+];
 
 @Component({
   selector: 'mango-ai-lease-form',
@@ -29,7 +71,8 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly aiLeaseService: AiLeaseService,
-    private readonly aiSidebarService: AiSidebarService
+    private readonly aiSidebarService: AiSidebarService,
+    private readonly formWizardService: FormWizardService
   ) {}
 
   ngOnInit(): void {
@@ -39,20 +82,34 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
           this.leaseId = Number(params.get('id'));
           this.isLoading = true;
           this.errorMessage = null;
-          return this.aiLeaseService.getLeaseById(this.leaseId);
+          // Load AI data and lease type dropdown options in parallel
+          return forkJoin({
+            data: this.aiLeaseService.getLeaseById(this.leaseId),
+            leaseTypes: this.formWizardService
+              .getRenderSelect('', RequestType.cnstDD_GetLeaseTypes)
+              .pipe(catchError(() => of({ data: [] }))),
+          });
         }),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: (data) => {
+        next: ({ data, leaseTypes }) => {
           if (!data) {
             this.errorMessage = 'No AI abstraction data found for this lease.';
             this.isLoading = false;
             return;
           }
-          this.sections = this.buildSections(data);
+
+          // Map raw lease type items from backend into AiDropdownItem format
+          const leaseTypeItems: AiDropdownItem[] = (leaseTypes?.data ?? []).map((item: any) => ({
+            id: item.leaseTypeID,
+            name: item.leaseTypeName ?? item.leaseType ?? String(item.leaseTypeID),
+          }));
+
+          this.sections = this.buildSections(data, leaseTypeItems);
           this.sectionsExpanded = this.sections.map(() => true);
           this.form = this.buildFormGroup(this.sections);
+
           if (data.basics?.tenant?.value) {
             this.pageTitle = `AI Lease Abstraction — ${data.basics.tenant.value}`;
           }
@@ -96,7 +153,6 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-    // Placeholder for save logic when real API is wired in
     console.log('Saving AI form data:', this.form.value);
     this.editMode = false;
     this.form.disable();
@@ -117,16 +173,16 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
 
   // ─── Section Builder ────────────────────────────────────────────────────────
 
-  private buildSections(data: IAIOutput): AiFormSection[] {
+  private buildSections(data: IAIOutput, leaseTypeItems: AiDropdownItem[]): AiFormSection[] {
     return [
-      this.buildBasicsSection(data),
+      this.buildBasicsSection(data, leaseTypeItems),
       this.buildDatesSection(data),
       this.buildRentSection(data),
       this.buildExpensesSection(data),
     ];
   }
 
-  private buildBasicsSection(data: IAIOutput): AiFormSection {
+  private buildBasicsSection(data: IAIOutput, leaseTypeItems: AiDropdownItem[]): AiFormSection {
     const address = data.basics?.addresses?.value
       ?.map((a) => [a.StreetAddress, a.CityStateZip].filter(Boolean).join(', '))
       .join('; ') ?? null;
@@ -134,6 +190,12 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     const floors = Array.isArray(data.basics?.floors?.value)
       ? data.basics.floors.value.join(', ')
       : null;
+
+    // Map the AI's string value for leaseType to the corresponding leaseTypeID
+    const leaseTypeValue = data.basics?.leaseType?.value;
+    const leaseTypeId = leaseTypeItems.find(
+      (item) => item.name?.toLowerCase() === leaseTypeValue?.toLowerCase()
+    )?.id ?? leaseTypeValue;
 
     return {
       key: 'basics',
@@ -145,9 +207,27 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
         { key: 'squareFootage', label: 'Square Footage (SF)', type: 'number', value: data.basics?.squareFootage?.value },
         { key: 'suite', label: 'Suite', type: 'text', value: data.basics?.suite?.value },
         { key: 'floors', label: 'Floors', type: 'text', value: floors },
-        { key: 'leaseType', label: 'Lease Type', type: 'text', value: data.basics?.leaseType?.value },
-        { key: 'dealType', label: 'Deal Type', type: 'text', value: data.basics?.dealType?.value },
-        { key: 'spaceUse', label: 'Space Use', type: 'text', value: data.basics?.spaceUse?.value },
+        {
+          key: 'leaseType',
+          label: 'Lease Type',
+          type: 'dropdown',
+          value: leaseTypeId,
+          dropdownItems: leaseTypeItems,
+        },
+        {
+          key: 'dealType',
+          label: 'Deal Type',
+          type: 'dropdown',
+          value: data.basics?.dealType?.value,
+          dropdownItems: DEAL_TYPE_OPTIONS,
+        },
+        {
+          key: 'spaceUse',
+          label: 'Space Use',
+          type: 'dropdown',
+          value: data.basics?.spaceUse?.value,
+          dropdownItems: SPACE_USE_OPTIONS,
+        },
         { key: 'entireBuilding', label: 'Entire Building', type: 'boolean', value: data.basics?.entireBuilding?.value },
         { key: 'includesAmendments', label: 'Includes Amendments', type: 'boolean', value: data.basics?.includesAmendments?.value },
         { key: 'abstractionDate', label: 'Abstraction Date', type: 'date', value: data.basics?.abstractionDate?.value },
@@ -217,38 +297,78 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
 
   private buildExpensesSection(data: IAIOutput): AiFormSection {
     const expenseFields: AiFormField[] = [
-      { key: 'serviceType', label: 'Service Type', type: 'text', value: data.expenses?.serviceTypeEstimate?.value },
+      {
+        key: 'serviceType',
+        label: 'Service Type',
+        type: 'dropdown',
+        value: data.expenses?.serviceTypeEstimate?.value,
+        dropdownItems: SERVICE_TYPE_OPTIONS,
+      },
       {
         key: 'operatingExpenses',
         label: 'Operating Expenses',
-        type: 'text',
+        type: 'dropdown',
         value: data.expenses?.operatingExpenses?.value,
+        dropdownItems: PAYOR_OPTIONS,
         citation: data.expenses?.operatingExpenses?.citation,
       },
       {
         key: 'cam',
         label: 'CAM',
-        type: 'text',
+        type: 'dropdown',
         value: data.expenses?.cam?.value,
+        dropdownItems: PAYOR_OPTIONS,
         citation: data.expenses?.cam?.citation,
       },
-      { key: 'insurance', label: 'Insurance', type: 'text', value: data.expenses?.insurance?.value },
-      { key: 'taxes', label: 'Taxes / Real Estate', type: 'text', value: data.expenses?.taxes?.value },
-      { key: 'water', label: 'Water', type: 'text', value: data.expenses?.water?.value },
-      { key: 'gas', label: 'Gas', type: 'text', value: data.expenses?.gas?.value },
-      { key: 'electricity', label: 'Electricity', type: 'text', value: data.expenses?.electricity?.value },
+      {
+        key: 'insurance',
+        label: 'Insurance',
+        type: 'dropdown',
+        value: data.expenses?.insurance?.value,
+        dropdownItems: PAYOR_OPTIONS,
+      },
+      {
+        key: 'taxes',
+        label: 'Taxes / Real Estate',
+        type: 'dropdown',
+        value: data.expenses?.taxes?.value,
+        dropdownItems: PAYOR_OPTIONS,
+      },
+      {
+        key: 'water',
+        label: 'Water',
+        type: 'dropdown',
+        value: data.expenses?.water?.value,
+        dropdownItems: PAYOR_OPTIONS,
+      },
+      {
+        key: 'gas',
+        label: 'Gas',
+        type: 'dropdown',
+        value: data.expenses?.gas?.value,
+        dropdownItems: PAYOR_OPTIONS,
+      },
+      {
+        key: 'electricity',
+        label: 'Electricity',
+        type: 'dropdown',
+        value: data.expenses?.electricity?.value,
+        dropdownItems: PAYOR_OPTIONS,
+      },
       {
         key: 'hvac',
         label: 'HVAC',
-        type: 'text',
+        type: 'dropdown',
         value: data.expenses?.hvac?.value,
+        dropdownItems: PAYOR_OPTIONS,
         citation: data.expenses?.hvac?.citation,
       },
       {
         key: 'cleaning',
         label: 'Cleaning',
-        type: 'text',
+        type: 'dropdown',
         value: data.expenses?.cleaning?.value,
+        dropdownItems: PAYOR_OPTIONS,
         citation: data.expenses?.cleaning?.citation,
       },
     ];
@@ -265,7 +385,7 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
       const sectionControls: { [key: string]: FormControl } = {};
 
       section.fields.forEach((field) => {
-        sectionControls[field.key] = new FormControl({ value: field.value ?? '', disabled: true });
+        sectionControls[field.key] = new FormControl({ value: field.value ?? null, disabled: true });
       });
 
       root[section.key] = new FormGroup(sectionControls);

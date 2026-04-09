@@ -60,9 +60,22 @@
             [label]="formatDisplayValue(field)"
           ></crem-input-label>
 
+          <!-- Edit mode: dropdown (backend lookup or static list) -->
+          <crem-dropdown
+            *ngIf="editMode && field.type === 'dropdown'"
+            [dataSource]="field.dropdownItems"
+            [displayExpr]="field.displayExpr || 'name'"
+            [valueExpr]="field.valueExpr || 'id'"
+            [formControlName]="field.key"
+            [showClearButton]="true"
+            [showColumnHeader]="false"
+            [useSelectBox]="true"
+            [autoSelect]="false"
+          ></crem-dropdown>
+
           <!-- Edit mode: text / number / currency / percent -->
           <crem-input
-            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
+            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date' && field.type !== 'dropdown'"
             [inputType]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
             [formControlName]="field.key"
           ></crem-input>

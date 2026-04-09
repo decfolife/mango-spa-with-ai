@@ -55,6 +55,12 @@ export class AiFormSectionComponent implements OnInit {
     if (val == null || val === '') return '—';
 
     switch (field.type) {
+      case 'dropdown': {
+        const displayExpr = field.displayExpr ?? 'name';
+        const valueExpr = field.valueExpr ?? 'id';
+        const match = field.dropdownItems?.find((item) => item[valueExpr] === val || item[valueExpr] === String(val));
+        return match ? String(match[displayExpr]) : String(val);
+      }
       case 'boolean':
         return val === true || val === 'true' ? 'Yes' : 'No';
       case 'currency':
