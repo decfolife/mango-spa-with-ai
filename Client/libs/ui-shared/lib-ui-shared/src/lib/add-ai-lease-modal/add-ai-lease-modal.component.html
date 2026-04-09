@@ -211,12 +211,13 @@
         </div>
 
         <crem-form-item id="aet-ai-document-container">
-          <crem-form-label [required]="true">Lease Document (PDF)</crem-form-label>
-          <div class="ai-file-upload" [class.ai-file-upload--has-file]="selectedFileName">
+          <crem-form-label [required]="true">Lease Documents</crem-form-label>
+          <div class="ai-file-upload">
             <input
               #fileInput
               type="file"
-              accept=".pdf"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.odt,.ods,.odp,.jpg,.jpeg,.png,.tif,.tiff,.msg,.eml,.csv,.zip"
               class="ai-file-upload__input"
               (change)="onFileSelected($event)"
             />
@@ -225,15 +226,25 @@
               [icon]="'faUpload'"
               (click)="fileInput.click(); $event.preventDefault()"
             >
-              {{ selectedFileName ? 'Change File' : 'Choose PDF' }}
+              Add Files
             </crem-button>
-            <span *ngIf="selectedFileName" class="ai-file-upload__name">
-              {{ selectedFileName }}
-            </span>
-            <span *ngIf="!selectedFileName" class="ai-file-upload__placeholder">
-              No file selected
+            <span *ngIf="!selectedFiles.length" class="ai-file-upload__placeholder">
+              No files selected
             </span>
           </div>
+          <ul *ngIf="selectedFiles.length" class="ai-file-list">
+            <li *ngFor="let file of selectedFiles; let i = index" class="ai-file-list__item">
+              <span class="ai-file-list__name">{{ file.name }}</span>
+              <button
+                type="button"
+                class="ai-file-list__remove"
+                (click)="removeFile(i)"
+                title="Remove file"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </li>
+          </ul>
         </crem-form-item>
 
         <crem-form-item id="aet-ai-amendments-container">

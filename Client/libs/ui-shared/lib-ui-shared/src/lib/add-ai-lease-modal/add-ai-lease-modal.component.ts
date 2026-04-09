@@ -16,8 +16,14 @@ import { AddLeaseModalComponent } from '../add-lease-modal/add-lease-modal.compo
   styleUrls: ['./add-ai-lease-modal.component.scss'],
 })
 export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
-  selectedFileName: string | null = null;
-  selectedFile: File | null = null;
+  selectedFiles: File[] = [];
+
+  // Extensions blocked for security — executable / script / system file types
+  private readonly BLOCKED_EXTENSIONS = new Set([
+    'exe', 'bat', 'cmd', 'sh', 'ps1', 'vbs', 'msi', 'dll', 'com', 'scr',
+    'jar', 'app', 'deb', 'rpm', 'dmg', 'pkg', 'bin', 'run', 'pif',
+    'ws', 'wsf', 'wsh', 'hta', 'reg', 'inf', 'lnk',
+  ]);
 
   constructor(
     public override dialogRef: MatDialogRef<AddAiLeaseModalComponent>,
@@ -63,11 +69,36 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this.selectedFile = input.files[0];
-      this.selectedFileName = this.selectedFile.name;
-      this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFile);
+    if (!input.files?.length) return;
+
+    const rejected: string[] = [];
+    Array.from(input.files).forEach((file) => {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+      if (this.BLOCKED_EXTENSIONS.has(ext)) {
+        rejected.push(file.name);
+        return;
+      }
+      if (!this.selectedFiles.some((f) => f.name === file.name)) {
+        this.selectedFiles.push(file);
+      }
+    });
+
+    if (rejected.length) {
+      this.toastService.show(
+        `File type not allowed: ${rejected.join(', ')}`,
+        '',
+        ToastState.ERROR,
+        { position: 'bottom right', maxWidth: '350px' }
+      );
     }
+
+    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
+    input.value = '';
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
   }
 
   override save(e: any): void {
