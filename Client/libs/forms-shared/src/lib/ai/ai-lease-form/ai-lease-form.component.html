@@ -102,6 +102,15 @@
         <p>{{ errorMessage }}</p>
       </div>
 
+      <!-- AI verification banner -->
+      <div *ngIf="!errorMessage" class="ai-lease-form__notice">
+        <crem-icon class="ai-lease-form__notice-icon" icon="faCircleInfo"></crem-icon>
+        <div class="ai-lease-form__notice-content">
+          <strong>AI Abstracted Record(s) Ready to Verify</strong>
+          <span>This lease was abstracted by AI. Review all fields and confirm accuracy before saving.</span>
+        </div>
+      </div>
+
       <!-- Form sections -->
       <div *ngIf="!errorMessage" class="dynamic-form-content" [formGroup]="form">
         <div class="row">
