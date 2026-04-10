@@ -408,6 +408,14 @@ public class Startup
 
     public void AddServices(IServiceCollection services)
     {
+        // AI abstraction services
+        services.AddScoped<FormsEngine.Application.Ai.IAiAbstractionRepository,
+                           FormsEngine.Application.Ai.AiAbstractionRepository>();
+        services.AddScoped<FormsEngine.Application.Ai.IAiAbstractionService,
+                           FormsEngine.Application.Ai.AiAbstractionService>();
+        services.AddScoped<FormsEngine.Application.Ai.IAiProvider,
+                           FormsEngine.Application.Ai.AiMockProvider>();
+
         services.AddScoped<IRequestService>(provider =>
         {
             var httpContext = provider.GetRequiredService<IHttpContextAccessor>();

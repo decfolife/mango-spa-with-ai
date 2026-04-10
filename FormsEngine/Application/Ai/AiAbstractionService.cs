@@ -19,11 +19,13 @@ public interface IAiAbstractionService
 public class AiAbstractionService : IAiAbstractionService
 {
     readonly IAiAbstractionRepository _repository;
+    readonly IAiProvider _aiProvider;
     readonly IConfiguration _configuration;
 
-    public AiAbstractionService(IAiAbstractionRepository repository, IConfiguration configuration)
+    public AiAbstractionService(IAiAbstractionRepository repository, IAiProvider aiProvider, IConfiguration configuration)
     {
         _repository = repository;
+        _aiProvider  = aiProvider;
         _configuration = configuration;
     }
 
@@ -35,6 +37,9 @@ public class AiAbstractionService : IAiAbstractionService
 
         await SaveDocumentsAsync(abstractionId, command.Files, userId, cancellationToken);
 
+        // Process with AI (fire-and-forget so the HTTP response returns immediately)
+        _ = ProcessWithAiAsync(abstractionId, inputJson, userId);
+
         return abstractionId;
     }
 
@@ -43,6 +48,48 @@ public class AiAbstractionService : IAiAbstractionService
 
     public Task<IEnumerable<dynamic>> GetAbstractionsListAsync(int buildingId)
         => _repository.GetListAsync(buildingId);
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    private async Task ProcessWithAiAsync(int abstractionId, string inputJson, int userId)
+    {
+        try
+        {
+            await _repository.SetStatusAsync(abstractionId, "Processing", userId);
+
+            var aiOutputJson = await _aiProvider.ProcessAsync(inputJson, CancellationToken.None);
+
+            // Extract top-level fields to promote into indexed columns
+            string? aiTenant = null;
+            DateTime? aiLeaseEndDate = null;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(aiOutputJson);
+                if (doc.RootElement.TryGetProperty("basics", out var basics) &&
+                    basics.TryGetProperty("tenant", out var tenantEl) &&
+                    tenantEl.TryGetProperty("value", out var tenantVal))
+                {
+                    aiTenant = tenantVal.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("dates", out var dates) &&
+                    dates.TryGetProperty("leaseEndDate", out var endDateEl) &&
+                    endDateEl.TryGetProperty("value", out var endDateVal) &&
+                    DateTime.TryParse(endDateVal.GetString(), out var parsed))
+                {
+                    aiLeaseEndDate = parsed;
+                }
+            }
+            catch { /* promotion is best-effort */ }
+
+            await _repository.CompleteAsync(abstractionId, aiOutputJson, aiTenant, aiLeaseEndDate, userId);
+        }
+        catch (Exception ex)
+        {
+            await _repository.SetErrorAsync(abstractionId, ex.Message, userId);
+        }
+    }
 
     private async Task SaveDocumentsAsync(int abstractionId, List<IFormFile> files, int userId, CancellationToken cancellationToken)
     {

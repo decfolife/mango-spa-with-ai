@@ -10,6 +10,9 @@ public interface IAiAbstractionRepository
     Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string inputJson);
     Task AddDocumentAsync(int abstractionId, string originalFileName, string storedFileName,
         string shareFolderPath, long? fileSizeBytes, string? mimeType, int sortOrder, int userId);
+    Task SetStatusAsync(int abstractionId, string status, int userId);
+    Task CompleteAsync(int abstractionId, string aiOutputJson, string aiTenant, DateTime? aiLeaseEndDate, int userId);
+    Task SetErrorAsync(int abstractionId, string errorMessage, int userId);
     Task<dynamic?> GetByIdAsync(int abstractionId);
     Task<IEnumerable<dynamic>> GetListAsync(int buildingId);
 }
@@ -110,6 +113,53 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                 SortOrder       = sortOrder,
                 UserId          = userId,
             });
+    }
+
+    public async Task SetStatusAsync(int abstractionId, string status, int userId)
+    {
+        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
+        await connection.ExecuteAsync(
+            """
+            UPDATE dbo.tblAiAbstractionLeases
+            SET    [Status]         = @Status,
+                   LastModifiedBy   = @UserId,
+                   LastModifiedDate = GETUTCDATE()
+            WHERE  AbstractionID = @AbstractionId
+            """,
+            new { AbstractionId = abstractionId, Status = status, UserId = userId });
+    }
+
+    public async Task CompleteAsync(int abstractionId, string aiOutputJson, string aiTenant, DateTime? aiLeaseEndDate, int userId)
+    {
+        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
+        await connection.ExecuteAsync(
+            """
+            UPDATE dbo.tblAiAbstractionLeases
+            SET    [Status]         = 'Complete',
+                   AIOutputJson     = @AiOutputJson,
+                   AI_Tenant        = @AiTenant,
+                   AI_LeaseEndDate  = @AiLeaseEndDate,
+                   CompletedDate    = GETUTCDATE(),
+                   LastModifiedBy   = @UserId,
+                   LastModifiedDate = GETUTCDATE()
+            WHERE  AbstractionID = @AbstractionId
+            """,
+            new { AbstractionId = abstractionId, AiOutputJson = aiOutputJson, AiTenant = aiTenant, AiLeaseEndDate = aiLeaseEndDate, UserId = userId });
+    }
+
+    public async Task SetErrorAsync(int abstractionId, string errorMessage, int userId)
+    {
+        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
+        await connection.ExecuteAsync(
+            """
+            UPDATE dbo.tblAiAbstractionLeases
+            SET    [Status]         = 'Error',
+                   ErrorMessage     = @ErrorMessage,
+                   LastModifiedBy   = @UserId,
+                   LastModifiedDate = GETUTCDATE()
+            WHERE  AbstractionID = @AbstractionId
+            """,
+            new { AbstractionId = abstractionId, ErrorMessage = errorMessage, UserId = userId });
     }
 
     public async Task<dynamic?> GetByIdAsync(int abstractionId)
