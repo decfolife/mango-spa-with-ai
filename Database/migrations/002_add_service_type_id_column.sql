@@ -4,7 +4,7 @@
 --
 -- This makes the service type queryable/indexable without parsing JSON at query time.
 
-ALTER TABLE dbo.tblAbstractionLeases
+ALTER TABLE dbo.tblAiAbstractionLeases
 ADD AI_ServiceTypeID AS TRY_CAST(
     JSON_VALUE(AIOutputJson, '$.expenses.serviceTypeId.value')
     AS INT
@@ -13,6 +13,6 @@ GO
 
 -- Optional index for filtering abstractions by service type
 CREATE NONCLUSTERED INDEX IX_AILeaseAbstractions_ServiceTypeID
-ON dbo.tblAbstractionLeases (AI_ServiceTypeID)
+ON dbo.tblAiAbstractionLeases (AI_ServiceTypeID)
 WHERE AI_ServiceTypeID IS NOT NULL;
 GO
