@@ -39,14 +39,11 @@ export interface AiFormSection {
 }
 
 export interface AiLeaseListItem {
-  id: number;
-  tenant: string;
-  landlord: string;
-  address: string;
-  leaseType: string;
-  startDate: string;
-  endDate: string;
-  squareFootage: number;
-  effectiveRent: number;
-  abstractionDate: string;
+  id: number;         // abstractionId
+  buildingId: number;
+  status: string;
+  aiTenant?: string;
+  aiLeaseEndDate?: string;
+  createdDate: string;
+  lastModifiedDate: string;
 }

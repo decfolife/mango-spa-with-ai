@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { switchMap, takeUntil } from 'rxjs/operators';
 import { AiLeaseListItem } from '../models/ai-form.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 
@@ -24,21 +24,16 @@ export class AiListPageComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadLeases();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private loadLeases(): void {
-    this.isLoading = true;
-    this.errorMessage = null;
-
-    this.aiLeaseService
-      .getLeaseList()
-      .pipe(takeUntil(this.destroy$))
+    this.activatedRoute.queryParamMap
+      .pipe(
+        switchMap((params) => {
+          const buildingId = Number(params.get('buildingId') ?? 0);
+          this.isLoading = true;
+          this.errorMessage = null;
+          return this.aiLeaseService.getLeaseList(buildingId);
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe({
         next: (leases) => {
           this.leases = leases;
@@ -51,21 +46,14 @@ export class AiListPageComponent implements OnInit, OnDestroy {
       });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   onRowClick(event: { data: AiLeaseListItem }): void {
     if (event?.data?.id) {
       this.router.navigate([event.data.id], { relativeTo: this.activatedRoute });
     }
-  }
-
-  formatCurrency(value: number): string {
-    return value != null
-      ? `$${value.toFixed(2)}/SF`
-      : '—';
-  }
-
-  formatNumber(value: number): string {
-    return value != null
-      ? value.toLocaleString()
-      : '—';
   }
 }

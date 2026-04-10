@@ -25,7 +25,7 @@
           (click)="navigateBack(); $event.preventDefault()"
         ></crem-button>
 
-        <ng-container *ngIf="!errorMessage">
+        <ng-container *ngIf="!errorMessage && abstractionStatus === 'Complete'">
 
           <!-- AI Summary sidebar toggle -->
           <crem-button
@@ -102,8 +102,17 @@
         <p>{{ errorMessage }}</p>
       </div>
 
+      <!-- Pending / processing state -->
+      <div *ngIf="!errorMessage && abstractionStatus && abstractionStatus !== 'Complete'" class="ai-lease-form__pending">
+        <crem-icon class="ai-lease-form__pending-icon" icon="faHourglass"></crem-icon>
+        <div class="ai-lease-form__pending-content">
+          <strong>Abstraction {{ abstractionStatus }}</strong>
+          <span>The AI is processing your documents. This page will show the results once complete.</span>
+        </div>
+      </div>
+
       <!-- AI verification banner -->
-      <div *ngIf="!errorMessage" class="ai-lease-form__notice">
+      <div *ngIf="!errorMessage && abstractionStatus === 'Complete'" class="ai-lease-form__notice">
         <crem-icon class="ai-lease-form__notice-icon" icon="faCircleInfo"></crem-icon>
         <div class="ai-lease-form__notice-content">
           <strong>AI Abstracted Record(s) Ready to Verify</strong>
@@ -112,7 +121,7 @@
       </div>
 
       <!-- Form sections -->
-      <div *ngIf="!errorMessage" class="dynamic-form-content" [formGroup]="form">
+      <div *ngIf="!errorMessage && abstractionStatus === 'Complete'" class="dynamic-form-content" [formGroup]="form">
         <div class="row">
           <div
             *ngFor="let section of sections; let i = index"

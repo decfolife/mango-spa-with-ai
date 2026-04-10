@@ -62,6 +62,7 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   isLoading = true;
   editMode = false;
   errorMessage: string | null = null;
+  abstractionStatus: string | null = null;
   pageTitle = 'AI Lease Abstraction';
 
   private leaseId: number;
@@ -82,9 +83,10 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
           this.leaseId = Number(params.get('id'));
           this.isLoading = true;
           this.errorMessage = null;
-          // Load AI data and lease type dropdown options in parallel
+          this.abstractionStatus = null;
+          // Load abstraction detail and lease type dropdown options in parallel
           return forkJoin({
-            data: this.aiLeaseService.getLeaseById(this.leaseId),
+            detail: this.aiLeaseService.getAbstractionById(this.leaseId),
             leaseTypes: this.formWizardService
               .getRenderSelect('', RequestType.cnstDD_GetLeaseTypes)
               .pipe(catchError(() => of({ data: [] }))),
@@ -93,9 +95,35 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: ({ data, leaseTypes }) => {
-          if (!data) {
-            this.errorMessage = 'No AI abstraction data found for this lease.';
+        next: ({ detail, leaseTypes }) => {
+          if (!detail) {
+            this.errorMessage = 'Abstraction not found.';
+            this.isLoading = false;
+            return;
+          }
+
+          this.abstractionStatus = detail.status;
+
+          // Not yet complete — show status, no form to render
+          if (detail.status !== 'Complete') {
+            if (detail.status === 'Error') {
+              this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+            }
+            this.isLoading = false;
+            return;
+          }
+
+          if (!detail.aiOutputJson) {
+            this.errorMessage = 'AI output is missing for this abstraction.';
+            this.isLoading = false;
+            return;
+          }
+
+          let aiOutput: IAIOutput;
+          try {
+            aiOutput = JSON.parse(detail.aiOutputJson) as IAIOutput;
+          } catch {
+            this.errorMessage = 'Failed to parse AI output data.';
             this.isLoading = false;
             return;
           }
@@ -106,12 +134,12 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
             name: item.leaseTypeName ?? item.leaseType ?? String(item.leaseTypeID),
           }));
 
-          this.sections = this.buildSections(data, leaseTypeItems);
+          this.sections = this.buildSections(aiOutput, leaseTypeItems);
           this.sectionsExpanded = this.sections.map(() => true);
           this.form = this.buildFormGroup(this.sections);
 
-          if (data.basics?.tenant?.value) {
-            this.pageTitle = `AI Lease Abstraction — ${data.basics.tenant.value}`;
+          if (aiOutput.basics?.tenant?.value) {
+            this.pageTitle = `AI Lease Abstraction — ${aiOutput.basics.tenant.value}`;
           }
           this.isLoading = false;
         },
