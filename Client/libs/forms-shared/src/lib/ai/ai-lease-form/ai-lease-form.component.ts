@@ -279,13 +279,14 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   private buildRentSection(data: IAIOutput): AiFormSection {
+    const schedule   = data.rent?.baseRentSchedule;
     const rentSchedule: AiRentScheduleSection | undefined =
-      (data.rent?.baseRentSchedule?.value?.length ?? 0) > 0
+      (schedule?.value?.length ?? 0) > 0
         ? {
-            scheduleItems: data.rent.baseRentSchedule.value,
+            scheduleItems: schedule!.value!,
             abatementItems: data.rent?.rentAbatements?.value ?? [],
-            startsFromRCD: data.rent.baseRentSchedule.subfields?.startsFromRCD ?? false,
-            startsFromCD: data.rent.baseRentSchedule.subfields?.startsFromCD ?? false,
+            startsFromRCD: schedule!.subfields?.startsFromRCD ?? false,
+            startsFromCD:  schedule!.subfields?.startsFromCD  ?? false,
           }
         : undefined;
 
