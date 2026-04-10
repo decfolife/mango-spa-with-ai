@@ -4,32 +4,31 @@
 
 -- ── AILeaseAbstractions ───────────────────────────────────────────────────────
 
-EXEC sp_rename 'dbo.AILeaseAbstractions.CreatedByUserID', 'CreatedBy', 'COLUMN';
+EXEC sp_rename 'dbo.tblAILeaseAbstractions.CreatedByUserID', 'CreatedBy', 'COLUMN';
 GO
 
-ALTER TABLE dbo.AILeaseAbstractions
+ALTER TABLE dbo.tblAILeaseAbstractions
     ADD LastModifiedBy   INT       NOT NULL DEFAULT 0,
         LastModifiedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE();
 GO
 
--- Backfill LastModifiedBy / LastModifiedDate from existing created values
-UPDATE dbo.AILeaseAbstractions
+UPDATE dbo.tblAILeaseAbstractions
 SET    LastModifiedBy   = CreatedBy,
        LastModifiedDate = CreatedDate;
 GO
 
--- ── AIAbstractionDocuments ────────────────────────────────────────────────────
+-- ── tblAIAbstractionDocuments ─────────────────────────────────────────────────
 
-EXEC sp_rename 'dbo.AIAbstractionDocuments.UploadedByUserID', 'CreatedBy', 'COLUMN';
+EXEC sp_rename 'dbo.tblAIAbstractionDocuments.UploadedByUserID', 'CreatedBy', 'COLUMN';
 GO
 
-ALTER TABLE dbo.AIAbstractionDocuments
+ALTER TABLE dbo.tblAIAbstractionDocuments
     ADD CreatedDate      DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
         LastModifiedBy   INT       NOT NULL DEFAULT 0,
         LastModifiedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE();
 GO
 
-UPDATE dbo.AIAbstractionDocuments
+UPDATE dbo.tblAIAbstractionDocuments
 SET    LastModifiedBy   = CreatedBy,
        LastModifiedDate = CreatedDate;
 GO

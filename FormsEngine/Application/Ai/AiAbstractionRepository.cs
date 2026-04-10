@@ -7,7 +7,7 @@ namespace FormsEngine.Application.Ai;
 
 public interface IAiAbstractionRepository
 {
-    Task<int> CreateAsync(int buildingId, int userId, string inputJson);
+    Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string inputJson);
     Task AddDocumentAsync(int abstractionId, string originalFileName, string storedFileName,
         string shareFolderPath, long? fileSizeBytes, string? mimeType, int sortOrder, int userId);
     Task<dynamic?> GetByIdAsync(int abstractionId);
@@ -23,18 +23,65 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         _dbProvider = dbProvider;
     }
 
-    public async Task<int> CreateAsync(int buildingId, int userId, string inputJson)
+    public async Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string inputJson)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         return await connection.ExecuteScalarAsync<int>(
             """
-            INSERT INTO dbo.AILeaseAbstractions
-                (BuildingID, InputJson, CreatedBy, CreatedDate, LastModifiedBy, LastModifiedDate)
+            INSERT INTO dbo.tblAILeaseAbstractions (
+                BuildingID,
+                InputJson,
+                In_PortfolioID,
+                In_PremiseID,
+                In_PremiseTypeID,
+                In_NewPremiseName,
+                In_LeaseTemplateID,
+                In_AccountingType,
+                In_MeasureUnitsID,
+                In_ParentLeaseID,
+                In_IncludesAmendments,
+                In_AbstractionNotes,
+                CreatedBy,
+                CreatedDate,
+                LastModifiedBy,
+                LastModifiedDate
+            )
             OUTPUT INSERTED.AbstractionID
-            VALUES
-                (@BuildingId, @InputJson, @UserId, GETUTCDATE(), @UserId, GETUTCDATE())
+            VALUES (
+                @BuildingId,
+                @InputJson,
+                @PortfolioId,
+                @PremiseId,
+                @PremiseTypeId,
+                @NewPremiseName,
+                @LeaseTemplateId,
+                @AccountingType,
+                @MeasurementUnitId,
+                @ParentLeaseId,
+                @IncludesAmendments,
+                @AbstractionNotes,
+                @UserId,
+                GETUTCDATE(),
+                @UserId,
+                GETUTCDATE()
+            )
             """,
-            new { BuildingId = buildingId, InputJson = inputJson, UserId = userId });
+            new
+            {
+                BuildingId          = command.BuildingId,
+                InputJson           = inputJson,
+                PortfolioId         = command.PortfolioId,
+                PremiseId           = command.PremiseId,
+                PremiseTypeId       = command.PremiseTypeId,
+                NewPremiseName      = command.NewPremiseName,
+                LeaseTemplateId     = command.LeaseTemplateId,
+                AccountingType      = command.AccountingType,
+                MeasurementUnitId   = command.MeasurementUnitId,
+                ParentLeaseId       = command.ParentLeaseId,
+                IncludesAmendments  = command.IncludesAmendments,
+                AbstractionNotes    = command.AbstractionNotes,
+                UserId              = userId,
+            });
     }
 
     public async Task AddDocumentAsync(int abstractionId, string originalFileName, string storedFileName,
@@ -43,7 +90,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
             """
-            INSERT INTO dbo.AIAbstractionDocuments
+            INSERT INTO dbo.tblAIAbstractionDocuments
                 (AbstractionID, OriginalFileName, StoredFileName, ShareFolderPath,
                  FileSizeBytes, MimeType, SortOrder,
                  CreatedBy, CreatedDate, LastModifiedBy, LastModifiedDate)
@@ -54,14 +101,14 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             """,
             new
             {
-                AbstractionId = abstractionId,
+                AbstractionId   = abstractionId,
                 OriginalFileName = originalFileName,
-                StoredFileName = storedFileName,
+                StoredFileName  = storedFileName,
                 ShareFolderPath = shareFolderPath,
-                FileSizeBytes = fileSizeBytes,
-                MimeType = mimeType,
-                SortOrder = sortOrder,
-                UserId = userId,
+                FileSizeBytes   = fileSizeBytes,
+                MimeType        = mimeType,
+                SortOrder       = sortOrder,
+                UserId          = userId,
             });
     }
 
@@ -76,13 +123,23 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                 [Status],
                 ErrorMessage,
                 InputJson,
-                AIOutputJson     AS AiOutputJson,
+                AIOutputJson        AS AiOutputJson,
+                In_PortfolioID      AS PortfolioId,
+                In_PremiseID        AS PremiseId,
+                In_PremiseTypeID    AS PremiseTypeId,
+                In_NewPremiseName   AS NewPremiseName,
+                In_LeaseTemplateID  AS LeaseTemplateId,
+                In_AccountingType   AS AccountingType,
+                In_MeasureUnitsID   AS MeasurementUnitId,
+                In_ParentLeaseID    AS ParentLeaseId,
+                In_IncludesAmendments AS IncludesAmendments,
+                In_AbstractionNotes AS AbstractionNotes,
                 CreatedBy,
                 CreatedDate,
                 LastModifiedBy,
                 LastModifiedDate,
                 CompletedDate
-            FROM dbo.AILeaseAbstractions
+            FROM dbo.tblAILeaseAbstractions
             WHERE AbstractionID = @AbstractionId
             """,
             new { AbstractionId = abstractionId });
@@ -103,7 +160,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                 CreatedDate,
                 LastModifiedBy,
                 LastModifiedDate
-            FROM dbo.AILeaseAbstractions
+            FROM dbo.tblAILeaseAbstractions
             WHERE BuildingID = @BuildingId
               AND [Status] <> 'Cancelled'
             ORDER BY CreatedDate DESC

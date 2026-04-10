@@ -31,7 +31,7 @@ public class AiAbstractionService : IAiAbstractionService
     {
         var inputJson = JsonSerializer.Serialize(command);
 
-        var abstractionId = await _repository.CreateAsync(command.BuildingId, userId, inputJson);
+        var abstractionId = await _repository.CreateAsync(command, userId, inputJson);
 
         await SaveDocumentsAsync(abstractionId, command.Files, userId, cancellationToken);
 
