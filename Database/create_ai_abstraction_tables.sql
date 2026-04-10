@@ -1,12 +1,20 @@
+-- ============================================================
+-- AI Abstraction Tables
+-- ============================================================
+
+-- ── tblAiAbstractionLeases ───────────────────────────────────
+
 CREATE TABLE dbo.tblAiAbstractionLeases (
     AbstractionID         INT            NOT NULL IDENTITY(1,1) PRIMARY KEY,
     BuildingID            INT            NOT NULL,
     [Status]              NVARCHAR(50)   NOT NULL DEFAULT 'Pending',
     ErrorMessage          NVARCHAR(MAX)  NULL,
+
+    -- Raw input/output JSON payloads
     InputJson             NVARCHAR(MAX)  NULL,
     AIOutputJson          NVARCHAR(MAX)  NULL,
 
-    -- AI output fields (top-level)
+    -- AI output fields promoted for querying
     AI_Tenant             NVARCHAR(500)  NULL,
     AI_LeaseEndDate       DATE           NULL,
     AI_ServiceTypeID      AS TRY_CAST(
@@ -14,7 +22,7 @@ CREATE TABLE dbo.tblAiAbstractionLeases (
                               AS INT
                           ) PERSISTED,
 
-    -- Input parameters
+    -- Input parameters captured from the abstraction request
     In_PortfolioID        INT            NULL,
     In_PremiseID          INT            NULL,
     In_PremiseTypeID      INT            NULL,
@@ -38,14 +46,20 @@ CREATE TABLE dbo.tblAiAbstractionLeases (
 );
 GO
 
-CREATE INDEX IX_tblAiAbstractionLeases_BuildingID
-    ON dbo.tblAiAbstractionLeases (BuildingID);
+-- Query abstractions by building, ordered by newest first
+CREATE NONCLUSTERED INDEX IX_tblAiAbstractionLeases_Building
+    ON dbo.tblAiAbstractionLeases (BuildingID, CreatedDate DESC)
+    INCLUDE (AbstractionID, [Status], AI_Tenant, AI_LeaseEndDate, In_AccountingType);
 GO
 
+-- Query/filter abstractions by AI-extracted service type
+-- Note: filtered indexes are not supported on computed columns in SQL Server;
+--       a plain index on the persisted column is used instead.
 CREATE NONCLUSTERED INDEX IX_tblAiAbstractionLeases_ServiceTypeID
-    ON dbo.tblAiAbstractionLeases (AI_ServiceTypeID)
-    WHERE AI_ServiceTypeID IS NOT NULL;
+    ON dbo.tblAiAbstractionLeases (AI_ServiceTypeID);
 GO
+
+-- ── tblAiAbstractionDocuments ────────────────────────────────
 
 CREATE TABLE dbo.tblAiAbstractionDocuments (
     DocumentID            INT             NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -68,6 +82,6 @@ CREATE TABLE dbo.tblAiAbstractionDocuments (
 );
 GO
 
-CREATE INDEX IX_tblAiAbstractionDocuments_AbstractionID
+CREATE NONCLUSTERED INDEX IX_tblAiAbstractionDocuments_AbstractionID
     ON dbo.tblAiAbstractionDocuments (AbstractionID);
 GO
