@@ -53,6 +53,13 @@
       <button
         *ngIf="objectTypeId == '4'"
         mat-menu-item
+        (click)="showAddLeasePopup(); $event.preventDefault()"
+      >
+        Add Lease
+      </button>
+      <button
+        *ngIf="objectTypeId == '4'"
+        mat-menu-item
         (click)="showAddAiLeasePopup(); $event.preventDefault()"
       >
         AI Lease Abstraction
