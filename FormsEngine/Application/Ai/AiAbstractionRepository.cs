@@ -28,7 +28,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         return await connection.ExecuteScalarAsync<int>(
             """
-            INSERT INTO dbo.tblAILeaseAbstractions (
+            INSERT INTO dbo.tblAbstractionLeases (
                 BuildingID,
                 InputJson,
                 In_PortfolioID,
@@ -90,7 +90,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
             """
-            INSERT INTO dbo.tblAIAbstractionDocuments
+            INSERT INTO dbo.tblAbstractionDocuments
                 (AbstractionID, OriginalFileName, StoredFileName, ShareFolderPath,
                  FileSizeBytes, MimeType, SortOrder,
                  CreatedBy, CreatedDate, LastModifiedBy, LastModifiedDate)
@@ -139,7 +139,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                 LastModifiedBy,
                 LastModifiedDate,
                 CompletedDate
-            FROM dbo.tblAILeaseAbstractions
+            FROM dbo.tblAbstractionLeases
             WHERE AbstractionID = @AbstractionId
             """,
             new { AbstractionId = abstractionId });
@@ -160,7 +160,7 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                 CreatedDate,
                 LastModifiedBy,
                 LastModifiedDate
-            FROM dbo.tblAILeaseAbstractions
+            FROM dbo.tblAbstractionLeases
             WHERE BuildingID = @BuildingId
               AND [Status] <> 'Cancelled'
             ORDER BY CreatedDate DESC
