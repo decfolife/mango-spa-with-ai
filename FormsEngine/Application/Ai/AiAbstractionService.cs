@@ -67,7 +67,7 @@ public class AiAbstractionService : IAiAbstractionService
                 fileSizeBytes: file.Length,
                 mimeType: file.ContentType,
                 sortOrder: i,
-                uploadedByUserId: userId);
+                userId: userId);
         }
     }
 }
