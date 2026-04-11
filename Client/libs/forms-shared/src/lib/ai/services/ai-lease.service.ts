@@ -36,7 +36,9 @@ export class AiLeaseService {
 
   createAbstraction(formData: FormData): Observable<CreateAiAbstractionResponse> {
     return this.http
-      .post<ApiResponse>(`${this.apiUrl}AiAbstractions/CreateAiAbstraction`, formData)
+      .post<ApiResponse>(`${this.apiUrl}AiAbstractions/CreateAiAbstraction`, formData, {
+        headers: { enctype: 'multipart/form-data' },
+      })
       .pipe(map((res) => res.data as CreateAiAbstractionResponse));
   }
 
