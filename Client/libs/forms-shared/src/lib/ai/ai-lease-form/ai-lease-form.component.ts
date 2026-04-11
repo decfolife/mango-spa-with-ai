@@ -208,9 +208,16 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-    console.log('Saving AI form data:', this.form.value);
-    this.editMode = false;
-    this.form.disable();
+    const reviewedFormData = JSON.stringify(this.form.getRawValue());
+    this.aiLeaseService
+      .saveReviewedFormData(this.leaseId, reviewedFormData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.editMode = false;
+          this.form.disable();
+        },
+      });
   }
 
   onCancel(): void {

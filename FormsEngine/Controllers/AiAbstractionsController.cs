@@ -35,4 +35,11 @@ public class AiAbstractionsController : ApiControllerBase
         var response = await Mediator.Send(new GetAiAbstractionsListQuery { BuildingId = buildingId });
         return response.Success ? Ok(response) : BadRequest();
     }
+
+    [HttpPost("SaveReviewedFormData")]
+    public async Task<ActionResult<ApiResponse>> SaveReviewedFormData([FromBody] SaveReviewedFormDataCommand command)
+    {
+        var response = await Mediator.Send(command);
+        return response.Success ? Ok(response) : BadRequest();
+    }
 }

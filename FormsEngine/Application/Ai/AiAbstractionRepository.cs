@@ -154,20 +154,20 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         return await connection.QueryFirstOrDefaultAsync(
             """
             SELECT
-                AiAbstractionID,
-                BuildingID,
-                [Status],
-                CompletedDate,
-                ErrorMessage,
-                ContextJson,
-                AIOutputJson     AS AiOutputJson,
-                AI_Tenant        AS AiTenant,
-                AI_LeaseEndDate  AS AiLeaseEndDate,
-                ReviewedFormData,
-                CreatedBy,
-                CreatedDate,
-                LastModifiedBy,
-                LastModifiedDate
+                AiAbstractionID  AS abstractionId,
+                BuildingID       AS buildingId,
+                [Status]         AS status,
+                CompletedDate    AS completedDate,
+                ErrorMessage     AS errorMessage,
+                ContextJson      AS contextJson,
+                AIOutputJson     AS aiOutputJson,
+                AI_Tenant        AS aiTenant,
+                AI_LeaseEndDate  AS aiLeaseEndDate,
+                ReviewedFormData AS reviewedFormData,
+                CreatedBy        AS createdBy,
+                CreatedDate      AS createdDate,
+                LastModifiedBy   AS lastModifiedBy,
+                LastModifiedDate AS lastModifiedDate
             FROM dbo.tblAiAbstractionLeases
             WHERE AiAbstractionID = @AiAbstractionId
             """,
@@ -180,16 +180,16 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         return await connection.QueryAsync(
             """
             SELECT
-                AiAbstractionID,
-                BuildingID,
-                [Status],
-                CompletedDate,
-                AI_Tenant        AS AiTenant,
-                AI_LeaseEndDate  AS AiLeaseEndDate,
-                CreatedBy,
-                CreatedDate,
-                LastModifiedBy,
-                LastModifiedDate
+                AiAbstractionID  AS abstractionId,
+                BuildingID       AS buildingId,
+                [Status]         AS status,
+                CompletedDate    AS completedDate,
+                AI_Tenant        AS aiTenant,
+                AI_LeaseEndDate  AS aiLeaseEndDate,
+                CreatedBy        AS createdBy,
+                CreatedDate      AS createdDate,
+                LastModifiedBy   AS lastModifiedBy,
+                LastModifiedDate AS lastModifiedDate
             FROM dbo.tblAiAbstractionLeases
             WHERE BuildingID = @BuildingId
               AND [Status] <> 'Cancelled'

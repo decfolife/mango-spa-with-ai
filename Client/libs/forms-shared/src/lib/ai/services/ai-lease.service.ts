@@ -11,12 +11,15 @@ export interface AiAbstractionDetail {
   abstractionId: number;
   buildingId: number;
   status: 'Pending' | 'Processing' | 'Complete' | 'Error' | 'Cancelled';
+  completedDate?: string;
   errorMessage?: string;
-  inputJson: string;
+  contextJson?: string;
   aiOutputJson?: string;
+  aiTenant?: string;
+  aiLeaseEndDate?: string;
+  reviewedFormData?: string;
   createdDate: string;
   lastModifiedDate: string;
-  completedDate?: string;
 }
 
 export interface CreateAiAbstractionResponse {
@@ -69,6 +72,15 @@ export class AiLeaseService {
         }
       })
     );
+  }
+
+  saveReviewedFormData(abstractionId: number, reviewedFormData: string): Observable<void> {
+    return this.http
+      .post<ApiResponse>(
+        `${this.apiUrl}AiAbstractions/SaveReviewedFormData`,
+        { abstractionId, reviewedFormData }
+      )
+      .pipe(map(() => void 0));
   }
 
   /**
