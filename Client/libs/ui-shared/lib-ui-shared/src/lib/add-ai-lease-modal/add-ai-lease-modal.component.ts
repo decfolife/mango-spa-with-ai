@@ -95,13 +95,13 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
       );
     }
 
-    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
+    this.addLeaseFormGroup.get('leaseDocument')?.setValue(this.selectedFiles.length ? this.selectedFiles : null);
     input.value = '';
   }
 
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
-    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
+    this.addLeaseFormGroup.get('leaseDocument')?.setValue(this.selectedFiles.length ? this.selectedFiles : null);
   }
 
   /** Launch: post to AI abstractions API, then navigate to the abstraction form. */
