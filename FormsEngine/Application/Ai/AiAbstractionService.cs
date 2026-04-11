@@ -12,8 +12,9 @@ namespace FormsEngine.Application.Ai;
 public interface IAiAbstractionService
 {
     Task<int> CreateAbstractionAsync(CreateAiAbstractionCommand command, int userId, CancellationToken cancellationToken);
-    Task<dynamic?> GetAbstractionAsync(int abstractionId);
+    Task<dynamic?> GetAbstractionAsync(int aiAbstractionId);
     Task<IEnumerable<dynamic>> GetAbstractionsListAsync(int buildingId);
+    Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId);
 }
 
 public class AiAbstractionService : IAiAbstractionService
@@ -31,33 +32,37 @@ public class AiAbstractionService : IAiAbstractionService
 
     public async Task<int> CreateAbstractionAsync(CreateAiAbstractionCommand command, int userId, CancellationToken cancellationToken)
     {
-        var inputJson = JsonSerializer.Serialize(command);
+        // Serialise the modal context inputs (portfolio, premise, template, etc.)
+        var contextJson = JsonSerializer.Serialize(command);
 
-        var abstractionId = await _repository.CreateAsync(command, userId, inputJson);
+        var aiAbstractionId = await _repository.CreateAsync(command, userId, contextJson);
 
-        await SaveDocumentsAsync(abstractionId, command.Files, userId, cancellationToken);
+        await SaveDocumentsAsync(aiAbstractionId, command.Files, userId, cancellationToken);
 
-        // Process with AI (fire-and-forget so the HTTP response returns immediately)
-        _ = ProcessWithAiAsync(abstractionId, inputJson, userId);
+        // Fire-and-forget: AI processing runs in the background; response returns immediately
+        _ = ProcessWithAiAsync(aiAbstractionId, contextJson, userId);
 
-        return abstractionId;
+        return aiAbstractionId;
     }
 
-    public Task<dynamic?> GetAbstractionAsync(int abstractionId)
-        => _repository.GetByIdAsync(abstractionId);
+    public Task<dynamic?> GetAbstractionAsync(int aiAbstractionId)
+        => _repository.GetByIdAsync(aiAbstractionId);
 
     public Task<IEnumerable<dynamic>> GetAbstractionsListAsync(int buildingId)
         => _repository.GetListAsync(buildingId);
 
+    public Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId)
+        => _repository.SaveReviewedFormDataAsync(aiAbstractionId, reviewedFormData, userId);
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    private async Task ProcessWithAiAsync(int abstractionId, string inputJson, int userId)
+    private async Task ProcessWithAiAsync(int aiAbstractionId, string contextJson, int userId)
     {
         try
         {
-            await _repository.SetStatusAsync(abstractionId, "Processing", userId);
+            await _repository.SetStatusAsync(aiAbstractionId, "Processing", userId);
 
-            var aiOutputJson = await _aiProvider.ProcessAsync(inputJson, CancellationToken.None);
+            var aiOutputJson = await _aiProvider.ProcessAsync(contextJson, CancellationToken.None);
 
             // Extract top-level fields to promote into indexed columns
             string? aiTenant = null;
@@ -83,18 +88,18 @@ public class AiAbstractionService : IAiAbstractionService
             }
             catch { /* promotion is best-effort */ }
 
-            await _repository.CompleteAsync(abstractionId, aiOutputJson, aiTenant, aiLeaseEndDate, userId);
+            await _repository.CompleteAsync(aiAbstractionId, aiOutputJson, aiTenant, aiLeaseEndDate, userId);
         }
         catch (Exception ex)
         {
-            await _repository.SetErrorAsync(abstractionId, ex.Message, userId);
+            await _repository.SetErrorAsync(aiAbstractionId, ex.Message, userId);
         }
     }
 
-    private async Task SaveDocumentsAsync(int abstractionId, List<IFormFile> files, int userId, CancellationToken cancellationToken)
+    private async Task SaveDocumentsAsync(int aiAbstractionId, List<IFormFile> files, int userId, CancellationToken cancellationToken)
     {
         var basePath = _configuration["FileStorage:AiDocumentsBasePath"] ?? Path.GetTempPath();
-        var folder = Path.Combine(basePath, abstractionId.ToString());
+        var folder = Path.Combine(basePath, aiAbstractionId.ToString());
         Directory.CreateDirectory(folder);
 
         for (int i = 0; i < files.Count; i++)
@@ -107,7 +112,7 @@ public class AiAbstractionService : IAiAbstractionService
             await file.CopyToAsync(stream, cancellationToken);
 
             await _repository.AddDocumentAsync(
-                abstractionId,
+                aiAbstractionId,
                 originalFileName: file.FileName,
                 storedFileName: storedName,
                 shareFolderPath: folder,

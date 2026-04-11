@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Dapper;
 using FormsEngine.Application.Common.Interfaces;
@@ -7,13 +8,14 @@ namespace FormsEngine.Application.Ai;
 
 public interface IAiAbstractionRepository
 {
-    Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string inputJson);
-    Task AddDocumentAsync(int abstractionId, string originalFileName, string storedFileName,
+    Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string contextJson);
+    Task AddDocumentAsync(int aiAbstractionId, string originalFileName, string storedFileName,
         string shareFolderPath, long? fileSizeBytes, string? mimeType, int sortOrder, int userId);
-    Task SetStatusAsync(int abstractionId, string status, int userId);
-    Task CompleteAsync(int abstractionId, string aiOutputJson, string aiTenant, DateTime? aiLeaseEndDate, int userId);
-    Task SetErrorAsync(int abstractionId, string errorMessage, int userId);
-    Task<dynamic?> GetByIdAsync(int abstractionId);
+    Task SetStatusAsync(int aiAbstractionId, string status, int userId);
+    Task CompleteAsync(int aiAbstractionId, string aiOutputJson, string? aiTenant, DateTime? aiLeaseEndDate, int userId);
+    Task SetErrorAsync(int aiAbstractionId, string errorMessage, int userId);
+    Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId);
+    Task<dynamic?> GetByIdAsync(int aiAbstractionId);
     Task<IEnumerable<dynamic>> GetListAsync(int buildingId);
 }
 
@@ -26,43 +28,23 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         _dbProvider = dbProvider;
     }
 
-    public async Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string inputJson)
+    public async Task<int> CreateAsync(CreateAiAbstractionCommand command, int userId, string contextJson)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         return await connection.ExecuteScalarAsync<int>(
             """
             INSERT INTO dbo.tblAiAbstractionLeases (
                 BuildingID,
-                InputJson,
-                In_PortfolioID,
-                In_PremiseID,
-                In_PremiseTypeID,
-                In_NewPremiseName,
-                In_LeaseTemplateID,
-                In_AccountingType,
-                In_MeasureUnitsID,
-                In_ParentLeaseID,
-                In_IncludesAmendments,
-                In_AbstractionNotes,
+                ContextJson,
                 CreatedBy,
                 CreatedDate,
                 LastModifiedBy,
                 LastModifiedDate
             )
-            OUTPUT INSERTED.AbstractionID
+            OUTPUT INSERTED.AiAbstractionID
             VALUES (
                 @BuildingId,
-                @InputJson,
-                @PortfolioId,
-                @PremiseId,
-                @PremiseTypeId,
-                @NewPremiseName,
-                @LeaseTemplateId,
-                @AccountingType,
-                @MeasurementUnitId,
-                @ParentLeaseId,
-                @IncludesAmendments,
-                @AbstractionNotes,
+                @ContextJson,
                 @UserId,
                 GETUTCDATE(),
                 @UserId,
@@ -71,51 +53,41 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             """,
             new
             {
-                BuildingId          = command.BuildingId,
-                InputJson           = inputJson,
-                PortfolioId         = command.PortfolioId,
-                PremiseId           = command.PremiseId,
-                PremiseTypeId       = command.PremiseTypeId,
-                NewPremiseName      = command.NewPremiseName,
-                LeaseTemplateId     = command.LeaseTemplateId,
-                AccountingType      = command.AccountingType,
-                MeasurementUnitId   = command.MeasurementUnitId,
-                ParentLeaseId       = command.ParentLeaseId,
-                IncludesAmendments  = command.IncludesAmendments,
-                AbstractionNotes    = command.AbstractionNotes,
-                UserId              = userId,
+                BuildingId  = command.BuildingId,
+                ContextJson = contextJson,
+                UserId      = userId,
             });
     }
 
-    public async Task AddDocumentAsync(int abstractionId, string originalFileName, string storedFileName,
+    public async Task AddDocumentAsync(int aiAbstractionId, string originalFileName, string storedFileName,
         string shareFolderPath, long? fileSizeBytes, string? mimeType, int sortOrder, int userId)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
             """
             INSERT INTO dbo.tblAiAbstractionDocuments
-                (AbstractionID, OriginalFileName, StoredFileName, ShareFolderPath,
+                (AiAbstractionID, OriginalFileName, StoredFileName, ShareFolderPath,
                  FileSizeBytes, MimeType, SortOrder,
                  CreatedBy, CreatedDate, LastModifiedBy, LastModifiedDate)
             VALUES
-                (@AbstractionId, @OriginalFileName, @StoredFileName, @ShareFolderPath,
+                (@AiAbstractionId, @OriginalFileName, @StoredFileName, @ShareFolderPath,
                  @FileSizeBytes, @MimeType, @SortOrder,
                  @UserId, GETUTCDATE(), @UserId, GETUTCDATE())
             """,
             new
             {
-                AbstractionId   = abstractionId,
+                AiAbstractionId  = aiAbstractionId,
                 OriginalFileName = originalFileName,
-                StoredFileName  = storedFileName,
-                ShareFolderPath = shareFolderPath,
-                FileSizeBytes   = fileSizeBytes,
-                MimeType        = mimeType,
-                SortOrder       = sortOrder,
-                UserId          = userId,
+                StoredFileName   = storedFileName,
+                ShareFolderPath  = shareFolderPath,
+                FileSizeBytes    = fileSizeBytes,
+                MimeType         = mimeType,
+                SortOrder        = sortOrder,
+                UserId           = userId,
             });
     }
 
-    public async Task SetStatusAsync(int abstractionId, string status, int userId)
+    public async Task SetStatusAsync(int aiAbstractionId, string status, int userId)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
@@ -124,12 +96,12 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             SET    [Status]         = @Status,
                    LastModifiedBy   = @UserId,
                    LastModifiedDate = GETUTCDATE()
-            WHERE  AbstractionID = @AbstractionId
+            WHERE  AiAbstractionID = @AiAbstractionId
             """,
-            new { AbstractionId = abstractionId, Status = status, UserId = userId });
+            new { AiAbstractionId = aiAbstractionId, Status = status, UserId = userId });
     }
 
-    public async Task CompleteAsync(int abstractionId, string aiOutputJson, string aiTenant, DateTime? aiLeaseEndDate, int userId)
+    public async Task CompleteAsync(int aiAbstractionId, string aiOutputJson, string? aiTenant, DateTime? aiLeaseEndDate, int userId)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
@@ -142,12 +114,12 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                    CompletedDate    = GETUTCDATE(),
                    LastModifiedBy   = @UserId,
                    LastModifiedDate = GETUTCDATE()
-            WHERE  AbstractionID = @AbstractionId
+            WHERE  AiAbstractionID = @AiAbstractionId
             """,
-            new { AbstractionId = abstractionId, AiOutputJson = aiOutputJson, AiTenant = aiTenant, AiLeaseEndDate = aiLeaseEndDate, UserId = userId });
+            new { AiAbstractionId = aiAbstractionId, AiOutputJson = aiOutputJson, AiTenant = aiTenant, AiLeaseEndDate = aiLeaseEndDate, UserId = userId });
     }
 
-    public async Task SetErrorAsync(int abstractionId, string errorMessage, int userId)
+    public async Task SetErrorAsync(int aiAbstractionId, string errorMessage, int userId)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         await connection.ExecuteAsync(
@@ -157,42 +129,49 @@ public class AiAbstractionRepository : IAiAbstractionRepository
                    ErrorMessage     = @ErrorMessage,
                    LastModifiedBy   = @UserId,
                    LastModifiedDate = GETUTCDATE()
-            WHERE  AbstractionID = @AbstractionId
+            WHERE  AiAbstractionID = @AiAbstractionId
             """,
-            new { AbstractionId = abstractionId, ErrorMessage = errorMessage, UserId = userId });
+            new { AiAbstractionId = aiAbstractionId, ErrorMessage = errorMessage, UserId = userId });
     }
 
-    public async Task<dynamic?> GetByIdAsync(int abstractionId)
+    public async Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId)
+    {
+        using SqlConnection connection = new(await _dbProvider.GetConnectionString());
+        await connection.ExecuteAsync(
+            """
+            UPDATE dbo.tblAiAbstractionLeases
+            SET    ReviewedFormData  = @ReviewedFormData,
+                   LastModifiedBy   = @UserId,
+                   LastModifiedDate = GETUTCDATE()
+            WHERE  AiAbstractionID = @AiAbstractionId
+            """,
+            new { AiAbstractionId = aiAbstractionId, ReviewedFormData = reviewedFormData, UserId = userId });
+    }
+
+    public async Task<dynamic?> GetByIdAsync(int aiAbstractionId)
     {
         using SqlConnection connection = new(await _dbProvider.GetConnectionString());
         return await connection.QueryFirstOrDefaultAsync(
             """
             SELECT
-                AbstractionID,
+                AiAbstractionID,
                 BuildingID,
                 [Status],
+                CompletedDate,
                 ErrorMessage,
-                InputJson,
-                AIOutputJson        AS AiOutputJson,
-                In_PortfolioID      AS PortfolioId,
-                In_PremiseID        AS PremiseId,
-                In_PremiseTypeID    AS PremiseTypeId,
-                In_NewPremiseName   AS NewPremiseName,
-                In_LeaseTemplateID  AS LeaseTemplateId,
-                In_AccountingType   AS AccountingType,
-                In_MeasureUnitsID   AS MeasurementUnitId,
-                In_ParentLeaseID    AS ParentLeaseId,
-                In_IncludesAmendments AS IncludesAmendments,
-                In_AbstractionNotes AS AbstractionNotes,
+                ContextJson,
+                AIOutputJson     AS AiOutputJson,
+                AI_Tenant        AS AiTenant,
+                AI_LeaseEndDate  AS AiLeaseEndDate,
+                ReviewedFormData,
                 CreatedBy,
                 CreatedDate,
                 LastModifiedBy,
-                LastModifiedDate,
-                CompletedDate
+                LastModifiedDate
             FROM dbo.tblAiAbstractionLeases
-            WHERE AbstractionID = @AbstractionId
+            WHERE AiAbstractionID = @AiAbstractionId
             """,
-            new { AbstractionId = abstractionId });
+            new { AiAbstractionId = aiAbstractionId });
     }
 
     public async Task<IEnumerable<dynamic>> GetListAsync(int buildingId)
@@ -201,9 +180,10 @@ public class AiAbstractionRepository : IAiAbstractionRepository
         return await connection.QueryAsync(
             """
             SELECT
-                AbstractionID,
+                AiAbstractionID,
                 BuildingID,
                 [Status],
+                CompletedDate,
                 AI_Tenant        AS AiTenant,
                 AI_LeaseEndDate  AS AiLeaseEndDate,
                 CreatedBy,
