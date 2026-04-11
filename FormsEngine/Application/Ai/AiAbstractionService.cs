@@ -12,8 +12,8 @@ namespace FormsEngine.Application.Ai;
 public interface IAiAbstractionService
 {
     Task<int> CreateAbstractionAsync(CreateAiAbstractionCommand command, int userId, CancellationToken cancellationToken);
-    Task<dynamic?> GetAbstractionAsync(int aiAbstractionId);
-    Task<IEnumerable<dynamic>> GetAbstractionsListAsync(int buildingId);
+    Task<AiAbstractionRecord?> GetAbstractionAsync(int aiAbstractionId);
+    Task<IEnumerable<AiAbstractionRecord>> GetAbstractionsListAsync(int buildingId);
     Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId);
 }
 
@@ -45,10 +45,10 @@ public class AiAbstractionService : IAiAbstractionService
         return aiAbstractionId;
     }
 
-    public Task<dynamic?> GetAbstractionAsync(int aiAbstractionId)
+    public Task<AiAbstractionRecord?> GetAbstractionAsync(int aiAbstractionId)
         => _repository.GetByIdAsync(aiAbstractionId);
 
-    public Task<IEnumerable<dynamic>> GetAbstractionsListAsync(int buildingId)
+    public Task<IEnumerable<AiAbstractionRecord>> GetAbstractionsListAsync(int buildingId)
         => _repository.GetListAsync(buildingId);
 
     public Task SaveReviewedFormDataAsync(int aiAbstractionId, string reviewedFormData, int userId)

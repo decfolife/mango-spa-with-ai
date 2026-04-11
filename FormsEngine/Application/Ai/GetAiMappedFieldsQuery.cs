@@ -46,11 +46,11 @@ public class GetAiMappedFieldsQueryHandler : IRequestHandler<GetAiMappedFieldsQu
         try
         {
             // ── 1. Load AI output ────────────────────────────────────────────
-            dynamic? abstraction = await _repository.GetByIdAsync(request.AbstractionId);
+            AiAbstractionRecord? abstraction = await _repository.GetByIdAsync(request.AbstractionId);
             if (abstraction is null)
                 return new ApiResponse(false, "Abstraction not found.");
 
-            string? aiOutputJson = abstraction.aiOutputJson;
+            string? aiOutputJson = abstraction.AiOutputJson;
             if (string.IsNullOrWhiteSpace(aiOutputJson))
                 return new ApiResponse(false, "AI output is not available yet.");
 

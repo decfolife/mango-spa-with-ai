@@ -34,7 +34,7 @@ public class GetAiAbstractionQueryHandler : IRequestHandler<GetAiAbstractionQuer
         try
         {
             var data = await _service.GetAbstractionAsync(request.AbstractionId);
-            if (data == null)
+            if (data is null)
                 return new ApiResponse(false, "Abstraction not found.");
 
             return new ApiResponse(true, data);
