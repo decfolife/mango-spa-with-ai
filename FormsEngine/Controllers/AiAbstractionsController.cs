@@ -19,27 +19,27 @@ public class AiAbstractionsController : ApiControllerBase
     public async Task<ActionResult<ApiResponse>> CreateAiAbstraction([FromForm] CreateAiAbstractionCommand command)
     {
         var response = await Mediator.Send(command);
-        return response.Success ? Ok(response) : BadRequest();
+        return response.Success ? Ok(response) : CreateErrorResponse(response);
     }
 
     [HttpGet("GetAiAbstractionById")]
     public async Task<ActionResult<ApiResponse>> GetAiAbstractionById(int abstractionId)
     {
         var response = await Mediator.Send(new GetAiAbstractionQuery { AbstractionId = abstractionId });
-        return response.Success ? Ok(response) : BadRequest();
+        return response.Success ? Ok(response) : CreateErrorResponse(response);
     }
 
     [HttpGet("GetAiAbstractionsByBuilding")]
     public async Task<ActionResult<ApiResponse>> GetAiAbstractionsByBuilding(int buildingId)
     {
         var response = await Mediator.Send(new GetAiAbstractionsListQuery { BuildingId = buildingId });
-        return response.Success ? Ok(response) : BadRequest();
+        return response.Success ? Ok(response) : CreateErrorResponse(response);
     }
 
     [HttpPost("SaveReviewedFormData")]
     public async Task<ActionResult<ApiResponse>> SaveReviewedFormData([FromBody] SaveReviewedFormDataCommand command)
     {
         var response = await Mediator.Send(command);
-        return response.Success ? Ok(response) : BadRequest();
+        return response.Success ? Ok(response) : CreateErrorResponse(response);
     }
 }
