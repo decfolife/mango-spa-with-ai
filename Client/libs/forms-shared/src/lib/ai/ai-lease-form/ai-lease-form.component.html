@@ -4,9 +4,9 @@
   [instances]="4"
 ></crem-skeleton>
 
-<div *ngIf="!isLoading" class="ai-lease-form">
+<div *ngIf="!isLoading" id="df-formContainer-formContainer" class="ai-lease-form">
 
-  <div class="ai-lease-form__header">
+  <div class="page-header">
     <crem-page-header
       [pageTitle]="pageTitle"
       [tabTitle]="pageTitle"
@@ -14,54 +14,143 @@
       [showSettingsButton]="false"
       [customActions]="true"
     >
-      <div actions class="ai-lease-form__actions">
-        <crem-button
-          type="secondary"
-          [icon]="'faArrowLeft'"
-          (click)="navigateBack()"
-        >Back to List</crem-button>
+      <div actions class="page-header__actions">
 
-        <ng-container *ngIf="!errorMessage">
+        <!-- Back -->
+        <crem-button
+          [text]="'Back to List'"
+          [icon]="'faArrowLeft'"
+          [btnStyle]="'flat'"
+          [color]="'secondary'"
+          (click)="navigateBack(); $event.preventDefault()"
+        ></crem-button>
+
+        <ng-container *ngIf="!errorMessage && abstractionStatus === 'Complete'">
+
+          <!-- AI Summary sidebar toggle -->
+          <crem-button
+            id="ai-form-aiSummaryBtn"
+            [text]="'AI Summary'"
+            [btnStyle]="'flat'"
+            [color]="'secondary'"
+            (click)="toggleSidebar(); $event.preventDefault()"
+          ></crem-button>
+
+          <!-- Actions dropdown (Expand / Collapse All) -->
+          <div class="dfActions">
+            <crem-button
+              [type]="'secondary'"
+              class="df-actionsButton"
+              id="ai-form-actionsBtn"
+              [matMenuTriggerFor]="aiActionsMenu"
+              (click)="$event.preventDefault()"
+            >
+              <span class="df-actionsBtn-text">Actions</span>
+              <mat-icon class="df-actionsBtn-arrow">arrow_drop_down</mat-icon>
+            </crem-button>
+            <mat-menu #aiActionsMenu="matMenu" class="df-actionsMenu">
+              <button type="button" mat-menu-item class="df-actionsMenuBtn" (click)="expandAll()">
+                <span>Expand All</span>
+              </button>
+              <button type="button" mat-menu-item class="df-actionsMenuBtn" (click)="collapseAll()">
+                <span>Collapse All</span>
+              </button>
+            </mat-menu>
+          </div>
+
+          <!-- Edit / Cancel + Save -->
           <ng-container *ngIf="!editMode">
             <crem-button
-              type="primary"
-              id="ai-form-edit-btn"
-              (click)="toggleEditMode()"
-            >Edit</crem-button>
+              [id]="'ai-form-edit-btn'"
+              [text]="'Edit'"
+              [btnStyle]="'flat'"
+              [color]="'primary'"
+              (click)="toggleEditMode(); $event.preventDefault()"
+            ></crem-button>
           </ng-container>
 
           <ng-container *ngIf="editMode">
             <crem-button
-              type="secondary"
-              id="ai-form-cancel-btn"
-              (click)="onCancel()"
-            >Cancel</crem-button>
+              [id]="'ai-form-cancel-btn'"
+              [text]="'Cancel'"
+              [btnStyle]="'flat'"
+              [color]="'secondary'"
+              (click)="onCancel(); $event.preventDefault()"
+            ></crem-button>
             <crem-button
-              type="primary"
-              id="ai-form-save-btn"
-              (click)="onSave()"
-            >Save</crem-button>
+              [id]="'ai-form-save-btn'"
+              [text]="'Save'"
+              [btnStyle]="'flat'"
+              [color]="'primary'"
+              (click)="onSave(); $event.preventDefault()"
+            ></crem-button>
           </ng-container>
+
         </ng-container>
       </div>
     </crem-page-header>
   </div>
 
-  <!-- Error state -->
-  <div *ngIf="errorMessage" class="ai-lease-form__error">
-    <crem-icon icon="faCircleExclamation"></crem-icon>
-    <p>{{ errorMessage }}</p>
+  <!-- Body: form content + sidebar side-by-side -->
+  <div class="ai-lease-form__body">
+
+    <div class="ai-lease-form__main">
+
+      <!-- Error state -->
+      <div *ngIf="errorMessage" class="ai-lease-form__error">
+        <crem-icon icon="faCircleExclamation"></crem-icon>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <!-- Pending / processing state -->
+      <div *ngIf="!errorMessage && abstractionStatus && abstractionStatus !== 'Complete'" class="ai-lease-form__pending">
+        <crem-icon class="ai-lease-form__pending-icon" icon="faHourglass"></crem-icon>
+        <div class="ai-lease-form__pending-content">
+          <strong>Abstraction {{ abstractionStatus }}</strong>
+          <span>The AI is processing your documents. This page will show the results once complete.</span>
+        </div>
+      </div>
+
+      <!-- AI verification banner -->
+      <div *ngIf="!errorMessage && abstractionStatus === 'Complete'" class="ai-lease-form__notice">
+        <crem-icon class="ai-lease-form__notice-icon" icon="faCircleInfo"></crem-icon>
+        <div class="ai-lease-form__notice-content">
+          <strong>AI Abstracted Record(s) Ready to Verify</strong>
+          <span>This lease was abstracted by AI. Review all fields and confirm accuracy before saving.</span>
+        </div>
+      </div>
+
+      <!-- Form sections -->
+      <div *ngIf="!errorMessage && abstractionStatus === 'Complete'" class="dynamic-form-content" [formGroup]="form">
+        <div class="row">
+          <div
+            *ngFor="let section of sections; let i = index"
+            class="col-md-12"
+          >
+            <mango-ai-form-section
+              [section]="section"
+              [formGroup]="getSectionFormGroup(section.key)"
+              [editMode]="editMode"
+              [isExpanded]="sectionsExpanded[i]"
+            ></mango-ai-form-section>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <mango-ai-sidebar></mango-ai-sidebar>
+
   </div>
 
-  <!-- Form sections -->
-  <div *ngIf="!errorMessage" class="ai-lease-form__sections" [formGroup]="form">
-    <mango-ai-form-section
-      *ngFor="let section of sections; let i = index"
-      [section]="section"
-      [formGroup]="getSectionFormGroup(section.key)"
-      [editMode]="editMode"
-      [isExpanded]="true"
-    ></mango-ai-form-section>
-  </div>
+  <!-- Scroll to top -->
+  <crem-button
+    [id]="'ai-form-scrollToTopBtn'"
+    class="scroll-to-top-button"
+    type="primary"
+    (click)="scrollToTop(); $event.preventDefault()"
+  >
+    <span>Scroll to Top</span>
+  </crem-button>
 
 </div>

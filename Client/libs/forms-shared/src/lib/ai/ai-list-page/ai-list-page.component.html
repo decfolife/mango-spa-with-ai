@@ -17,16 +17,22 @@
     <p>{{ errorMessage }}</p>
   </div>
 
-  <div *ngIf="!errorMessage" class="ai-list-page__grid-container">
+  <div *ngIf="!errorMessage" class="list-page-data-grid-wrapper">
     <dx-data-grid
       id="aiLeaseListGrid"
+      class="list-page-data-grid"
       [dataSource]="leases"
-      [showBorders]="true"
+      [showBorders]="false"
       [showColumnLines]="false"
       [showRowLines]="true"
       [rowAlternationEnabled]="true"
       [hoverStateEnabled]="true"
       [wordWrapEnabled]="false"
+      [allowColumnReordering]="true"
+      [allowColumnResizing]="true"
+      columnResizingMode="widget"
+      [columnAutoWidth]="true"
+      [height]="'100%'"
       keyExpr="id"
       (onRowClick)="onRowClick($event)"
     >
@@ -36,78 +42,60 @@
         [showPageSizeSelector]="true"
         [allowedPageSizes]="[10, 25, 50, 100]"
         [showInfo]="true"
+        [showNavigationButtons]="true"
       ></dxo-pager>
-      <dxo-filter-row [visible]="true"></dxo-filter-row>
-      <dxo-header-filter [visible]="true"></dxo-header-filter>
+      <dxo-header-filter [visible]="true" [allowSearch]="true"></dxo-header-filter>
       <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      <dxo-sorting mode="multiple"></dxo-sorting>
+      <dxo-export [enabled]="true" [fileName]="'AI Lease Abstractions'"></dxo-export>
 
       <dxi-column
-        dataField="tenant"
+        dataField="aiTenant"
         caption="Tenant"
         [minWidth]="150"
         cellTemplate="tenantLinkTemplate"
       ></dxi-column>
 
       <dxi-column
-        dataField="landlord"
-        caption="Landlord"
-        [minWidth]="150"
+        dataField="status"
+        caption="Status"
+        [width]="130"
+        cellTemplate="statusTemplate"
       ></dxi-column>
 
       <dxi-column
-        dataField="address"
-        caption="Address"
-        [minWidth]="200"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="leaseType"
-        caption="Lease Type"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="startDate"
-        caption="Start Date"
-        dataType="date"
-        format="MM/dd/yyyy"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="endDate"
-        caption="End Date"
-        dataType="date"
-        format="MM/dd/yyyy"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="squareFootage"
-        caption="Sq Ft"
-        dataType="number"
-        [format]="{ type: 'fixedPoint', precision: 0 }"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="effectiveRent"
-        caption="Effective Rent ($/SF)"
-        dataType="number"
-        [format]="{ type: 'currency', precision: 2 }"
-        [width]="160"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="abstractionDate"
-        caption="Abstraction Date"
+        dataField="aiLeaseEndDate"
+        caption="Lease End Date"
         dataType="date"
         format="MM/dd/yyyy"
         [width]="140"
       ></dxi-column>
 
+      <dxi-column
+        dataField="createdDate"
+        caption="Submitted"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="120"
+        [sortOrder]="'desc'"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="lastModifiedDate"
+        caption="Last Updated"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="130"
+      ></dxi-column>
+
       <div *dxTemplate="let cell of 'tenantLinkTemplate'">
-        <a class="ai-list-page__row-link">{{ cell.data.tenant }}</a>
+        <a class="grid-link">{{ cell.data.aiTenant || '—' }}</a>
+      </div>
+
+      <div *dxTemplate="let cell of 'statusTemplate'">
+        <span class="status-badge status-badge--{{ cell.data.status | lowercase }}">
+          {{ cell.data.status }}
+        </span>
       </div>
     </dx-data-grid>
   </div>

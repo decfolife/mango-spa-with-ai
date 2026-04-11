@@ -408,6 +408,14 @@ public class Startup
 
     public void AddServices(IServiceCollection services)
     {
+        // AI abstraction services
+        services.AddScoped<FormsEngine.Application.Ai.IAiAbstractionRepository,
+                           FormsEngine.Application.Ai.AiAbstractionRepository>();
+        services.AddScoped<FormsEngine.Application.Ai.IAiAbstractionService,
+                           FormsEngine.Application.Ai.AiAbstractionService>();
+        services.AddScoped<FormsEngine.Application.Ai.IAiProvider,
+                           FormsEngine.Application.Ai.AiMockProvider>();
+
         services.AddScoped<IRequestService>(provider =>
         {
             var httpContext = provider.GetRequiredService<IHttpContextAccessor>();
@@ -418,9 +426,7 @@ public class Startup
         });
 
         services.AddScoped<ICacheService, CacheService>()
-                .AddScoped<ISessionService, SessionService>()
-                .AddScoped<IAiAbstractionRepository, AiAbstractionRepository>()
-                .AddScoped<IAiDocumentStorageService, AiDocumentStorageService>();
+                .AddScoped<ISessionService, SessionService>();
     }
 
     // Configure data protection to use the same key ring and app identifier persisted to Redis.

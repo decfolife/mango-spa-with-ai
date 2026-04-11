@@ -1,6 +1,5 @@
 using Common.Contracts.HTTP.Microservice;
-using FormsEngine.Application.Commands;
-using FormsEngine.Application.Queries;
+using FormsEngine.Application.Ai;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

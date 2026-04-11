@@ -1,5 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { AiFormField, AiFormSection, AiRentScheduleSection } from '../../models/ai-form.model';
 
 @Component({
@@ -12,6 +13,9 @@ export class AiFormSectionComponent implements OnInit {
   @Input() formGroup: FormGroup;
   @Input() editMode = false;
   @Input() isExpanded = true;
+
+  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
+  sectionLabelMenuEntered = false;
 
   rentSchedule: AiRentScheduleSection | null = null;
 
@@ -51,6 +55,12 @@ export class AiFormSectionComponent implements OnInit {
     if (val == null || val === '') return '—';
 
     switch (field.type) {
+      case 'dropdown': {
+        const displayExpr = field.displayExpr ?? 'name';
+        const valueExpr = field.valueExpr ?? 'id';
+        const match = field.dropdownItems?.find((item) => item[valueExpr] === val || item[valueExpr] === String(val));
+        return match ? String(match[displayExpr]) : String(val);
+      }
       case 'boolean':
         return val === true || val === 'true' ? 'Yes' : 'No';
       case 'currency':
@@ -68,5 +78,23 @@ export class AiFormSectionComponent implements OnInit {
 
   hasAbatements(): boolean {
     return (this.rentSchedule?.abatementItems?.length ?? 0) > 0;
+  }
+
+  openSectionLabelMenu(): void {
+    this.sectionLabelMenuEntered = false;
+    this.trigger?.openMenu();
+  }
+
+  closeSectionLabelMenu(): void {
+    setTimeout(() => {
+      if (!this.sectionLabelMenuEntered) {
+        this.trigger?.closeMenu();
+      }
+    }, 500);
+  }
+
+  sectionLabelMenuLeave(): void {
+    this.sectionLabelMenuEntered = false;
+    this.closeSectionLabelMenu();
   }
 }

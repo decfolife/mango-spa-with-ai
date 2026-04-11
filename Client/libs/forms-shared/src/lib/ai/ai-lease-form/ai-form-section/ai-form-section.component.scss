@@ -39,11 +39,7 @@ mat-card.mat-mdc-card {
         align-items: flex-start;
         margin: 2px 0;
         padding: 4px 18px;
-        transition: background-color 0.15s;
 
-        &:hover {
-          background-color: #e8f0fe;
-        }
       }
 
       // Label container — matches df-formSection-labelContainer

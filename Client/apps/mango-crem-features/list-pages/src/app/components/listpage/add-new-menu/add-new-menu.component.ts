@@ -12,11 +12,13 @@ import {
   PREMISE_WIZARD_OTID,
   BUILDING_WIZARD_OTID,
   LEASE_WIZARD_OTID,
+  AI_LEASE_WIZARD_OTID,
   ToastState,
 } from '@mango/data-models/lib-data-models';
 import { AddEquipmentModalComponent } from '@mango/ui-shared/lib-ui-shared';
 import { EQUIPMENT_WIZARD_OTID } from '@mango/data-models/lib-data-models';
 import { AddLeaseModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-lease-modal/add-lease-modal.component';
+import { AddAiLeaseModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-ai-lease-modal/add-ai-lease-modal.component';
 import { AddPremiseModalComponent } from 'libs/ui-shared/lib-ui-shared/src/lib/add-premise-modal/add-premise-modal.component';
 import { DashboardService } from '@project-dashboard/services/dashboard.service';
 import { map } from 'rxjs/operators';
@@ -215,6 +217,10 @@ export class AddNewMenuComponent implements OnInit {
     if (objectTypeId == EQUIPMENT_WIZARD_OTID) {
       this.showAddEquipmentPopup();
     }
+
+    if (objectTypeId == AI_LEASE_WIZARD_OTID) {
+      this.showAddAiLeasePopup();
+    }
   }
 
   showAddSupplierPopup(): void {
@@ -283,6 +289,25 @@ export class AddNewMenuComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
+      this.reLoadGrid.emit(true);
+    });
+  }
+
+  showAddAiLeasePopup() {
+    const dialogRef = this.dialog.open(AddAiLeaseModalComponent, {
+      disableClose: true,
+      width: '70vw',
+      minWidth: '320px',
+      maxWidth: '1100px',
+      minHeight: '420px',
+      maxHeight: '90vh',
+      data: {
+        objectTypeId: this.objectTypeId,
+        userId: 2,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
       this.reLoadGrid.emit(true);
     });
   }

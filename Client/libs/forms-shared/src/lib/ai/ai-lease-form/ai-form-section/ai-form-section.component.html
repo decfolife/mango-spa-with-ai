@@ -1,7 +1,25 @@
 <mat-card class="ai-form-section df-sectionCard view-mode" [class.edit-mode]="editMode" [class.view-mode]="!editMode">
 
   <mat-card-header class="df-sectionHeader" (click)="toggleExpanded()">
-    <mat-card-title>{{ section.title }}</mat-card-title>
+    <mat-card-title
+      #menuTrigger="matMenuTrigger"
+      [matMenuTriggerFor]="sectionLabelMenu"
+      (mouseenter)="openSectionLabelMenu()"
+      (mouseleave)="closeSectionLabelMenu()"
+    >{{ section.title }}</mat-card-title>
+
+    <mat-menu #sectionLabelMenu="matMenu" [hasBackdrop]="false">
+      <div
+        (mouseenter)="sectionLabelMenuEntered = true"
+        (mouseleave)="sectionLabelMenuLeave()"
+        class="df-sectionLabelMenu"
+      >
+        <a mat-menu-item>Section Edit</a>
+        <a mat-menu-item>Form Item Details</a>
+        <a mat-menu-item>Behaviors</a>
+      </div>
+    </mat-menu>
+
     <button type="button" mat-icon-button class="btn-expand" (click)="toggleExpanded(); $event.stopPropagation()">
       <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
     </button>
@@ -42,9 +60,22 @@
             [label]="formatDisplayValue(field)"
           ></crem-input-label>
 
+          <!-- Edit mode: dropdown (backend lookup or static list) -->
+          <crem-dropdown
+            *ngIf="editMode && field.type === 'dropdown'"
+            [dataSource]="field.dropdownItems"
+            [displayExpr]="field.displayExpr || 'name'"
+            [valueExpr]="field.valueExpr || 'id'"
+            [formControlName]="field.key"
+            [showClearButton]="true"
+            [showColumnHeader]="false"
+            [useSelectBox]="true"
+            [autoSelect]="false"
+          ></crem-dropdown>
+
           <!-- Edit mode: text / number / currency / percent -->
           <crem-input
-            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
+            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date' && field.type !== 'dropdown'"
             [inputType]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
             [formControlName]="field.key"
           ></crem-input>

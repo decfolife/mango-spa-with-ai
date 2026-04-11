@@ -1,7 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, switchMap, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { DxDataGridComponent } from 'devextreme-angular';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 import { AiSidebarService } from './ai-sidebar.service';
@@ -24,23 +25,33 @@ interface SidebarSection {
   styleUrls: ['./ai-sidebar.component.scss'],
 })
 export class AiSidebarComponent implements OnInit, OnDestroy {
+  @ViewChildren(DxDataGridComponent) dataGrids: QueryList<DxDataGridComponent>;
+
   isOpen = false;
   isLoading = false;
   errorMessage: string | null = null;
   sections: SidebarSection[] = [];
   rentScheduleItems: any[] = [];
   abatementItems: any[] = [];
+  currentWidth = 420;
+
+  private isDragging = false;
+  private dragStartX = 0;
+  private dragStartWidth = 0;
+  private readonly MIN_WIDTH = 250;
+  private readonly MAX_WIDTH = 800;
+  private resizeObserver: ResizeObserver;
 
   readonly rentScheduleColumns = [
-    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'monthlyBaseRent', caption: 'Monthly Rent', dataType: 'number', format: { type: 'currency', precision: 0 }, width: 120 },
+    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'monthlyBaseRent', caption: 'Monthly Rent', dataType: 'number', format: { type: 'currency', precision: 0 } },
   ];
 
   readonly abatementColumns = [
-    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy', width: 95 },
-    { dataField: 'discountAmount', caption: 'Amount', dataType: 'number', format: { type: 'currency', precision: 0 }, width: 110 },
+    { dataField: 'startDate', caption: 'Start', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'endDate', caption: 'End', dataType: 'date', format: 'MM/dd/yyyy' },
+    { dataField: 'discountAmount', caption: 'Amount', dataType: 'number', format: { type: 'currency', precision: 0 } },
   ];
 
   private readonly destroy$ = new Subject<void>();
@@ -48,30 +59,39 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   constructor(
     private readonly aiSidebarService: AiSidebarService,
     private readonly aiLeaseService: AiLeaseService,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly el: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
-    // React to sidebar open/close + route oid changes together
+    // Repaint grids whenever the sidebar's width changes (drag or open/close transition)
+    this.resizeObserver = new ResizeObserver(() => {
+      this.dataGrids?.forEach((grid) => grid.instance?.repaint());
+    });
+    this.resizeObserver.observe(this.el.nativeElement);
+
     combineLatest([
-      this.aiSidebarService.isOpen$,
+      this.aiSidebarService.state$,
       this.route.queryParams,
     ])
       .pipe(
         takeUntil(this.destroy$),
         distinctUntilChanged(
-          ([prevOpen, prevParams], [nextOpen, nextParams]) =>
-            prevOpen === nextOpen && prevParams['oid'] === nextParams['oid']
+          ([prevState, prevParams], [nextState, nextParams]) =>
+            prevState.isOpen === nextState.isOpen &&
+            prevState.leaseId === nextState.leaseId &&
+            prevParams['oid'] === nextParams['oid']
         )
       )
-      .subscribe(([open, params]) => {
-        this.isOpen = open;
-        const oid = params['oid'] ? Number(params['oid']) : null;
+      .subscribe(([state, params]) => {
+        this.isOpen = state.isOpen;
+        // Prefer explicit leaseId from service (AI abstraction route),
+        // fall back to ?oid= query param (dynamic form route)
+        const oid = state.leaseId ?? (params['oid'] ? Number(params['oid']) : null);
 
-        if (open && oid) {
+        if (state.isOpen && oid) {
           this.loadData(oid);
-        } else if (!open) {
-          // Reset data when closed so stale data doesn't flash on next open
+        } else if (!state.isOpen) {
           this.sections = [];
           this.rentScheduleItems = [];
           this.abatementItems = [];
@@ -81,6 +101,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -96,6 +117,39 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   hasAbatements(): boolean {
     return this.abatementItems.length > 0;
   }
+
+  copyCitation(text: string): void {
+    navigator.clipboard?.writeText(text);
+  }
+
+  // ─── Resize ──────────────────────────────────────────────────────────────────
+
+  onResizeStart(event: MouseEvent): void {
+    this.isDragging = true;
+    this.dragStartX = event.clientX;
+    this.dragStartWidth = this.currentWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    event.preventDefault();
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    if (!this.isDragging) return;
+    // Sidebar is on the right edge; dragging left (smaller clientX) increases width
+    const delta = this.dragStartX - event.clientX;
+    this.currentWidth = Math.min(this.MAX_WIDTH, Math.max(this.MIN_WIDTH, this.dragStartWidth + delta));
+  }
+
+  @HostListener('document:mouseup')
+  onMouseUp(): void {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  // ─── Data ────────────────────────────────────────────────────────────────────
 
   private loadData(oid: number): void {
     this.isLoading = true;
@@ -182,7 +236,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
             value: this.formatPayor(data.expenses?.operatingExpenses?.value),
             citation: data.expenses?.operatingExpenses?.citation,
           },
-          { label: 'CAM', value: this.formatPayor(data.expenses?.cam?.value), citation: data.expenses?.cam?.citation },
+          { label: 'Common Area Maintenance', value: this.formatPayor(data.expenses?.cam?.value), citation: data.expenses?.cam?.citation },
           { label: 'Insurance', value: this.formatPayor(data.expenses?.insurance?.value) },
           { label: 'Taxes', value: this.formatPayor(data.expenses?.taxes?.value) },
           { label: 'Water', value: this.formatPayor(data.expenses?.water?.value) },
