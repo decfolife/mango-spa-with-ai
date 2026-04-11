@@ -8,18 +8,19 @@ using MediatR;
 
 namespace FormsEngine.Application.Ai;
 
-public class GetAiAbstractionQuery : IRequest<ApiResponse>
+public class SaveReviewedFormDataCommand : IRequest<ApiResponse>
 {
     public int AbstractionId { get; set; }
+    public string ReviewedFormData { get; set; } = string.Empty;
 }
 
-public class GetAiAbstractionQueryHandler : IRequestHandler<GetAiAbstractionQuery, ApiResponse>
+public class SaveReviewedFormDataCommandHandler : IRequestHandler<SaveReviewedFormDataCommand, ApiResponse>
 {
     readonly IAiAbstractionService _service;
     readonly ILogDirectService _logger;
     readonly ICurrentUserService _currentUserService;
 
-    public GetAiAbstractionQueryHandler(
+    public SaveReviewedFormDataCommandHandler(
         IAiAbstractionService service,
         ILogDirectService logger,
         ICurrentUserService currentUserService)
@@ -29,19 +30,16 @@ public class GetAiAbstractionQueryHandler : IRequestHandler<GetAiAbstractionQuer
         _currentUserService = currentUserService;
     }
 
-    public async Task<ApiResponse> Handle(GetAiAbstractionQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse> Handle(SaveReviewedFormDataCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var data = await _service.GetAbstractionAsync(request.AbstractionId);
-            if (data is null)
-                return new ApiResponse(false, "Abstraction not found.");
-
-            return new ApiResponse(true, data);
+            await _service.SaveReviewedFormDataAsync(request.AbstractionId, request.ReviewedFormData, _currentUserService.UserId);
+            return new ApiResponse(true, "Reviewed form data saved.");
         }
         catch (Exception ex)
         {
-            string errorMessage = $"AiAbstractions: Exception Occurred, Method -- GetAiAbstractionById, Error Message: {ex.Message}, Inner Exception: {ex.InnerException}, Stack Trace: {ex.StackTrace}";
+            string errorMessage = $"AiAbstractions: Exception Occurred, Method -- SaveReviewedFormData, Error Message: {ex.Message}, Inner Exception: {ex.InnerException}, Stack Trace: {ex.StackTrace}";
             await _logger.LogToProcessLogEntries((int)ProcessLogType.Mango, _currentUserService.ClientKey, Environment.MachineName, "F", errorMessage, _currentUserService.UserId);
             return new ApiResponse(false, ex.Message);
         }

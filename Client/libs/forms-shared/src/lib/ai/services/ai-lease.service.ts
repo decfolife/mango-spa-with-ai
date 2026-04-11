@@ -10,13 +10,18 @@ import { AiLeaseListItem } from '../models/ai-form.model';
 export interface AiAbstractionDetail {
   abstractionId: number;
   buildingId: number;
+  portfolioId?: number;
+  premiseId?: number;
   status: 'Pending' | 'Processing' | 'Complete' | 'Error' | 'Cancelled';
+  completedDate?: string;
   errorMessage?: string;
-  inputJson: string;
+  contextJson?: string;
   aiOutputJson?: string;
+  aiTenant?: string;
+  aiLeaseEndDate?: string;
+  reviewedFormData?: string;
   createdDate: string;
   lastModifiedDate: string;
-  completedDate?: string;
 }
 
 export interface CreateAiAbstractionResponse {
@@ -31,7 +36,9 @@ export class AiLeaseService {
 
   createAbstraction(formData: FormData): Observable<CreateAiAbstractionResponse> {
     return this.http
-      .post<ApiResponse>(`${this.apiUrl}AiAbstractions/CreateAiAbstraction`, formData)
+      .post<ApiResponse>(`${this.apiUrl}AiAbstractions/CreateAiAbstraction`, formData, {
+        headers: { enctype: 'multipart/form-data' },
+      })
       .pipe(map((res) => res.data as CreateAiAbstractionResponse));
   }
 
@@ -71,6 +78,32 @@ export class AiLeaseService {
     );
   }
 
+  saveReviewedFormData(abstractionId: number, reviewedFormData: string): Observable<void> {
+    return this.http
+      .post<ApiResponse>(
+        `${this.apiUrl}AiAbstractions/SaveReviewedFormData`,
+        { abstractionId, reviewedFormData }
+      )
+      .pipe(map(() => void 0));
+  }
+
+  /**
+   * Calls the backend to load form fields + sections, apply AI output mapping,
+   * and return field objects with formItemAnswer already populated.
+   * The backend handles both fetching form fields and mapping AI values.
+   */
+  getMappedFormFields(
+    abstractionId: number,
+    formId: number,
+    objectTypeId = 4
+  ): Observable<{ fields: any[]; sections: any[] }> {
+    return this.http
+      .get<ApiResponse>(`${this.apiUrl}AiAbstractions/GetMappedFormFields`, {
+        params: { abstractionId, formId, objectTypeId },
+      })
+      .pipe(map((res) => res.data as { fields: any[]; sections: any[] }));
+  }
+
   /**
    * Returns the list of abstractions for a building, mapped to the grid model.
    */
@@ -80,9 +113,11 @@ export class AiLeaseService {
         items.map((item) => ({
           id: item.abstractionId,
           buildingId: item.buildingId,
+          portfolioId: item.portfolioId ?? undefined,
+          premiseId: item.premiseId ?? undefined,
           status: item.status,
-          aiTenant: (item as any).aiTenant ?? undefined,
-          aiLeaseEndDate: (item as any).aiLeaseEndDate ?? undefined,
+          aiTenant: item.aiTenant ?? undefined,
+          aiLeaseEndDate: item.aiLeaseEndDate ?? undefined,
           createdDate: item.createdDate,
           lastModifiedDate: item.lastModifiedDate,
         }))

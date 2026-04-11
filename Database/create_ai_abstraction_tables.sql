@@ -5,7 +5,10 @@
 -- Purpose:   Track AI lease abstraction requests end-to-end.
 --
 --            tblAiAbstractionLeases  – one row per abstraction request.
---              ContextJson      – modal inputs (portfolio, premise, template …)
+--              PortfolioID      – portfolio selected in the Add AI Lease modal
+--              PremiseID        – premise selected in the Add AI Lease modal
+--              ContextJson      – full modal inputs as JSON (portfolio, premise,
+--                                 template, accounting type, etc.)
 --              AIOutputJson     – structured JSON returned by the AI service
 --              ReviewedFormData – user-verified field answers saved from the
 --                                 review form before the lease is created
@@ -21,16 +24,17 @@ CREATE TABLE dbo.tblAiAbstractionLeases (
     -- Primary key
     AiAbstractionID      INT            NOT NULL IDENTITY(1,1) PRIMARY KEY,
 
-    -- Context
+    -- Context: building, portfolio, and premise selected in the modal
     BuildingID           INT            NOT NULL,
+    PortfolioID          INT            NULL,
+    PremiseID            INT            NULL,
 
     -- Workflow
     [Status]             NVARCHAR(50)   NOT NULL DEFAULT 'Pending',
     CompletedDate        DATETIME2      NULL,
     ErrorMessage         NVARCHAR(MAX)  NULL,
 
-    -- Modal inputs: portfolio, premise, lease template, accounting type, etc.
-    -- Stored as JSON; parsed at lease-creation time — no need for individual columns.
+    -- Full modal inputs as JSON (template, accounting type, notes, etc.)
     ContextJson          NVARCHAR(MAX)  NULL,
 
     -- AI processing output (raw structured JSON from the AI service)
@@ -61,7 +65,7 @@ GO
 -- List abstractions by building, newest first
 CREATE NONCLUSTERED INDEX IX_tblAiAbstractionLeases_Building
     ON dbo.tblAiAbstractionLeases (BuildingID, CreatedDate DESC)
-    INCLUDE (AiAbstractionID, [Status], CompletedDate, AI_Tenant, AI_LeaseEndDate);
+    INCLUDE (AiAbstractionID, [Status], CompletedDate, PortfolioID, PremiseID, AI_Tenant, AI_LeaseEndDate);
 GO
 
 -- Filter by AI-extracted service type

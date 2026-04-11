@@ -31,7 +31,7 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     public override dialogRef: MatDialogRef<AddAiLeaseModalComponent>,
     formWizardService: FormWizardService,
     dashboardService: DashboardService,
-    private readonly router: Router,
+    router: Router,
     dataService: DataService,
     private readonly toastService: CremToastService,
     facade: MangoAppFacade,
@@ -43,6 +43,7 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
       objectId: number;
       objectName: string;
       premiseId: number;
+      formId?: number;
     }
   ) {
     super(dialogRef, formWizardService, dashboardService, router, dataService, toastService, facade, data);
@@ -95,13 +96,13 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
       );
     }
 
-    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
+    this.addLeaseFormGroup.get('leaseDocument')?.setValue(this.selectedFiles.length ? this.selectedFiles : null);
     input.value = '';
   }
 
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
-    this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles.length ? this.selectedFiles : null);
+    this.addLeaseFormGroup.get('leaseDocument')?.setValue(this.selectedFiles.length ? this.selectedFiles : null);
   }
 
   /** Launch: post to AI abstractions API, then navigate to the abstraction form. */
