@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FormsEngine.Application.Ai;
 
@@ -20,14 +21,20 @@ public interface IAiAbstractionService
 public class AiAbstractionService : IAiAbstractionService
 {
     readonly IAiAbstractionRepository _repository;
-    readonly IAiProvider _aiProvider;
-    readonly IConfiguration _configuration;
+    readonly IAiProvider              _aiProvider;
+    readonly IConfiguration           _configuration;
+    readonly IServiceScopeFactory     _scopeFactory;
 
-    public AiAbstractionService(IAiAbstractionRepository repository, IAiProvider aiProvider, IConfiguration configuration)
+    public AiAbstractionService(
+        IAiAbstractionRepository repository,
+        IAiProvider              aiProvider,
+        IConfiguration           configuration,
+        IServiceScopeFactory     scopeFactory)
     {
-        _repository = repository;
-        _aiProvider  = aiProvider;
+        _repository    = repository;
+        _aiProvider    = aiProvider;
         _configuration = configuration;
+        _scopeFactory  = scopeFactory;
     }
 
     public async Task<int> CreateAbstractionAsync(CreateAiAbstractionCommand command, int userId, CancellationToken cancellationToken)
@@ -58,9 +65,14 @@ public class AiAbstractionService : IAiAbstractionService
 
     private async Task ProcessWithAiAsync(int aiAbstractionId, string contextJson, int userId)
     {
+        // The originating HTTP request has already returned, so its DI scope is gone.
+        // Create a fresh scope so the repository's DB connection provider is still valid.
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var repository = scope.ServiceProvider.GetRequiredService<IAiAbstractionRepository>();
+
         try
         {
-            await _repository.SetStatusAsync(aiAbstractionId, "Processing", userId);
+            await repository.SetStatusAsync(aiAbstractionId, "Processing", userId);
 
             var aiOutputJson = await _aiProvider.ProcessAsync(contextJson, CancellationToken.None);
 
@@ -88,11 +100,11 @@ public class AiAbstractionService : IAiAbstractionService
             }
             catch { /* promotion is best-effort */ }
 
-            await _repository.CompleteAsync(aiAbstractionId, aiOutputJson, aiTenant, aiLeaseEndDate, userId);
+            await repository.CompleteAsync(aiAbstractionId, aiOutputJson, aiTenant, aiLeaseEndDate, userId);
         }
         catch (Exception ex)
         {
-            await _repository.SetErrorAsync(aiAbstractionId, ex.Message, userId);
+            await repository.SetErrorAsync(aiAbstractionId, ex.Message, userId);
         }
     }
 
