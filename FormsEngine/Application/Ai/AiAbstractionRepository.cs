@@ -35,6 +35,8 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             """
             INSERT INTO dbo.tblAiAbstractionLeases (
                 BuildingID,
+                PortfolioID,
+                PremiseID,
                 ContextJson,
                 CreatedBy,
                 CreatedDate,
@@ -44,6 +46,8 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             OUTPUT INSERTED.AiAbstractionID
             VALUES (
                 @BuildingId,
+                @PortfolioId,
+                @PremiseId,
                 @ContextJson,
                 @UserId,
                 GETUTCDATE(),
@@ -54,6 +58,8 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             new
             {
                 BuildingId  = command.BuildingId,
+                PortfolioId = command.PortfolioId,
+                PremiseId   = command.PremiseId,
                 ContextJson = contextJson,
                 UserId      = userId,
             });
@@ -156,6 +162,8 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             SELECT
                 AiAbstractionID  AS abstractionId,
                 BuildingID       AS buildingId,
+                PortfolioID      AS portfolioId,
+                PremiseID        AS premiseId,
                 [Status]         AS status,
                 CompletedDate    AS completedDate,
                 ErrorMessage     AS errorMessage,
@@ -182,6 +190,8 @@ public class AiAbstractionRepository : IAiAbstractionRepository
             SELECT
                 AiAbstractionID  AS abstractionId,
                 BuildingID       AS buildingId,
+                PortfolioID      AS portfolioId,
+                PremiseID        AS premiseId,
                 [Status]         AS status,
                 CompletedDate    AS completedDate,
                 AI_Tenant        AS aiTenant,
