@@ -122,7 +122,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
     public dialogRef: MatDialogRef<AddLeaseModalComponent>,
     private formWizardService: FormWizardService,
     private dashboardService: DashboardService,
-    private router: Router,
+    protected router: Router,
     private dataService: DataService,
     private toastService: CremToastService,
     private facade: MangoAppFacade,

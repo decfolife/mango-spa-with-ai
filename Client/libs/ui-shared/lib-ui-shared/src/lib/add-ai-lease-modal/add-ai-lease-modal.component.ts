@@ -31,7 +31,7 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     public override dialogRef: MatDialogRef<AddAiLeaseModalComponent>,
     formWizardService: FormWizardService,
     dashboardService: DashboardService,
-    private readonly router: Router,
+    router: Router,
     dataService: DataService,
     private readonly toastService: CremToastService,
     facade: MangoAppFacade,
