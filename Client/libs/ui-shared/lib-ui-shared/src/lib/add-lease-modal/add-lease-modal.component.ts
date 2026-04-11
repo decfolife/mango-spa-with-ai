@@ -119,7 +119,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
   @ViewChild('leasePortfolioId') portfolioDropdown: DropdownComponent;
 
   constructor(
-    public dialogRef: MatDialogRef<AddLeaseModalComponent>,
+    public dialogRef: MatDialogRef<any>,
     private formWizardService: FormWizardService,
     private dashboardService: DashboardService,
     protected router: Router,
