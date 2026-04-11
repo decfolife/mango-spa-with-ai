@@ -20,6 +20,7 @@ import {
   PageHeaderComponent,
 } from '@mango/ui-shared/lib-ui-elements';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
+import { DynamicFormsService } from '../../services/dynamic-forms.service';
 import { AiLeaseFormComponent } from './ai-lease-form.component';
 import { AiFormSectionComponent } from './ai-form-section/ai-form-section.component';
 import { AiSidebarModule } from '../ai-sidebar/ai-sidebar.module';
@@ -47,7 +48,7 @@ import { AiSidebarModule } from '../ai-sidebar/ai-sidebar.module';
     PageHeaderComponent,
     AiSidebarModule,
   ],
-  providers: [FormWizardService],
+  providers: [FormWizardService, DynamicFormsService],
   exports: [AiLeaseFormComponent],
 })
 export class AiLeaseFormModule {}

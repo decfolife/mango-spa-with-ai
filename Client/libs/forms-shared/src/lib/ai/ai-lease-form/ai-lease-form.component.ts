@@ -6,8 +6,10 @@ import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { AiDropdownItem, AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
+import { AiFieldMapperService } from '../services/ai-field-mapper.service';
 import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
+import { DynamicFormsService } from '../../services/dynamic-forms.service';
 import { RequestType } from '@forms/model/enums/render-selects.enums';
 
 // ── Static dropdown option lists ─────────────────────────────────────────────
@@ -68,12 +70,17 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   private leaseId: number;
   private readonly destroy$ = new Subject<void>();
 
+  // Object type ID for leases
+  private static readonly LEASE_OBJECT_TYPE_ID = 4;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly aiLeaseService: AiLeaseService,
+    private readonly aiFieldMapperService: AiFieldMapperService,
     private readonly aiSidebarService: AiSidebarService,
-    private readonly formWizardService: FormWizardService
+    private readonly formWizardService: FormWizardService,
+    private readonly dynamicFormsService: DynamicFormsService
   ) {}
 
   ngOnInit(): void {
@@ -81,21 +88,27 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
       .pipe(
         switchMap((params) => {
           this.leaseId = Number(params.get('id'));
+          const formId  = Number(this.route.snapshot.queryParamMap.get('formId') ?? 0);
           this.isLoading = true;
           this.errorMessage = null;
           this.abstractionStatus = null;
-          // Load abstraction detail and lease type dropdown options in parallel
+          // Load abstraction detail, lease type options, and form sections in parallel
           return forkJoin({
             detail: this.aiLeaseService.getAbstractionById(this.leaseId),
             leaseTypes: this.formWizardService
               .getRenderSelect('', RequestType.cnstDD_GetLeaseTypes)
               .pipe(catchError(() => of({ data: [] }))),
+            sections: formId
+              ? this.dynamicFormsService.getFormSections(formId, 0)
+                    .pipe(catchError(() => of(null)))
+              : of(null),
+            formId: of(formId),
           });
         }),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: ({ detail, leaseTypes }) => {
+        next: ({ detail, leaseTypes, sections, formId }) => {
           if (!detail) {
             this.errorMessage = 'Abstraction not found.';
             this.isLoading = false;
@@ -128,20 +141,34 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
             return;
           }
 
-          // Map raw lease type items from backend into AiDropdownItem format
-          const leaseTypeItems: AiDropdownItem[] = (leaseTypes?.data ?? []).map((item: any) => ({
-            id: item.leaseTypeID,
-            name: item.leaseTypeName ?? item.leaseType ?? String(item.leaseTypeID),
-          }));
-
-          this.sections = this.buildSections(aiOutput, leaseTypeItems);
-          this.sectionsExpanded = this.sections.map(() => true);
-          this.form = this.buildFormGroup(this.sections);
-
           if (aiOutput.basics?.tenant?.value) {
             this.pageTitle = `AI Lease Abstraction — ${aiOutput.basics.tenant.value}`;
           }
-          this.isLoading = false;
+
+          // ── Dynamic sections from form definition ──────────────────────────
+          // When a formId is provided (via ?formId=N query param), load the real
+          // form sections and map AI output to their fields.
+          if (formId && sections?.data?.length) {
+            this.aiFieldMapperService
+              .loadAndMap(formId, AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID, sections.data, aiOutput)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (mappedSections) => {
+                  this.sections = mappedSections;
+                  this.sectionsExpanded = this.sections.map(() => true);
+                  this.form = this.buildFormGroup(this.sections);
+                  this.isLoading = false;
+                },
+                error: () => {
+                  // Fall back to hardcoded sections if mapping fails
+                  this.buildHardcodedSections(aiOutput, leaseTypes);
+                },
+              });
+            return;
+          }
+
+          // ── Fallback: hardcoded sections ────────────────────────────────────
+          this.buildHardcodedSections(aiOutput, leaseTypes);
         },
         error: () => {
           this.errorMessage = 'Failed to load lease abstraction data. Please try again.';
@@ -199,7 +226,19 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     return this.form.get(sectionKey) as FormGroup;
   }
 
-  // ─── Section Builder ────────────────────────────────────────────────────────
+  // ─── Section Builders ────────────────────────────────────────────────────────
+
+  private buildHardcodedSections(aiOutput: IAIOutput, leaseTypes: any): void {
+    const leaseTypeItems: AiDropdownItem[] = (leaseTypes?.data ?? []).map((item: any) => ({
+      id: item.leaseTypeID,
+      name: item.leaseTypeName ?? item.leaseType ?? String(item.leaseTypeID),
+    }));
+
+    this.sections = this.buildSections(aiOutput, leaseTypeItems);
+    this.sectionsExpanded = this.sections.map(() => true);
+    this.form = this.buildFormGroup(this.sections);
+    this.isLoading = false;
+  }
 
   private buildSections(data: IAIOutput, leaseTypeItems: AiDropdownItem[]): AiFormSection[] {
     return [

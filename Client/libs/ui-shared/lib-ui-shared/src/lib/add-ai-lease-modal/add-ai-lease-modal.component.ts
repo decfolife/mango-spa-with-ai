@@ -160,7 +160,10 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
       next: (response) => {
         this.isSubmitting = false;
         this.dialogRef.close();
-        this.router.navigate(['/ai-abstractions', response.abstractionId]);
+        const extras = this.data?.formId
+          ? { queryParams: { formId: this.data.formId } }
+          : {};
+        this.router.navigate(['/ai-abstractions', response.abstractionId], extras);
       },
       error: () => {
         this.isSubmitting = false;
