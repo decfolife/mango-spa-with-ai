@@ -88,6 +88,23 @@ export class AiLeaseService {
   }
 
   /**
+   * Calls the backend to load form fields + sections, apply AI output mapping,
+   * and return field objects with formItemAnswer already populated.
+   * The backend handles both fetching form fields and mapping AI values.
+   */
+  getMappedFormFields(
+    abstractionId: number,
+    formId: number,
+    objectTypeId = 4
+  ): Observable<{ fields: any[]; sections: any[] }> {
+    return this.http
+      .get<ApiResponse>(`${this.apiUrl}AiAbstractions/GetMappedFormFields`, {
+        params: { abstractionId, formId, objectTypeId },
+      })
+      .pipe(map((res) => res.data as { fields: any[]; sections: any[] }));
+  }
+
+  /**
    * Returns the list of abstractions for a building, mapped to the grid model.
    */
   getLeaseList(buildingId: number): Observable<AiLeaseListItem[]> {

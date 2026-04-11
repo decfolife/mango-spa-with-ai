@@ -3,13 +3,12 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
-import { AiDropdownItem, AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
+import { AiDropdownItem, AiFieldType, AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
-import { AiFieldMapperService } from '../services/ai-field-mapper.service';
 import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
 import { FormWizardService } from '@micro-components/services/form-wizard.service';
-import { DynamicFormsService } from '../../services/dynamic-forms.service';
+import { FormWizardDataTypeID, FormWizardTypeID } from '@forms/model/dynamic-forms.interface';
 import { RequestType } from '@forms/model/enums/render-selects.enums';
 
 // ── Static dropdown option lists ─────────────────────────────────────────────
@@ -77,10 +76,8 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly aiLeaseService: AiLeaseService,
-    private readonly aiFieldMapperService: AiFieldMapperService,
     private readonly aiSidebarService: AiSidebarService,
-    private readonly formWizardService: FormWizardService,
-    private readonly dynamicFormsService: DynamicFormsService
+    private readonly formWizardService: FormWizardService
   ) {}
 
   ngOnInit(): void {
@@ -92,23 +89,18 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
           this.isLoading = true;
           this.errorMessage = null;
           this.abstractionStatus = null;
-          // Load abstraction detail, lease type options, and form sections in parallel
           return forkJoin({
             detail: this.aiLeaseService.getAbstractionById(this.leaseId),
             leaseTypes: this.formWizardService
               .getRenderSelect('', RequestType.cnstDD_GetLeaseTypes)
               .pipe(catchError(() => of({ data: [] }))),
-            sections: formId
-              ? this.dynamicFormsService.getFormSections(formId, 0)
-                    .pipe(catchError(() => of(null)))
-              : of(null),
             formId: of(formId),
           });
         }),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: ({ detail, leaseTypes, sections, formId }) => {
+        next: ({ detail, leaseTypes, formId }) => {
           if (!detail) {
             this.errorMessage = 'Abstraction not found.';
             this.isLoading = false;
@@ -145,16 +137,17 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
             this.pageTitle = `AI Lease Abstraction — ${aiOutput.basics.tenant.value}`;
           }
 
-          // ── Dynamic sections from form definition ──────────────────────────
-          // When a formId is provided (via ?formId=N query param), load the real
-          // form sections and map AI output to their fields.
-          if (formId && sections?.data?.length) {
-            this.aiFieldMapperService
-              .loadAndMap(formId, AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID, sections.data, aiOutput)
+          // ── Dynamic sections from form definition (backend-mapped) ──────────
+          // When a formId is provided (via ?formId=N query param), the backend
+          // fetches form fields, applies AI output mapping, and returns fields
+          // with formItemAnswer populated. Angular groups them into sections.
+          if (formId) {
+            this.aiLeaseService
+              .getMappedFormFields(this.leaseId, formId, AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID)
               .pipe(takeUntil(this.destroy$))
               .subscribe({
-                next: (mappedSections) => {
-                  this.sections = mappedSections;
+                next: ({ fields, sections }) => {
+                  this.sections = this.groupIntoSections(fields, sections);
                   this.sectionsExpanded = this.sections.map(() => true);
                   this.form = this.buildFormGroup(this.sections);
                   this.isLoading = false;
@@ -231,6 +224,47 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
 
   getSectionFormGroup(sectionKey: string): FormGroup {
     return this.form.get(sectionKey) as FormGroup;
+  }
+
+  // ─── Dynamic section helpers ─────────────────────────────────────────────────
+
+  private groupIntoSections(fields: any[], sections: any[]): AiFormSection[] {
+    return sections
+      .slice()
+      .sort((a, b) => a.formSectionSortOrder - b.formSectionSortOrder)
+      .map((section) => ({
+        key: String(section.formSectionID),
+        title: section.formSectionName,
+        fields: fields
+          .filter((f) => f.formSectionID === section.formSectionID)
+          .sort((a, b) => a.formItemSortOrder - b.formItemSortOrder)
+          .map((f) => this.toAiFormField(f)),
+      }))
+      .filter((s) => s.fields.length > 0);
+  }
+
+  private toAiFormField(field: any): AiFormField {
+    return {
+      key:           String(field.formItemID),
+      label:         field.formItemLabel || field.formItemFriendlyName || field.formItemName,
+      type:          this.resolveAiFieldType(field),
+      value:         field.formItemAnswer ?? null,
+      requestTypeId: field.requestTypeID || undefined,
+    };
+  }
+
+  private resolveAiFieldType(field: any): AiFieldType {
+    if (field.formItemTypeID === FormWizardTypeID.LIST_BOX) return 'dropdown';
+    switch (field.dataTypeID) {
+      case FormWizardDataTypeID.DATE:      return 'date';
+      case FormWizardDataTypeID.CURRENCY:  return 'currency';
+      case FormWizardDataTypeID.PERCENT:   return 'percent';
+      case FormWizardDataTypeID.INTEGER:
+      case FormWizardDataTypeID.SMALL_INT:
+      case FormWizardDataTypeID.DOUBLE:
+      case FormWizardDataTypeID.NUMBER:    return 'number';
+      default:                             return 'text';
+    }
   }
 
   // ─── Section Builders ────────────────────────────────────────────────────────

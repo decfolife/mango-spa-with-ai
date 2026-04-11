@@ -1,5 +1,6 @@
 using Common.Contracts.HTTP.Microservice;
 using FormsEngine.Application.Ai;
+using MangoSPA.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,21 @@ public class AiAbstractionsController : ApiControllerBase
     public async Task<ActionResult<ApiResponse>> SaveReviewedFormData([FromBody] SaveReviewedFormDataCommand command)
     {
         var response = await Mediator.Send(command);
+        return response.Success ? Ok(response) : BadRequest(response);
+    }
+
+    [HttpGet("GetMappedFormFields")]
+    public async Task<ActionResult<ApiResponse>> GetMappedFormFields(
+        int abstractionId, int formId, int objectTypeId = 4)
+    {
+        var bearerToken = User.AccessToken();
+        var response = await Mediator.Send(new GetAiMappedFieldsQuery
+        {
+            AbstractionId = abstractionId,
+            FormId        = formId,
+            ObjectTypeId  = objectTypeId,
+            BearerToken   = bearerToken,
+        });
         return response.Success ? Ok(response) : BadRequest(response);
     }
 }

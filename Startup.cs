@@ -408,6 +408,10 @@ public class Startup
 
     public void AddServices(IServiceCollection services)
     {
+        // MediatR — scans this assembly for all IRequestHandler<,> implementations
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
         // AI abstraction services
         services.AddScoped<FormsEngine.Application.Ai.IAiAbstractionRepository,
                            FormsEngine.Application.Ai.AiAbstractionRepository>();
@@ -415,6 +419,13 @@ public class Startup
                            FormsEngine.Application.Ai.AiAbstractionService>();
         services.AddScoped<FormsEngine.Application.Ai.IAiProvider,
                            FormsEngine.Application.Ai.AiMockProvider>();
+
+        // Forms API client — used by GetAiMappedFieldsQuery to fetch form fields + sections
+        services.AddHttpClient<FormsEngine.Application.Ai.IFormFieldsClient,
+                               FormsEngine.Application.Ai.FormFieldsClient>(c =>
+        {
+            c.BaseAddress = new Uri(Configuration["ServicesUrls:FormsApiBaseUrl"]!);
+        }).AddStandardResilienceHandler();
 
         services.AddScoped<IRequestService>(provider =>
         {
