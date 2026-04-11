@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, of, Subject } from 'rxjs';
-import { catchError, switchMap, takeUntil } from 'rxjs/operators';
+import { forkJoin, of, Subject, timer } from 'rxjs';
+import { catchError, filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { AiDropdownItem, AiFieldType, AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
@@ -67,7 +67,10 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   pageTitle = 'AI Lease Abstraction';
 
   private leaseId: number;
-  private readonly destroy$ = new Subject<void>();
+  private cachedFormId = 0;
+  private cachedLeaseTypes: any = { data: [] };
+  private readonly destroy$     = new Subject<void>();
+  private readonly stopPolling$ = new Subject<void>();
 
   // Object type ID for leases
   private static readonly LEASE_OBJECT_TYPE_ID = 4;
@@ -84,84 +87,25 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     this.route.paramMap
       .pipe(
         switchMap((params) => {
-          this.leaseId = Number(params.get('id'));
-          const formId  = Number(this.route.snapshot.queryParamMap.get('formId') ?? 0);
-          this.isLoading = true;
+          this.leaseId      = Number(params.get('id'));
+          this.cachedFormId = Number(this.route.snapshot.queryParamMap.get('formId') ?? 0);
+          this.isLoading    = true;
           this.errorMessage = null;
           this.abstractionStatus = null;
+          this.stopPolling$.next(); // cancel any poll running from a previous route
           return forkJoin({
             detail: this.aiLeaseService.getAbstractionById(this.leaseId),
             leaseTypes: this.formWizardService
               .getRenderSelect('', RequestType.cnstDD_GetLeaseTypes)
               .pipe(catchError(() => of({ data: [] }))),
-            formId: of(formId),
           });
         }),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: ({ detail, leaseTypes, formId }) => {
-          if (!detail) {
-            this.errorMessage = 'Abstraction not found.';
-            this.isLoading = false;
-            return;
-          }
-
-          this.abstractionStatus = detail.status;
-
-          // Not yet complete — show status, no form to render
-          if (detail.status !== 'Complete') {
-            if (detail.status === 'Error') {
-              this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
-            }
-            this.isLoading = false;
-            return;
-          }
-
-          if (!detail.aiOutputJson) {
-            this.errorMessage = 'AI output is missing for this abstraction.';
-            this.isLoading = false;
-            return;
-          }
-
-          let aiOutput: IAIOutput;
-          try {
-            aiOutput = JSON.parse(detail.aiOutputJson) as IAIOutput;
-          } catch {
-            this.errorMessage = 'Failed to parse AI output data.';
-            this.isLoading = false;
-            return;
-          }
-
-          if (aiOutput.basics?.tenant?.value) {
-            this.pageTitle = `AI Lease Abstraction — ${aiOutput.basics.tenant.value}`;
-          }
-
-          // ── Dynamic sections from form definition (backend-mapped) ──────────
-          // When a formId is provided (via ?formId=N query param), the backend
-          // fetches form fields, applies AI output mapping, and returns fields
-          // with formItemAnswer populated. Angular groups them into sections.
-          if (formId) {
-            this.aiLeaseService
-              .getMappedFormFields(this.leaseId, formId, AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                next: ({ fields, sections }) => {
-                  this.sections = this.groupIntoSections(fields, sections);
-                  this.sectionsExpanded = this.sections.map(() => true);
-                  this.form = this.buildFormGroup(this.sections);
-                  this.isLoading = false;
-                },
-                error: () => {
-                  // Fall back to hardcoded sections if mapping fails
-                  this.buildHardcodedSections(aiOutput, leaseTypes);
-                },
-              });
-            return;
-          }
-
-          // ── Fallback: hardcoded sections ────────────────────────────────────
-          this.buildHardcodedSections(aiOutput, leaseTypes);
+        next: ({ detail, leaseTypes }) => {
+          this.cachedLeaseTypes = leaseTypes;
+          this.handleAbstractionDetail(detail);
         },
         error: () => {
           this.errorMessage = 'Failed to load lease abstraction data. Please try again.';
@@ -171,8 +115,112 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPolling$.next();
+    this.stopPolling$.complete();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ─── Data-loading helpers ────────────────────────────────────────────────────
+
+  private handleAbstractionDetail(detail: any): void {
+    if (!detail) {
+      this.errorMessage = 'Abstraction not found.';
+      this.isLoading = false;
+      return;
+    }
+
+    this.abstractionStatus = detail.status;
+
+    if (detail.status !== 'Complete') {
+      if (detail.status === 'Error') {
+        this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+      } else {
+        // Pending or Processing — poll until a terminal state is reached
+        this.startPolling();
+      }
+      this.isLoading = false;
+      return;
+    }
+
+    this.renderComplete(detail);
+  }
+
+  /** Poll every 5 s until the abstraction reaches a terminal state, then render. */
+  private startPolling(): void {
+    this.stopPolling$.next(); // cancel any prior poll
+    timer(5000, 5000)
+      .pipe(
+        switchMap(() => this.aiLeaseService.getAbstractionById(this.leaseId)),
+        filter((d) => !d || ['Complete', 'Error', 'Cancelled'].includes(d.status)),
+        take(1),
+        takeUntil(this.stopPolling$),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (detail) => {
+          if (!detail) {
+            this.errorMessage = 'Abstraction not found.';
+            return;
+          }
+          this.abstractionStatus = detail.status;
+          if (detail.status === 'Error') {
+            this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+            return;
+          }
+          if (detail.status === 'Complete') {
+            this.renderComplete(detail);
+          }
+          // Cancelled: status banner updates automatically via abstractionStatus binding
+        },
+      });
+  }
+
+  private renderComplete(detail: any): void {
+    if (!detail.aiOutputJson) {
+      this.errorMessage = 'AI output is missing for this abstraction.';
+      this.isLoading = false;
+      return;
+    }
+
+    let aiOutput: IAIOutput;
+    try {
+      aiOutput = JSON.parse(detail.aiOutputJson) as IAIOutput;
+    } catch {
+      this.errorMessage = 'Failed to parse AI output data.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (aiOutput.basics?.tenant?.value) {
+      this.pageTitle = `AI Lease Abstraction — ${aiOutput.basics.tenant.value}`;
+    }
+
+    // ── Dynamic sections from form definition (backend-mapped) ──────────
+    // When a formId is provided (via ?formId=N query param), the backend
+    // fetches form fields, applies AI output mapping, and returns fields
+    // with formItemAnswer populated. Angular groups them into sections.
+    if (this.cachedFormId) {
+      this.aiLeaseService
+        .getMappedFormFields(this.leaseId, this.cachedFormId, AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: ({ fields, sections }) => {
+            this.sections = this.groupIntoSections(fields, sections);
+            this.sectionsExpanded = this.sections.map(() => true);
+            this.form = this.buildFormGroup(this.sections);
+            this.isLoading = false;
+          },
+          error: () => {
+            // Fall back to hardcoded sections if mapping fails
+            this.buildHardcodedSections(aiOutput, this.cachedLeaseTypes);
+          },
+        });
+      return;
+    }
+
+    // ── Fallback: hardcoded sections ────────────────────────────────────
+    this.buildHardcodedSections(aiOutput, this.cachedLeaseTypes);
   }
 
   toggleSidebar(): void {
