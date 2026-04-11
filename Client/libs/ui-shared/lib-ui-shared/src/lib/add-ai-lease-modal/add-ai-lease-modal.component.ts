@@ -43,6 +43,7 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
       objectId: number;
       objectName: string;
       premiseId: number;
+      formId?: number;
     }
   ) {
     super(dialogRef, formWizardService, dashboardService, router, dataService, toastService, facade, data);
