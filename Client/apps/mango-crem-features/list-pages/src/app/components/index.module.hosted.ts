@@ -74,6 +74,7 @@ import { FormWizardService } from '@micro-components/services/form-wizard.servic
 import { LeaseAlertsModule } from '@micro-components/lease-alerts/lease-alerts.module';
 import { TaskApprovalModule } from '@project-dashboard/components/modal/task-approval/task-approval.module';
 import { PaymentDetailsPopupComponent } from './listpage/payment-details/payment-details-popup.component';
+import { AddAiLeaseModalModule } from 'libs/ui-shared/lib-ui-shared/src/lib/add-ai-lease-modal/add-ai-lease-modal.module';
 
 @NgModule({
   declarations: [
@@ -142,6 +143,7 @@ import { PaymentDetailsPopupComponent } from './listpage/payment-details/payment
     TaskApprovalModule,
     DropdownModule,
     InputComponent,
+    AddAiLeaseModalModule,
   ],
   providers: [
     {
