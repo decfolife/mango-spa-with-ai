@@ -1,4 +1,13 @@
-<div class="ai-sidebar" [class.ai-sidebar--open]="isOpen">
+<div
+  class="ai-sidebar"
+  [class.ai-sidebar--open]="isOpen"
+  [style.width]="isOpen ? currentWidth + 'px' : '0'"
+>
+  <!-- Drag-resize handle on left edge -->
+  <div
+    class="ai-sidebar__resize-handle"
+    (mousedown)="onResizeStart($event)"
+  ></div>
 
   <!-- Header -->
   <div class="ai-sidebar__header">
@@ -27,11 +36,81 @@
     <span>{{ errorMessage }}</span>
   </div>
 
+  <div *ngIf="!isLoading && !errorMessage" class="ai-sidebar__tabs">
+    <button
+      type="button"
+      class="ai-sidebar__tab"
+      [class.ai-sidebar__tab--active]="activeTabIndex === 0"
+      (click)="onTabChange(0)"
+    >
+      Document
+    </button>
+    <button
+      type="button"
+      class="ai-sidebar__tab"
+      [class.ai-sidebar__tab--active]="activeTabIndex === 1"
+      (click)="onTabChange(1)"
+    >
+      Ai Summary
+    </button>
+  </div>
+
+  <div
+    *ngIf="!isLoading && !errorMessage"
+    class="ai-sidebar__document-tab"
+    [hidden]="activeTabIndex !== 0"
+  >
+    <div *ngIf="documentOptions.length" class="ai-sidebar__document-toolbar">
+      <div class="ai-sidebar__document-toolbar-row">
+        <div class="ai-sidebar__document-input-group">
+          <label class="ai-sidebar__document-label" for="ai-document-select">
+            Document
+          </label>
+          <select
+            id="ai-document-select"
+            class="ai-sidebar__document-select"
+            [value]="selectedDocumentId ?? ''"
+            (change)="onDocumentSelectionChange($any($event.target).value)"
+          >
+            <option
+              *ngFor="let document of documentOptions"
+              [value]="document.documentId"
+            >
+              {{ document.fileName }}
+            </option>
+          </select>
+        </div>
+        <button
+          type="button"
+          class="ai-sidebar__document-popout"
+          (click)="openDocumentInNewWindow()"
+          aria-label="Open document in new window"
+          title="Open document in new window"
+        >
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div *ngIf="isDocumentLoading" class="ai-sidebar__document-loading">
+      Loading document...
+    </div>
+    <mango-ai-document-viewer
+      [src]="documentSource"
+      [filename]="documentFileName || undefined"
+      [searchQuery]="searchQuery"
+    ></mango-ai-document-viewer>
+    <div *ngIf="documentLoadError" class="ai-sidebar__document-note">
+      {{ documentLoadError }}
+    </div>
+  </div>
+
   <!-- Content -->
-  <div *ngIf="!isLoading && !errorMessage && sections.length" class="ai-sidebar__content">
-
+  <div
+    *ngIf="!isLoading && !errorMessage && sections.length"
+    class="ai-sidebar__content"
+    [hidden]="activeTabIndex !== 1"
+  >
     <div *ngFor="let section of sections" class="ai-sidebar__section">
-
       <!-- Section header -->
       <div class="ai-sidebar__section-header" (click)="toggleSection(section)">
         <span class="ai-sidebar__section-title">{{ section.title }}</span>
@@ -42,36 +121,106 @@
 
       <!-- Section fields -->
       <div *ngIf="section.isExpanded" class="ai-sidebar__section-body">
-        <div *ngFor="let field of section.fields" class="ai-sidebar__field">
-          <span class="ai-sidebar__field-label">{{ field.label }}</span>
-          <span class="ai-sidebar__field-value">{{ field.value }}</span>
-          <div *ngIf="field.citation" class="ai-sidebar__citation">
-            <mat-icon class="ai-sidebar__citation-icon">format_quote</mat-icon>
-            <span>{{ field.citation }}</span>
+        <!-- Expenses section: card-per-expense layout -->
+        <ng-container
+          *ngIf="section.title === 'Expenses'; else defaultFieldList"
+        >
+          <div *ngFor="let field of section.fields">
+            <!-- Service Type shown as a plain label, not a card -->
+            <div
+              *ngIf="field.label === 'Service Type' && field.value !== '—'"
+              class="ai-sidebar__expense-service-type"
+            >
+              {{ field.value }}
+            </div>
+
+            <!-- Each other expense rendered as a card -->
+            <div
+              *ngIf="field.label !== 'Service Type' && field.value !== '—'"
+              class="ai-sidebar__expense-card"
+            >
+              <div class="ai-sidebar__expense-card__name">
+                {{ field.label }}
+              </div>
+              <div class="ai-sidebar__expense-card__payor">
+                {{ field.value }}
+              </div>
+              <div
+                *ngIf="field.citation"
+                class="ai-sidebar__expense-card__citation"
+              >
+                <span class="ai-sidebar__expense-card__citation-label"
+                  >Citation:</span
+                >
+                <p class="ai-sidebar__expense-card__citation-text">
+                  {{ field.citation }}
+                </p>
+                <button
+                  class="ai-sidebar__expense-card__copy-btn"
+                  (click)="copyCitation(field.citation)"
+                  title="Copy citation"
+                  type="button"
+                >
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </ng-container>
+
+        <!-- Default field layout for all other sections -->
+        <ng-template #defaultFieldList>
+          <div *ngFor="let field of section.fields" class="ai-sidebar__field">
+            <span class="ai-sidebar__field-label">{{ field.label }}</span>
+            <span class="ai-sidebar__field-value">{{ field.value }}</span>
+            <div *ngIf="field.citation" class="ai-sidebar__citation">
+              <mat-icon class="ai-sidebar__citation-icon"
+                >format_quote</mat-icon
+              >
+              <span>{{ field.citation }}</span>
+            </div>
+          </div>
+        </ng-template>
 
         <!-- Rent schedule table (inside Rent section) -->
-        <ng-container *ngIf="section.title === 'Rent' && rentScheduleItems.length">
+        <ng-container
+          *ngIf="section.title === 'Rent' && rentScheduleItems.length"
+        >
           <div class="ai-sidebar__subtable-label">Base Rent Schedule</div>
           <dx-data-grid
             class="ai-sidebar__subtable"
             [dataSource]="rentScheduleItems"
             [showBorders]="true"
             [showColumnLines]="false"
-            [showRowLines]="true"
+            [showRowLines]="false"
             [rowAlternationEnabled]="true"
-            [wordWrapEnabled]="false"
+            [wordWrapEnabled]="true"
+            [columnAutoWidth]="true"
+            [allowColumnResizing]="true"
           >
-            <dxo-load-panel [enabled]="false"></dxo-load-panel>
-            <dxo-paging [enabled]="false"></dxo-paging>
+            <dxo-load-panel [enabled]="true"></dxo-load-panel>
+            <dxo-sorting mode="multiple"></dxo-sorting>
+            <dxo-header-filter [visible]="true"></dxo-header-filter>
+            <dxo-scrolling mode="standard"></dxo-scrolling>
+            <dxo-column-fixing [enabled]="false"></dxo-column-fixing>
+            <dxo-group-panel [visible]="false"></dxo-group-panel>
+            <dxo-grouping [autoExpandAll]="false"></dxo-grouping>
+            <dxo-paging [pageSize]="10"></dxo-paging>
+            <dxo-pager
+              [visible]="true"
+              [showInfo]="true"
+              infoText="Page {0} of {1}"
+              [showPageSizeSelector]="true"
+              [allowedPageSizes]="[10, 25, 50]"
+              [showNavigationButtons]="true"
+            ></dxo-pager>
             <ng-container *ngFor="let col of rentScheduleColumns">
               <dxi-column
                 [dataField]="col.dataField"
                 [caption]="col.caption"
                 [dataType]="col.dataType"
                 [format]="col.format"
-                [width]="col.width"
+                alignment="left"
               ></dxi-column>
             </ng-container>
           </dx-data-grid>
@@ -83,26 +232,41 @@
               [dataSource]="abatementItems"
               [showBorders]="true"
               [showColumnLines]="false"
-              [showRowLines]="true"
+              [showRowLines]="false"
               [rowAlternationEnabled]="true"
+              [wordWrapEnabled]="true"
+              [columnAutoWidth]="true"
+              [allowColumnResizing]="true"
             >
-              <dxo-load-panel [enabled]="false"></dxo-load-panel>
-              <dxo-paging [enabled]="false"></dxo-paging>
+              <dxo-load-panel [enabled]="true"></dxo-load-panel>
+              <dxo-sorting mode="multiple"></dxo-sorting>
+              <dxo-header-filter [visible]="true"></dxo-header-filter>
+              <dxo-scrolling mode="standard"></dxo-scrolling>
+              <dxo-column-fixing [enabled]="false"></dxo-column-fixing>
+              <dxo-group-panel [visible]="false"></dxo-group-panel>
+              <dxo-grouping [autoExpandAll]="false"></dxo-grouping>
+              <dxo-paging [pageSize]="10"></dxo-paging>
+              <dxo-pager
+                [visible]="true"
+                [showInfo]="true"
+                infoText="Page {0} of {1}"
+                [showPageSizeSelector]="true"
+                [allowedPageSizes]="[10, 25, 50]"
+                [showNavigationButtons]="true"
+              ></dxo-pager>
               <ng-container *ngFor="let col of abatementColumns">
                 <dxi-column
                   [dataField]="col.dataField"
                   [caption]="col.caption"
                   [dataType]="col.dataType"
                   [format]="col.format"
-                  [width]="col.width"
+                  alignment="left"
                 ></dxi-column>
               </ng-container>
             </dx-data-grid>
           </ng-container>
         </ng-container>
-
       </div>
     </div>
-
   </div>
 </div>

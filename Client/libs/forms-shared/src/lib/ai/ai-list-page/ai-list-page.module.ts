@@ -2,8 +2,13 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DxDataGridModule } from 'devextreme-angular';
-import { SkeletonModule } from '@mango/ui-shared/lib-ui-elements';
-import { PageHeaderComponent } from '@mango/ui-shared/lib-ui-elements';
+import { SearchModule } from '@mango/ui-shared/cosmos';
+import {
+  ButtonModule,
+  DropdownModule,
+  SkeletonModule,
+} from '@mango/ui-shared/lib-ui-elements';
+import { ExportDevexDatagridService } from '@mango/core-shared';
 import { AiListPageComponent } from './ai-list-page.component';
 
 @NgModule({
@@ -12,9 +17,12 @@ import { AiListPageComponent } from './ai-list-page.component';
     CommonModule,
     RouterModule,
     DxDataGridModule,
+    SearchModule,
+    ButtonModule,
+    DropdownModule,
     SkeletonModule,
-    PageHeaderComponent,
   ],
+  providers: [ExportDevexDatagridService],
   exports: [AiListPageComponent],
 })
 export class AiListPageModule {}

@@ -1,0 +1,39 @@
+<div class="ai-document-page">
+  <header class="ai-document-page__header">
+    <div>
+      <div class="ai-document-page__eyebrow">AI Abstraction</div>
+      <h1 class="ai-document-page__title">Document Viewer</h1>
+    </div>
+
+    <div class="ai-document-page__controls" *ngIf="documentOptions.length">
+      <select
+        id="ai-document-page-select"
+        class="ai-document-page__select"
+        [value]="selectedDocumentId ?? ''"
+        (change)="onDocumentSelectionChange($any($event.target).value)"
+      >
+        <option
+          *ngFor="let document of documentOptions"
+          [value]="document.documentId"
+        >
+          {{ document.fileName }}
+        </option>
+      </select>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading" class="ai-document-page__state">
+    Loading document...
+  </div>
+
+  <div *ngIf="errorMessage" class="ai-document-page__state ai-document-page__state--error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="ai-document-page__viewer" *ngIf="!errorMessage">
+    <mango-ai-document-viewer
+      [src]="documentSource"
+      [filename]="documentFileName || undefined"
+    ></mango-ai-document-viewer>
+  </div>
+</div>

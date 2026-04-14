@@ -1,17 +1,50 @@
-<crem-skeleton
-  *ngIf="isLoading"
-  type="card"
-  [instances]="4"
-></crem-skeleton>
+<crem-skeleton *ngIf="isLoading" type="card" [instances]="4"></crem-skeleton>
 
 <div *ngIf="!isLoading" class="ai-list-page">
-  <crem-page-header
-    [pageTitle]="'AI Lease Abstractions'"
-    [tabTitle]="'AI Lease Abstractions'"
-    [showListOrMapViewButtons]="false"
-    [showSettingsButton]="false"
-    [customActions]="false"
-  ></crem-page-header>
+  <div class="actions-container">
+    <div class="menu-section">
+      <cs-search
+        class="ai-list-page__search"
+        [value]="searchText"
+        [placeholder]="'Search...'"
+        [disabled]="isLoading"
+        (changed)="onSearchChanged($event)"
+      ></cs-search>
+      <crem-dropdown
+        class="crem-dropdown-list-pages ai-list-page__portfolio"
+        [id]="'page-header-portfolio'"
+        [dataSource]="portfolioOptions"
+        displayExpr="name"
+        valueExpr="id"
+        selectMode="single"
+        placeholder="Portfolio"
+        [allowSearch]="true"
+        [showColumnHeader]="false"
+        [showClearButton]="true"
+        [initialSelectedValue]="selectedPortfolioId"
+        (selectedItems)="onPortfolioChanged($event)"
+      >
+      </crem-dropdown>
+    </div>
+    <div class="menu-section btns-right">
+      <crem-button
+        [id]="'page-header-clear'"
+        text="Clear Filters"
+        color="secondary"
+        [disabled]="isLoading"
+        (buttonClick)="clearFilters()"
+      >
+      </crem-button>
+      <crem-button
+        [id]="'page-header-export'"
+        text="Export"
+        color="primary"
+        [disabled]="isLoading"
+        (buttonClick)="exportToExcel()"
+      >
+      </crem-button>
+    </div>
+  </div>
 
   <div *ngIf="errorMessage" class="ai-list-page__error">
     <p>{{ errorMessage }}</p>
@@ -21,7 +54,7 @@
     <dx-data-grid
       id="aiLeaseListGrid"
       class="list-page-data-grid"
-      [dataSource]="leases"
+      [dataSource]="filteredLeases"
       [showBorders]="false"
       [showColumnLines]="false"
       [showRowLines]="true"
@@ -44,78 +77,91 @@
         [showInfo]="true"
         [showNavigationButtons]="true"
       ></dxo-pager>
-      <dxo-header-filter [visible]="true" [allowSearch]="true"></dxo-header-filter>
-      <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      <dxo-header-filter
+        [visible]="true"
+        [allowSearch]="true"
+      ></dxo-header-filter>
       <dxo-sorting mode="multiple"></dxo-sorting>
-      <dxo-export [enabled]="true" [fileName]="'AI Lease Abstractions'"></dxo-export>
 
       <dxi-column
-        dataField="tenant"
+        dataField="id"
+        caption="AI Abstraction ID"
+        [width]="140"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="portfolioName"
+        caption="Portfolio"
+        [minWidth]="160"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="buildingName"
+        caption="Building"
+        [minWidth]="160"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="formName"
+        caption="Form"
+        [minWidth]="180"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="aiTenant"
         caption="Tenant"
         [minWidth]="150"
         cellTemplate="tenantLinkTemplate"
       ></dxi-column>
 
       <dxi-column
-        dataField="landlord"
-        caption="Landlord"
-        [minWidth]="150"
+        dataField="status"
+        caption="Status"
+        [width]="130"
+        cellTemplate="statusTemplate"
       ></dxi-column>
 
       <dxi-column
-        dataField="address"
-        caption="Address"
-        [minWidth]="200"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="leaseType"
-        caption="Lease Type"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="startDate"
-        caption="Start Date"
-        dataType="date"
-        format="MM/dd/yyyy"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="endDate"
-        caption="End Date"
-        dataType="date"
-        format="MM/dd/yyyy"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="squareFootage"
-        caption="Sq Ft"
-        dataType="number"
-        [format]="{ type: 'fixedPoint', precision: 0 }"
-        [width]="120"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="effectiveRent"
-        caption="Effective Rent ($/SF)"
-        dataType="number"
-        [format]="{ type: 'currency', precision: 2 }"
-        [width]="160"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="abstractionDate"
-        caption="Abstraction Date"
+        dataField="aiLeaseEndDate"
+        caption="Lease End Date"
         dataType="date"
         format="MM/dd/yyyy"
         [width]="140"
       ></dxi-column>
 
+      <dxi-column
+        dataField="createdDate"
+        caption="Submitted"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="120"
+        [sortOrder]="'desc'"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="lastModifiedDate"
+        caption="Last Updated"
+        dataType="date"
+        format="MM/dd/yyyy"
+        [width]="130"
+      ></dxi-column>
+
       <div *dxTemplate="let cell of 'tenantLinkTemplate'">
-        <a class="grid-link">{{ cell.data.tenant }}</a>
+        <a class="grid-link">{{ cell.data.aiTenant || '—' }}</a>
+      </div>
+
+      <div *dxTemplate="let cell of 'statusTemplate'">
+        <span
+          class="status-badge status-badge--{{ cell.data.status | lowercase }}"
+          [class.status-badge--active]="isCreatedRow(cell.data)"
+        >
+          <span
+            *ngIf="isProcessing(cell.data.status)"
+            class="status-spinner"
+            aria-hidden="true"
+          ></span>
+          {{ cell.data.status }}
+        </span>
       </div>
     </dx-data-grid>
   </div>

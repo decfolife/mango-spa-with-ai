@@ -1,21 +1,19 @@
-<crem-skeleton
-  *ngIf="isLoading"
-  type="card"
-  [instances]="4"
-></crem-skeleton>
+<crem-skeleton *ngIf="isLoading" type="card" [instances]="4"></crem-skeleton>
 
-<div *ngIf="!isLoading" id="df-formContainer-formContainer" class="ai-lease-form">
-
+<div
+  *ngIf="!isLoading"
+  id="df-formContainer-formContainer"
+  class="ai-lease-form"
+>
   <div class="page-header">
     <crem-page-header
-      [pageTitle]="pageTitle"
       [tabTitle]="pageTitle"
+      [pageTitle]="pageSubtitle"
       [showListOrMapViewButtons]="false"
       [showSettingsButton]="false"
       [customActions]="true"
     >
       <div actions class="page-header__actions">
-
         <!-- Back -->
         <crem-button
           [text]="'Back to List'"
@@ -25,8 +23,7 @@
           (click)="navigateBack(); $event.preventDefault()"
         ></crem-button>
 
-        <ng-container *ngIf="!errorMessage">
-
+        <ng-container *ngIf="!errorMessage && hasRenderableContent">
           <!-- AI Summary sidebar toggle -->
           <crem-button
             id="ai-form-aiSummaryBtn"
@@ -49,14 +46,32 @@
               <mat-icon class="df-actionsBtn-arrow">arrow_drop_down</mat-icon>
             </crem-button>
             <mat-menu #aiActionsMenu="matMenu" class="df-actionsMenu">
-              <button type="button" mat-menu-item class="df-actionsMenuBtn" (click)="expandAll()">
+              <button
+                type="button"
+                mat-menu-item
+                class="df-actionsMenuBtn"
+                (click)="expandAll()"
+              >
                 <span>Expand All</span>
               </button>
-              <button type="button" mat-menu-item class="df-actionsMenuBtn" (click)="collapseAll()">
+              <button
+                type="button"
+                mat-menu-item
+                class="df-actionsMenuBtn"
+                (click)="collapseAll()"
+              >
                 <span>Collapse All</span>
               </button>
             </mat-menu>
           </div>
+
+          <crem-button
+            [id]="'ai-form-print-btn'"
+            [text]="'Print Page'"
+            [btnStyle]="'flat'"
+            [color]="'secondary'"
+            (click)="printPage(); $event.preventDefault()"
+          ></crem-button>
 
           <!-- Edit / Cancel + Save -->
           <ng-container *ngIf="!editMode">
@@ -64,7 +79,7 @@
               [id]="'ai-form-edit-btn'"
               [text]="'Edit'"
               [btnStyle]="'flat'"
-              [color]="'primary'"
+              [color]="'secondary'"
               (click)="toggleEditMode(); $event.preventDefault()"
             ></crem-button>
           </ng-container>
@@ -85,7 +100,6 @@
               (click)="onSave(); $event.preventDefault()"
             ></crem-button>
           </ng-container>
-
         </ng-container>
       </div>
     </crem-page-header>
@@ -93,17 +107,81 @@
 
   <!-- Body: form content + sidebar side-by-side -->
   <div class="ai-lease-form__body">
-
-    <div class="ai-lease-form__main">
-
+    <div #mainScrollContainer class="ai-lease-form__main">
       <!-- Error state -->
       <div *ngIf="errorMessage" class="ai-lease-form__error">
         <crem-icon icon="faCircleExclamation"></crem-icon>
         <p>{{ errorMessage }}</p>
       </div>
 
+      <!-- Pending / processing state -->
+      <div
+        *ngIf="
+          !errorMessage && abstractionStatus && abstractionStatus !== 'Complete' && !hasRenderableContent
+        "
+        class="ai-lease-form__pending"
+      >
+        <crem-icon
+          class="ai-lease-form__pending-icon"
+          icon="faHourglass"
+        ></crem-icon>
+        <div class="ai-lease-form__pending-content">
+          <strong>Abstraction {{ abstractionStatus }}</strong>
+          <span
+            >The AI is processing your documents. This page will show the
+            results once complete.</span
+          >
+        </div>
+      </div>
+
+      <!-- AI verification banner -->
+      <div
+        *ngIf="!errorMessage && hasRenderableContent"
+        class="ai-lease-form__notice"
+      >
+        <crem-icon
+          class="ai-lease-form__notice-icon"
+          icon="faCircleInfo"
+        ></crem-icon>
+        <div class="ai-lease-form__notice-content">
+          <strong>
+            {{
+              abstractionStatus === 'Complete'
+                ? 'AI Abstracted Record(s) Ready to Verify'
+                : 'AI Results Available While Processing Continues'
+            }}
+          </strong>
+          <span>
+            {{
+              abstractionStatus === 'Complete'
+                ? 'This lease was abstracted by AI. Review all fields and confirm accuracy before saving.'
+                : 'AI output is available for review now. Final processing is still running in the background.'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!errorMessage && hasRenderableContent && parentBuildingLink"
+        class="ai-lease-form__parent-link"
+      >
+        <a
+          class="ai-lease-form__parent-link-anchor"
+          (click)="navigateToParentBuilding()"
+          (keydown.enter)="navigateToParentBuilding()"
+          tabindex="0"
+        >
+          <img src="/assets/images/lnkback.gif" alt="" />
+          <span>go to {{ parentBuildingLink.label }}</span>
+        </a>
+      </div>
+
       <!-- Form sections -->
-      <div *ngIf="!errorMessage" class="dynamic-form-content" [formGroup]="form">
+      <div
+        *ngIf="!errorMessage && hasRenderableContent"
+        class="dynamic-form-content"
+        [formGroup]="form"
+      >
         <div class="row">
           <div
             *ngFor="let section of sections; let i = index"
@@ -114,15 +192,12 @@
               [formGroup]="getSectionFormGroup(section.key)"
               [editMode]="editMode"
               [isExpanded]="sectionsExpanded[i]"
+              [isSuperUser]="isSuperUser"
             ></mango-ai-form-section>
           </div>
         </div>
       </div>
-
     </div>
-
-    <mango-ai-sidebar></mango-ai-sidebar>
-
   </div>
 
   <!-- Scroll to top -->
@@ -134,5 +209,4 @@
   >
     <span>Scroll to Top</span>
   </crem-button>
-
 </div>

@@ -1,0 +1,14 @@
+<div class="ai-document-viewer">
+  <div #host class="ai-document-viewer__host"></div>
+  <div *ngIf="viewerError" class="ai-document-viewer__error">
+    {{ viewerError }}
+  </div>
+  <div *ngIf="!src" class="ai-document-viewer__empty">
+    <mat-icon>description</mat-icon>
+    <div class="ai-document-viewer__empty-title">Document unavailable</div>
+    <div class="ai-document-viewer__empty-text">
+      The AI abstraction detail does not currently expose a document URL for the
+      viewer yet.
+    </div>
+  </div>
+</div>

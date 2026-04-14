@@ -1,0 +1,8 @@
+@import "document-viewer-sdk/dist/assets/style.css";
+
+.rpdf-text-layer--highlighting,
+.rpdf-text-layer--highlighting span,
+.rpdf-text-layer--highlighting br {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}

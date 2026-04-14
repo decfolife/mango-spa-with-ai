@@ -12,18 +12,85 @@
   .page-header__actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+  }
+
+  .dfActions {
+    display: flex;
+    align-items: center;
+  }
+
+  .df-actionsButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .df-actionsBtn-text {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .df-actionsBtn-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
   }
 
   .dynamic-form-content {
     padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow-y: auto;
   }
 
   .scroll-to-top-button {
     position: fixed;
     bottom: 24px;
-    right: 24px;
+    right: calc(24px + var(--ai-sidebar-width, 0px));
     z-index: 100;
+    transition: right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 16px 16px 0;
+    padding: 18px 22px;
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    color: #0d47a1;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    &-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 18px;
+    }
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 15px;
+      line-height: 1.5;
+
+      strong {
+        font-size: 18px;
+        line-height: 1.35;
+      }
+    }
   }
 
   &__error {
@@ -38,6 +105,29 @@
 
     p {
       margin: 0;
+    }
+  }
+
+  &__parent-link {
+    margin: 12px 16px 0;
+  }
+
+  &__parent-link-anchor {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0559b3;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: none;
+      text-decoration: underline;
     }
   }
 

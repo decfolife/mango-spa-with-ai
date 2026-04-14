@@ -11,6 +11,7 @@ import { DxDataGridModule } from 'devextreme-angular';
 import {
   ButtonModule,
   DatePickerModule,
+  DropdownModule,
   FieldHistoryComponent,
   IconModule,
   InputComponent,
@@ -18,6 +19,10 @@ import {
   SkeletonModule,
   PageHeaderComponent,
 } from '@mango/ui-shared/lib-ui-elements';
+import { FormWizardService } from '@micro-components/services/form-wizard.service';
+import { CheckBoxComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/checkbox';
+import { CremRadioComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/radio/radio.component';
+import { CremRadioGroupComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/radio/radio-group.component';
 import { AiLeaseFormComponent } from './ai-lease-form.component';
 import { AiFormSectionComponent } from './ai-form-section/ai-form-section.component';
 import { AiSidebarModule } from '../ai-sidebar/ai-sidebar.module';
@@ -36,14 +41,19 @@ import { AiSidebarModule } from '../ai-sidebar/ai-sidebar.module';
     DxDataGridModule,
     ButtonModule,
     DatePickerModule,
+    DropdownModule,
     FieldHistoryComponent,
     IconModule,
     InputComponent,
     InputLabelComponent,
     SkeletonModule,
     PageHeaderComponent,
+    CheckBoxComponent,
+    CremRadioComponent,
+    CremRadioGroupComponent,
     AiSidebarModule,
   ],
+  providers: [FormWizardService],
   exports: [AiLeaseFormComponent],
 })
 export class AiLeaseFormModule {}

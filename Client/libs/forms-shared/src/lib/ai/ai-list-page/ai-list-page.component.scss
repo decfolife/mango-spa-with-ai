@@ -3,12 +3,8 @@
   flex-direction: column;
   height: 100%;
 
-  .page-header {
-    border-bottom: 1px solid #c5c5c5;
-  }
-
   &__error {
-    margin: 24px;
+    margin: 16px 16px 0;
     padding: 16px;
     background-color: #fdecea;
     border-radius: 4px;
@@ -16,6 +12,63 @@
 
     p {
       margin: 0;
+    }
+  }
+
+  &__search {
+    min-width: 240px;
+  }
+
+  &__portfolio {
+    min-width: 220px;
+  }
+}
+
+.actions-container {
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #c5c5c5;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  line-height: 1;
+
+  .menu-section {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    margin: 0;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .btns-right {
+    flex: 0 0 auto;
+  }
+}
+
+:host ::ng-deep {
+  .actions-container {
+    .crem-dropdown-list-pages {
+      .dx-fieldset {
+        margin: 0 !important;
+      }
+
+      .dx-field-value {
+        width: 100% !important;
+      }
+
+      .dx-dropdowneditor-input-wrapper {
+        height: 32px !important;
+        box-shadow: unset !important;
+      }
+
+      .dx-texteditor.dx-editor-outlined {
+        border-radius: 0 !important;
+      }
+    }
+
+    cs-search {
+      min-width: 210px;
     }
   }
 }
@@ -71,6 +124,60 @@
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-badge--active {
+    font-weight: 600;
+  }
+
+  .status-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #cfd8dc;
+    border-top-color: #0559b3;
+    border-radius: 50%;
+    animation: ai-list-spin 0.8s linear infinite;
+    flex: 0 0 auto;
+  }
+}
+
+@keyframes ai-list-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 992px) {
+  .actions-container {
+    flex-direction: column;
+    align-items: stretch;
+
+    .menu-section {
+      flex-wrap: wrap;
+      height: auto;
+    }
+
+    .btns-right {
+      justify-content: flex-end;
+    }
+  }
+
+  .ai-list-page {
+    &__search,
+    &__portfolio {
+      min-width: 0;
+      width: 100%;
     }
   }
 }

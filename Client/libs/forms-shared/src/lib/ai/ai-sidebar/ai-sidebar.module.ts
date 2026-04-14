@@ -6,9 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { DxDataGridModule } from 'devextreme-angular';
 import { SkeletonModule } from '@mango/ui-shared/lib-ui-elements';
 import { AiSidebarComponent } from './ai-sidebar.component';
+import { AiDocumentViewerComponent } from './ai-document-viewer.component';
 
 @NgModule({
-  declarations: [AiSidebarComponent],
+  declarations: [AiSidebarComponent, AiDocumentViewerComponent],
   imports: [
     CommonModule,
     RouterModule,
@@ -17,6 +18,6 @@ import { AiSidebarComponent } from './ai-sidebar.component';
     DxDataGridModule,
     SkeletonModule,
   ],
-  exports: [AiSidebarComponent],
+  exports: [AiSidebarComponent, AiDocumentViewerComponent],
 })
 export class AiSidebarModule {}

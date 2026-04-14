@@ -17,6 +17,7 @@ div.crem-container {
 .manageBookmarksLink {
   position: absolute;
   bottom: 10px;
+
   a {
     color: #1e3a6f;
     margin-left: 20px;
@@ -52,6 +53,7 @@ div.module-content {
 
 .module-content {
   width: 100%;
+  min-width: 0;
 }
 
 .mat-drawer.mat-sidenav.shared-left-nav {

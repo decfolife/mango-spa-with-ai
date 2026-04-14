@@ -9,7 +9,10 @@ export interface Basics {
   propertyId?: { value?: number };
   addresses?: { value?: Address[] };
   isMultipleBuildings?: { value?: boolean };
-  squareFootage?: { value?: number; subfields?: { spaceChangesOverTime?: boolean } };
+  squareFootage?: {
+    value?: number;
+    subfields?: { spaceChangesOverTime?: boolean };
+  };
   entireBuilding?: { value?: boolean };
   suite?: { value?: string };
   floors?: { value?: any[] };

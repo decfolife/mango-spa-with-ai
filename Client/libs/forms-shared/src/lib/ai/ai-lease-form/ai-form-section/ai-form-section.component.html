@@ -1,145 +1,246 @@
-<mat-card class="ai-form-section df-sectionCard view-mode" [class.edit-mode]="editMode" [class.view-mode]="!editMode">
+<div class="df-section">
+  <mat-card
+    class="ai-form-section df-sectionCard view-mode"
+    [class.edit-mode]="editMode"
+    [class.view-mode]="!editMode"
+  >
+    <mat-card-header class="df-sectionHeader">
+      <h3 class="df-accordion-heading">
+        <button
+          type="button"
+          class="df-accordion-trigger"
+          [attr.aria-label]="
+            (section?.title || 'Section') +
+            (isExpanded
+              ? ', press enter to collapse'
+              : ', press enter to expand')
+          "
+          (click)="toggleExpanded()"
+        >
+          <span class="df-accordion-title">{{ section.title }}</span>
+          <mat-icon class="df-accordion-icon">{{
+            isExpanded ? 'expand_less' : 'expand_more'
+          }}</mat-icon>
+        </button>
+      </h3>
+    </mat-card-header>
 
-  <mat-card-header class="df-sectionHeader" (click)="toggleExpanded()">
-    <mat-card-title
-      #menuTrigger="matMenuTrigger"
-      [matMenuTriggerFor]="sectionLabelMenu"
-      (mouseenter)="openSectionLabelMenu()"
-      (mouseleave)="closeSectionLabelMenu()"
-    >{{ section.title }}</mat-card-title>
-
-    <mat-menu #sectionLabelMenu="matMenu" [hasBackdrop]="false">
+    <mat-card-content
+      class="df-sectionContent"
+      *ngIf="isExpanded"
+      [formGroup]="formGroup"
+    >
+      <!-- Fields List -->
       <div
-        (mouseenter)="sectionLabelMenuEntered = true"
-        (mouseleave)="sectionLabelMenuLeave()"
-        class="df-sectionLabelMenu"
+        class="df-formSection-columnList"
+        [style.grid-template-columns]="getColumnTemplate()"
       >
-        <a mat-menu-item>Section Edit</a>
-        <a mat-menu-item>Form Item Details</a>
-        <a mat-menu-item>Behaviors</a>
-      </div>
-    </mat-menu>
+        <div
+          class="df-formSection-column"
+          *ngFor="let column of section.columnGroups || []"
+        >
+          <ng-container *ngFor="let field of column.fields">
+            <div class="field-container df-formSection-field" *ngIf="shouldRenderField(field)">
+              <!-- Label container: history icon + label text -->
+              <div class="df-formSection-labelContainer">
+                <div class="df-infoHistoryData">
+                  <crem-field-history
+                    [helpTextID]="'ai-helpText-' + field.key"
+                    [visible]="false"
+                    dateFormat="MM/dd/yyyy"
+                    [dataSource]="null"
+                    [displayIcon]="'infoHistoryIcon'"
+                    [showFieldName]="false"
+                  ></crem-field-history>
+                </div>
+                <crem-input-label
+                  class="df-formSection-fieldLabel"
+                  [ngClass]="{ 'df-superLabel': isSuperUser }"
+                  [tabindex]="isSuperUser && !editMode && isExpanded ? 0 : -1"
+                  (keydown)="onKeyDownOnLabel($event, field)"
+                  (click)="openLabelLink(field)"
+                  [label]="field.label"
+                ></crem-input-label>
+              </div>
 
-    <button type="button" mat-icon-button class="btn-expand" (click)="toggleExpanded(); $event.stopPropagation()">
-      <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-    </button>
-  </mat-card-header>
+              <!-- Field content -->
+              <div class="field-content df-formSection-fieldContent">
+                <img
+                  *ngIf="isImageField(field) && getCurrentFieldValue(field)"
+                  class="ai-form-image"
+                  [src]="getCurrentFieldValue(field)"
+                  [width]="getImageWidth(field)"
+                  [height]="getImageHeight(field)"
+                  [alt]="field.label"
+                />
 
-  <mat-card-content class="df-sectionContent" *ngIf="isExpanded" [formGroup]="formGroup">
+                <a
+                  *ngIf="!editMode && isEmailField(field) && getCurrentFieldValue(field)"
+                  class="ai-form-email"
+                  [href]="'mailto:' + getCurrentFieldValue(field)"
+                >
+                  {{ getCurrentFieldValue(field) }}
+                </a>
 
-    <!-- Fields List -->
-    <div class="df-formSection-columnList">
-      <div
-        class="field-container df-formSection-field"
-        *ngFor="let field of section.fields"
-      >
-        <!-- Label container: history icon + label text -->
-        <div class="df-formSection-labelContainer">
-          <div class="df-infoHistoryData">
-            <crem-field-history
-              [helpTextID]="'ai-helpText-' + field.key"
-              [visible]="false"
-              dateFormat="MM/dd/yyyy"
-              [dataSource]="null"
-              [displayIcon]="'infoHistoryIcon'"
-              [showFieldName]="false"
-            ></crem-field-history>
-          </div>
-          <crem-input-label
-            class="df-formSection-fieldLabel"
-            [label]="field.label"
-          ></crem-input-label>
+                <span
+                  class="df-dropdown-readonly-wrapper"
+                  *ngIf="!editMode && (isDropdownField(field) || isMultiSelectField(field))"
+                  tabindex="0"
+                >
+                  <span class="sr-only"
+                    >{{ field.label }}, {{ formatDisplayValue(field) }}</span
+                  >
+                  <crem-dropdown
+                    aria-hidden="true"
+                    [dataSource]="field.dropdownItems || []"
+                    [displayExpr]="getDropdownDisplayExpr(field)"
+                    [valueExpr]="getDropdownValueExpr(field)"
+                    [readOnly]="true"
+                    [containerized]="false"
+                    [readOnlyStyle]="'text-only'"
+                    [formControlName]="field.key"
+                    [tabindex]="-1"
+                    [selectMode]="isMultiSelectField(field) ? 'multiple' : 'single'"
+                    [showCheckBoxesMode]="isMultiSelectField(field) ? 'always' : 'none'"
+                  ></crem-dropdown>
+                </span>
+
+                <crem-input-label
+                  *ngIf="!editMode && isTextOnlyField(field)"
+                  [label]="formatDisplayValue(field)"
+                ></crem-input-label>
+
+                <crem-check-box
+                  *ngIf="!editMode && isBooleanField(field)"
+                  [formControlName]="field.key"
+                  [disabled]="true"
+                ></crem-check-box>
+
+                <crem-radio-group
+                  *ngIf="!editMode && isRadioField(field)"
+                  [formControlName]="field.key"
+                  [name]="'ai-radio-group-' + field.key"
+                  [ariaLabel]="field.label"
+                  [disabled]="true"
+                >
+                  <crem-radio-field
+                    *ngFor="let option of getRadioOptions(field)"
+                    [value]="option.value"
+                    [readOnly]="true"
+                    [readOnlyStyle]="'text-only'"
+                  >
+                    {{ option.display }}
+                  </crem-radio-field>
+                </crem-radio-group>
+
+                <crem-input-label
+                  *ngIf="
+                    !editMode &&
+                    !isDropdownField(field) &&
+                    !isMultiSelectField(field) &&
+                    !isBooleanField(field) &&
+                    !isRadioField(field) &&
+                    !isImageField(field) &&
+                    !isEmailField(field) &&
+                    !isTextOnlyField(field)
+                  "
+                  [label]="formatDisplayValue(field)"
+                ></crem-input-label>
+
+                <crem-dropdown
+                  *ngIf="editMode && (isDropdownField(field) || isMultiSelectField(field))"
+                  [id]="'ai-form-dropdown-' + field.key"
+                  [dataSource]="field.dropdownItems || []"
+                  [showClearButton]="true"
+                  [showColumnHeader]="false"
+                  [displayExpr]="getDropdownDisplayExpr(field)"
+                  [valueExpr]="getDropdownValueExpr(field)"
+                  [allowSearch]="true"
+                  [useSelectBox]="true"
+                  [containerized]="true"
+                  [searchMode]="'contains'"
+                  [formControlName]="field.key"
+                  [initialSelectedValue]="getFieldControl(field.key)?.value"
+                  [selectMode]="isMultiSelectField(field) ? 'multiple' : 'single'"
+                  [showCheckBoxesMode]="isMultiSelectField(field) ? 'always' : 'none'"
+                  (selectedItems)="onDropdownSelected(field, $event)"
+                ></crem-dropdown>
+
+                <crem-input
+                  *ngIf="editMode && isStandardInputField(field)"
+                  [inputType]="getInputType(field)"
+                  [formControlName]="field.key"
+                ></crem-input>
+
+                <crem-input
+                  *ngIf="editMode && isTextAreaField(field)"
+                  [inputType]="'textarea'"
+                  [formControlName]="field.key"
+                ></crem-input>
+
+                <crem-date-picker
+                  *ngIf="editMode && isDateField(field)"
+                  [formControlName]="field.key"
+                  dateFormat="MM/dd/yyyy"
+                  [useMaskBehavior]="false"
+                ></crem-date-picker>
+
+                <crem-check-box
+                  *ngIf="editMode && isBooleanField(field)"
+                  [formControlName]="field.key"
+                ></crem-check-box>
+
+                <crem-radio-group
+                  *ngIf="editMode && isRadioField(field)"
+                  [formControlName]="field.key"
+                  [name]="'ai-radio-group-' + field.key"
+                  [ariaLabel]="field.label"
+                >
+                  <crem-radio-field
+                    *ngFor="let option of getRadioOptions(field)"
+                    [value]="option.value"
+                  >
+                    {{ option.display }}
+                  </crem-radio-field>
+                </crem-radio-group>
+
+                <!-- Citation -->
+                <div *ngIf="field.citation" class="ai-citation">
+                  <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
+                  <span>{{ field.citation }}</span>
+                </div>
+
+                <!-- Search in document -->
+                <button
+                  *ngIf="!editMode && hasSearchableValue(field)"
+                  type="button"
+                  class="ai-field-search-link"
+                  (click)="searchInDocument(field)"
+                  title="Search for this value in the source document"
+                >
+                  Search in document
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
-
-        <!-- Field content -->
-        <div class="field-content df-formSection-fieldContent">
-
-          <!-- View mode -->
-          <crem-input-label
-            *ngIf="!editMode"
-            [label]="formatDisplayValue(field)"
-          ></crem-input-label>
-
-          <!-- Edit mode: text / number / currency / percent -->
-          <crem-input
-            *ngIf="editMode && field.type !== 'boolean' && field.type !== 'date'"
-            [inputType]="field.type === 'number' || field.type === 'currency' || field.type === 'percent' ? 'number' : 'text'"
-            [formControlName]="field.key"
-          ></crem-input>
-
-          <!-- Edit mode: date -->
-          <crem-date-picker
-            *ngIf="editMode && field.type === 'date'"
-            [formControlName]="field.key"
-            dateFormat="MM/dd/yyyy"
-            [useMaskBehavior]="false"
-          ></crem-date-picker>
-
-          <!-- Edit mode: boolean -->
-          <mat-checkbox
-            *ngIf="editMode && field.type === 'boolean'"
-            [formControlName]="field.key"
-          ></mat-checkbox>
-
-          <!-- Citation -->
-          <div *ngIf="field.citation" class="ai-citation">
-            <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
-            <span>{{ field.citation }}</span>
-          </div>
-
-          <!-- Search in document -->
-          <button
-            *ngIf="!editMode && hasSearchableValue(field)"
-            type="button"
-            class="ai-field-search-link"
-            (click)="searchInDocument(field)"
-            title="Search for this value in the source document"
-          >
-            Search in document
-          </button>
-        </div>
       </div>
-    </div>
 
-    <!-- Rent Schedule Sub-table -->
-    <ng-container *ngIf="rentSchedule">
-
-      <div class="ai-subtable-header">Base Rent Schedule</div>
-      <dx-data-grid
-        class="ai-subtable"
-        [dataSource]="rentSchedule.scheduleItems"
-        [showBorders]="true"
-        [showColumnLines]="false"
-        [showRowLines]="true"
-        [rowAlternationEnabled]="true"
-        [wordWrapEnabled]="false"
-      >
-        <dxo-load-panel [enabled]="false"></dxo-load-panel>
-        <dxo-paging [enabled]="false"></dxo-paging>
-        <ng-container *ngFor="let col of rentScheduleColumns">
-          <dxi-column
-            [dataField]="col.dataField"
-            [caption]="col.caption"
-            [dataType]="col.dataType"
-            [format]="col.format"
-            [width]="col.width"
-          ></dxi-column>
-        </ng-container>
-      </dx-data-grid>
-
-      <ng-container *ngIf="hasAbatements()">
-        <div class="ai-subtable-header">Rent Abatements</div>
+      <!-- Rent Schedule Sub-table -->
+      <ng-container *ngIf="rentSchedule">
+        <div class="ai-subtable-header">Base Rent Schedule</div>
         <dx-data-grid
           class="ai-subtable"
-          [dataSource]="rentSchedule.abatementItems"
+          [dataSource]="rentSchedule.scheduleItems"
           [showBorders]="true"
           [showColumnLines]="false"
           [showRowLines]="true"
           [rowAlternationEnabled]="true"
+          [wordWrapEnabled]="false"
         >
           <dxo-load-panel [enabled]="false"></dxo-load-panel>
           <dxo-paging [enabled]="false"></dxo-paging>
-          <ng-container *ngFor="let col of abatementColumns">
+          <ng-container *ngFor="let col of rentScheduleColumns">
             <dxi-column
               [dataField]="col.dataField"
               [caption]="col.caption"
@@ -149,10 +250,31 @@
             ></dxi-column>
           </ng-container>
         </dx-data-grid>
+
+        <ng-container *ngIf="hasAbatements()">
+          <div class="ai-subtable-header">Rent Abatements</div>
+          <dx-data-grid
+            class="ai-subtable"
+            [dataSource]="rentSchedule.abatementItems"
+            [showBorders]="true"
+            [showColumnLines]="false"
+            [showRowLines]="true"
+            [rowAlternationEnabled]="true"
+          >
+            <dxo-load-panel [enabled]="false"></dxo-load-panel>
+            <dxo-paging [enabled]="false"></dxo-paging>
+            <ng-container *ngFor="let col of abatementColumns">
+              <dxi-column
+                [dataField]="col.dataField"
+                [caption]="col.caption"
+                [dataType]="col.dataType"
+                [format]="col.format"
+                [width]="col.width"
+              ></dxi-column>
+            </ng-container>
+          </dx-data-grid>
+        </ng-container>
       </ng-container>
-
-    </ng-container>
-
-  </mat-card-content>
-
-</mat-card>
+    </mat-card-content>
+  </mat-card>
+</div>

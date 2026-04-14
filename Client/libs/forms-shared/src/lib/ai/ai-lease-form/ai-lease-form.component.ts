@@ -1,12 +1,18 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
-import { AiFormField, AiFormSection, AiRentScheduleSection } from '../models/ai-form.model';
+import { forkJoin, of, Subject, timer } from 'rxjs';
+import { catchError, switchMap, take, takeUntil } from 'rxjs/operators';
+import { AiDropdownItem, AiFieldType, AiFormField, AiFormSection } from '../models/ai-form.model';
 import { IAIOutput } from '../models/ai-output.model';
 import { AiLeaseService } from '../services/ai-lease.service';
 import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
+import { FormWizardDataTypeID, FormWizardTypeID } from '@forms/model/dynamic-forms.interface';
+import { DynamicFormsService } from '../../services/dynamic-forms.service';
+import { ObjectType } from '@mango/data-models/lib-data-models';
+import { ObjectTypeType } from '@mango/data-models/lib-data-models';
+import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
+import { BreadCrumb } from '@mango/data-models/lib-data-models';
 
 @Component({
   selector: 'mango-ai-lease-form',
@@ -14,49 +20,85 @@ import { AiSidebarService } from '../ai-sidebar/ai-sidebar.service';
   styleUrls: ['./ai-lease-form.component.scss'],
 })
 export class AiLeaseFormComponent implements OnInit, OnDestroy {
+  @ViewChild('mainScrollContainer')
+  private mainScrollContainer?: ElementRef<HTMLDivElement>;
+
   form: FormGroup = new FormGroup({});
   sections: AiFormSection[] = [];
   sectionsExpanded: boolean[] = [];
   isLoading = true;
   editMode = false;
   errorMessage: string | null = null;
-  pageTitle = 'AI Lease Abstraction';
+  abstractionStatus: string | null = null;
+  pageTitle = 'Lease:';
+  pageSubtitle = '';
+  hasRenderableContent = false;
+  parentBuildingLink: { label: string; queryParams: Record<string, number> } | null = null;
+  isSuperUser = false;
 
   private leaseId: number;
+  private cachedFormId = 0;
+  private hasStartedRendering = false;
   private readonly destroy$ = new Subject<void>();
+  private readonly stopPolling$ = new Subject<void>();
+
+  // Object type ID for leases
+  private static readonly LEASE_OBJECT_TYPE_ID = 4;
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly aiLeaseService: AiLeaseService,
-    private readonly aiSidebarService: AiSidebarService
-  ) {}
+    private readonly aiSidebarService: AiSidebarService,
+    private readonly dynamicFormsService: DynamicFormsService,
+    private readonly mangoAppFacade: MangoAppFacade
+  ) { }
 
   ngOnInit(): void {
+    this.mangoAppFacade.contactRecord$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((contact) => {
+        this.isSuperUser =
+          contact?.userRoleName?.toLowerCase().trim() === 'superuser';
+      });
+
     this.route.paramMap
       .pipe(
         switchMap((params) => {
           this.leaseId = Number(params.get('id'));
+          this.cachedFormId = Number(this.route.snapshot.queryParamMap.get('formId') ?? 0);
           this.isLoading = true;
           this.errorMessage = null;
-          return this.aiLeaseService.getLeaseById(this.leaseId);
+          this.abstractionStatus = null;
+          this.hasRenderableContent = false;
+          this.hasStartedRendering = false;
+          this.sections = [];
+          this.sectionsExpanded = [];
+          this.form = new FormGroup({});
+          this.parentBuildingLink = null;
+          this.stopPolling$.next(); // cancel any poll running from a previous route
+
+          if (!this.cachedFormId) {
+            this.errorMessage =
+              'Missing required formId. AI abstraction detail cannot be rendered without a mapped form definition.';
+            this.isLoading = false;
+            return of(null);
+          }
+
+          return forkJoin({
+            detail: this.aiLeaseService.getAbstractionById(this.leaseId),
+          });
         }),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: (data) => {
-          if (!data) {
-            this.errorMessage = 'No AI abstraction data found for this lease.';
-            this.isLoading = false;
+        next: (result) => {
+          if (!result) {
             return;
           }
-          this.sections = this.buildSections(data);
-          this.sectionsExpanded = this.sections.map(() => true);
-          this.form = this.buildFormGroup(this.sections);
-          if (data.basics?.tenant?.value) {
-            this.pageTitle = `AI Lease Abstraction — ${data.basics.tenant.value}`;
-          }
-          this.isLoading = false;
+
+          const { detail } = result;
+          this.handleAbstractionDetail(detail);
         },
         error: () => {
           this.errorMessage = 'Failed to load lease abstraction data. Please try again.';
@@ -66,12 +108,202 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.aiSidebarService.close();
+    this.stopPolling$.next();
+    this.stopPolling$.complete();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
+  // ─── Data-loading helpers ────────────────────────────────────────────────────
+
+  private handleAbstractionDetail(detail: any): void {
+    if (!detail) {
+      this.errorMessage = 'Abstraction not found.';
+      this.isLoading = false;
+      return;
+    }
+
+    this.abstractionStatus = detail.status;
+
+    if (detail.aiOutputJson) {
+      this.renderDetail(detail);
+    }
+
+    if (detail.status !== 'Complete' && detail.status !== 'Error' && detail.status !== 'Cancelled') {
+      this.startPolling();
+    }
+
+    if (detail.status === 'Error' && !this.hasRenderableContent) {
+      this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (detail.status === 'Cancelled' && !this.hasRenderableContent) {
+      this.errorMessage = 'The AI abstraction was cancelled before any results were available.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (detail.status === 'Complete' && !this.hasRenderableContent) {
+      this.errorMessage = 'AI output is missing for this abstraction.';
+      this.isLoading = false;
+      return;
+    }
+
+    if (!this.hasRenderableContent && detail.status !== 'Complete') {
+      if (detail.status === 'Error') {
+        this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+      }
+      this.isLoading = false;
+      return;
+    }
+  }
+
+  /** Poll every 5 s for status updates and render as soon as AI output exists. */
+  private startPolling(): void {
+    this.stopPolling$.next(); // cancel any prior poll
+    timer(5000, 5000)
+      .pipe(
+        switchMap(() => this.aiLeaseService.getAbstractionById(this.leaseId)),
+        takeUntil(this.stopPolling$),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (detail) => {
+          if (!detail) {
+            this.errorMessage = 'Abstraction not found.';
+            return;
+          }
+
+          this.abstractionStatus = detail.status;
+
+          if (detail.aiOutputJson) {
+            this.renderDetail(detail);
+          }
+
+          if (detail.status === 'Error' && !this.hasRenderableContent) {
+            this.errorMessage = detail.errorMessage ?? 'The AI abstraction encountered an error.';
+            this.isLoading = false;
+            this.stopPolling$.next();
+            return;
+          }
+
+          if (detail.status === 'Cancelled' && !this.hasRenderableContent) {
+            this.errorMessage = 'The AI abstraction was cancelled before any results were available.';
+            this.isLoading = false;
+            this.stopPolling$.next();
+            return;
+          }
+
+          if (detail.status === 'Complete' && !this.hasRenderableContent) {
+            this.errorMessage = 'AI output is missing for this abstraction.';
+            this.isLoading = false;
+            this.stopPolling$.next();
+            return;
+          }
+
+          if (['Complete', 'Error', 'Cancelled'].includes(detail.status)) {
+            this.stopPolling$.next();
+          }
+        },
+      });
+  }
+
+  private renderDetail(detail: any): void {
+    if (this.hasStartedRendering) {
+      this.hasRenderableContent = true;
+      this.isLoading = false;
+      return;
+    }
+
+    if (!detail.aiOutputJson) {
+      this.errorMessage = 'AI output is missing for this abstraction.';
+      this.isLoading = false;
+      return;
+    }
+
+    let aiOutput: IAIOutput;
+    try {
+      aiOutput = JSON.parse(detail.aiOutputJson) as IAIOutput;
+    } catch {
+      this.errorMessage = 'Failed to parse AI output data.';
+      this.isLoading = false;
+      return;
+    }
+
+    const titleName =
+      aiOutput.basics?.tenant?.value ||
+      detail?.aiTenant ||
+      detail?.formName ||
+      String(this.leaseId);
+    this.pageTitle = 'Lease:';
+    this.pageSubtitle = titleName;
+    this.updateBreadcrumbTitle(titleName);
+
+    this.hasStartedRendering = true;
+    this.hasRenderableContent = true;
+    this.aiSidebarService.setAiOutput(this.leaseId, aiOutput);
+
+    // ── Dynamic sections from form definition (backend-mapped) ──────────
+    // When a formId is provided (via ?formId=N query param), the backend
+    // fetches form fields, applies AI output mapping, and returns fields
+    // with formItemAnswer populated. Angular groups them into sections.
+    if (this.cachedFormId) {
+      forkJoin({
+        mappedForm: this.aiLeaseService.getMappedFormFields(
+          this.leaseId,
+          this.cachedFormId,
+          AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID
+        ),
+        dropdownValues: this.dynamicFormsService.getRenderFormFormItemDropdowns(
+          this.cachedFormId,
+          0,
+          AiLeaseFormComponent.LEASE_OBJECT_TYPE_ID,
+          detail?.buildingId ?? 0,
+          detail?.buildingId ? ObjectType.BUILDING : 0
+        ).pipe(catchError(() => of({ data: {} }))),
+        buildingForm:
+          detail?.buildingId
+            ? this.dynamicFormsService
+                .getFormForObjectTypeType(ObjectTypeType.Building)
+                .pipe(catchError(() => of({ data: null })))
+            : of({ data: null }),
+      })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: ({ mappedForm, dropdownValues, buildingForm }) => {
+            this.parentBuildingLink = this.buildParentBuildingLink(
+              detail,
+              buildingForm?.data
+            );
+            this.sections = this.groupIntoSections(
+              mappedForm.fields,
+              mappedForm.sections,
+              dropdownValues?.data ?? {},
+              detail
+            );
+            this.sectionsExpanded = this.sections.map(() => true);
+            this.form = this.buildFormGroup(this.sections);
+            this.isLoading = false;
+          },
+          error: () => {
+            this.errorMessage =
+              'Failed to load mapped form fields for this AI abstraction.';
+            this.isLoading = false;
+          },
+        });
+      return;
+    }
+
+    this.errorMessage =
+      'Missing required formId. AI abstraction detail cannot be rendered without a mapped form definition.';
+    this.isLoading = false;
+  }
+
   toggleSidebar(): void {
-    this.aiSidebarService.toggle();
+    this.aiSidebarService.toggle(this.leaseId);
   }
 
   expandAll(): void {
@@ -83,7 +315,10 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
   }
 
   scrollToTop(): void {
-    document.getElementById('df-formContainer-formContainer')?.scrollIntoView({ behavior: 'smooth' });
+    this.mainScrollContainer?.nativeElement.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   }
 
   toggleEditMode(): void {
@@ -95,11 +330,21 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  printPage(): void {
+    window.print();
+  }
+
   onSave(): void {
-    // Placeholder for save logic when real API is wired in
-    console.log('Saving AI form data:', this.form.value);
-    this.editMode = false;
-    this.form.disable();
+    const reviewedFormData = JSON.stringify(this.form.getRawValue());
+    this.aiLeaseService
+      .saveReviewedFormData(this.leaseId, reviewedFormData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.editMode = false;
+          this.form.disable();
+        },
+      });
   }
 
   onCancel(): void {
@@ -115,145 +360,316 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
     return this.form.get(sectionKey) as FormGroup;
   }
 
-  // ─── Section Builder ────────────────────────────────────────────────────────
+  // ─── Dynamic section helpers ─────────────────────────────────────────────────
 
-  private buildSections(data: IAIOutput): AiFormSection[] {
-    return [
-      this.buildBasicsSection(data),
-      this.buildDatesSection(data),
-      this.buildRentSection(data),
-      this.buildExpensesSection(data),
-    ];
-  }
+  private groupIntoSections(
+    fields: any[],
+    sections: any[],
+    dropdownValuesByFormItemId: Record<string, any[]> = {},
+    detail?: any
+  ): AiFormSection[] {
+    return sections
+      .slice()
+      .sort((a, b) => a.formSectionSortOrder - b.formSectionSortOrder)
+      .map((section) => {
+        const normalizedColumns = this.normalizeSectionColumns(section.formSectionColumns);
+        const sectionFields = fields
+          .filter((f) => !this.isParentLinkField(f))
+          .filter((f) => this.getFieldSectionId(f) === section.formSectionID)
+          .map((f, index) => this.toAiFormField(f, dropdownValuesByFormItemId, index, detail));
+        const outlierFields = sectionFields.filter(
+          (field) => (field.column ?? 1) > normalizedColumns
+        );
+        const columnGroups = Array.from({ length: normalizedColumns }, (_, index) => {
+          const columnNum = index + 1;
+          let columnFields = sectionFields
+            .filter((field) => (field.column ?? 1) === columnNum)
+            .sort((a, b) => (a.sourceIndex ?? Number.MAX_SAFE_INTEGER) - (b.sourceIndex ?? Number.MAX_SAFE_INTEGER));
 
-  private buildBasicsSection(data: IAIOutput): AiFormSection {
-    const address = data.basics?.addresses?.value
-      ?.map((a) => [a.StreetAddress, a.CityStateZip].filter(Boolean).join(', '))
-      .join('; ') ?? null;
-
-    const floors = Array.isArray(data.basics?.floors?.value)
-      ? data.basics.floors.value.join(', ')
-      : null;
-
-    return {
-      key: 'basics',
-      title: 'Overview',
-      fields: [
-        { key: 'tenant', label: 'Tenant', type: 'text', value: data.basics?.tenant?.value },
-        { key: 'landlord', label: 'Landlord', type: 'text', value: data.basics?.landlord?.value },
-        { key: 'address', label: 'Address', type: 'text', value: address },
-        { key: 'squareFootage', label: 'Square Footage (SF)', type: 'number', value: data.basics?.squareFootage?.value },
-        { key: 'suite', label: 'Suite', type: 'text', value: data.basics?.suite?.value },
-        { key: 'floors', label: 'Floors', type: 'text', value: floors },
-        { key: 'leaseType', label: 'Lease Type', type: 'text', value: data.basics?.leaseType?.value },
-        { key: 'dealType', label: 'Deal Type', type: 'text', value: data.basics?.dealType?.value },
-        { key: 'spaceUse', label: 'Space Use', type: 'text', value: data.basics?.spaceUse?.value },
-        { key: 'entireBuilding', label: 'Entire Building', type: 'boolean', value: data.basics?.entireBuilding?.value },
-        { key: 'includesAmendments', label: 'Includes Amendments', type: 'boolean', value: data.basics?.includesAmendments?.value },
-        { key: 'abstractionDate', label: 'Abstraction Date', type: 'date', value: data.basics?.abstractionDate?.value },
-      ],
-    };
-  }
-
-  private buildDatesSection(data: IAIOutput): AiFormSection {
-    return {
-      key: 'dates',
-      title: 'Key Dates',
-      fields: [
-        { key: 'leaseSignDate', label: 'Lease Sign Date', type: 'date', value: data.dates?.leaseSignDate?.value },
-        { key: 'leaseStartDate', label: 'Lease Start Date', type: 'date', value: data.dates?.leaseStartDate?.value },
-        { key: 'leaseCommencementDate', label: 'Commencement Date (CD)', type: 'date', value: data.dates?.leaseCommencementDate?.value },
-        { key: 'rentCommencementDate', label: 'Rent Commencement Date (RCD)', type: 'date', value: data.dates?.rentCommencementDate?.value },
-        { key: 'leaseEndDate', label: 'Lease End Date', type: 'date', value: data.dates?.leaseEndDate?.value },
-        { key: 'leaseTermInMonths', label: 'Lease Term (Months)', type: 'number', value: data.dates?.leaseTermInMonths?.value },
-      ],
-    };
-  }
-
-  private buildRentSection(data: IAIOutput): AiFormSection {
-    const rentSchedule: AiRentScheduleSection | undefined =
-      (data.rent?.baseRentSchedule?.value?.length ?? 0) > 0
-        ? {
-            scheduleItems: data.rent.baseRentSchedule.value,
-            abatementItems: data.rent?.rentAbatements?.value ?? [],
-            startsFromRCD: data.rent.baseRentSchedule.subfields?.startsFromRCD ?? false,
-            startsFromCD: data.rent.baseRentSchedule.subfields?.startsFromCD ?? false,
+          if (columnNum === 1 && outlierFields.length) {
+            columnFields = columnFields.concat(
+              outlierFields.sort(
+                (a, b) => (a.sourceIndex ?? Number.MAX_SAFE_INTEGER) - (b.sourceIndex ?? Number.MAX_SAFE_INTEGER)
+              )
+            );
           }
-        : undefined;
+
+          return {
+            columnNum,
+            fields: columnFields,
+          };
+        }).filter((group) => group.fields.length > 0);
+
+        return {
+          key: String(section.formSectionID),
+          title: section.formSectionName,
+          columns: normalizedColumns,
+          fields: sectionFields,
+          columnGroups,
+        };
+      })
+      .filter((s) => s.fields.length > 0);
+  }
+
+  private toAiFormField(
+    field: any,
+    dropdownValuesByFormItemId: Record<string, any[]> = {},
+    sourceIndex = 0,
+    detail?: any
+  ): AiFormField {
+    const sectionDetail = field.formItemSectionDetail ?? {};
+    const formItemTypeName =
+      field.formItemType?.formItemType ??
+      field.formItemType?.FormItemType ??
+      field.formItemTypeName ??
+      null;
+    const dropdownItems = this.normalizeDropdownItems(
+      dropdownValuesByFormItemId[String(field.formItemID)] ?? []
+    );
 
     return {
-      key: 'rent',
-      title: 'Rent',
-      fields: [
-        {
-          key: 'effectiveRent',
-          label: 'Effective Rent (Annual $/SF)',
-          type: 'currency',
-          value: data.rent?.effectiveRent?.value,
-        },
-        {
-          key: 'annualEscalation',
-          label: 'Annual Escalation',
-          type: 'percent',
-          value: data.rent?.annualEscalation?.value?.percent,
-        },
-        {
-          key: 'tiAllowance',
-          label: 'TI Allowance (Total)',
-          type: 'currency',
-          value: data.rent?.tenantImprovementAllowance?.value,
-          citation: data.rent?.tenantImprovementAllowance?.citation,
-        },
-        {
-          key: 'tiAllowancePerSf',
-          label: 'TI Allowance ($/SF)',
-          type: 'currency',
-          value: data.rent?.tenantImprovementAllowance?.subfields?.allowances?.[0]?.amount,
-        },
-      ],
-      rentSchedule,
+      key: String(field.formItemID),
+      label:
+        sectionDetail.formItemLabel ||
+        field.formItemLabel ||
+        field.formItemFriendlyName ||
+        field.formItemName,
+      type: this.resolveAiFieldType(field),
+      value: field.formItemAnswer ?? null,
+      dropdownId: field.dropdownID || undefined,
+      requestTypeId: field.requestTypeID || undefined,
+      dropdownItems: dropdownItems.length ? dropdownItems : undefined,
+      column: this.getFieldColumn(field),
+      sortOrder: this.getFieldSortOrder(field),
+      sourceIndex,
+      formItemTypeID: field.formItemTypeID ?? undefined,
+      formItemTypeName,
+      dataTypeID: field.dataTypeID ?? sectionDetail.dataTypeID ?? undefined,
+      formItemParameters: field.formItemParameters ?? null,
+      formItemViewOnly: Boolean(field.formItemViewOnly),
+      formItemFieldWidth: field.formItemFieldWidth ?? undefined,
+      formItemFieldHeight: field.formItemFieldHeight ?? undefined,
+      radioOptions: this.parseFormItemParameters(field.formItemParameters),
+      displayValue: this.resolveFieldDisplayValue(field, detail),
     };
   }
 
-  private buildExpensesSection(data: IAIOutput): AiFormSection {
-    const expenseFields: AiFormField[] = [
-      { key: 'serviceType', label: 'Service Type', type: 'text', value: data.expenses?.serviceTypeEstimate?.value },
-      {
-        key: 'operatingExpenses',
-        label: 'Operating Expenses',
-        type: 'text',
-        value: data.expenses?.operatingExpenses?.value,
-        citation: data.expenses?.operatingExpenses?.citation,
-      },
-      {
-        key: 'cam',
-        label: 'CAM',
-        type: 'text',
-        value: data.expenses?.cam?.value,
-        citation: data.expenses?.cam?.citation,
-      },
-      { key: 'insurance', label: 'Insurance', type: 'text', value: data.expenses?.insurance?.value },
-      { key: 'taxes', label: 'Taxes / Real Estate', type: 'text', value: data.expenses?.taxes?.value },
-      { key: 'water', label: 'Water', type: 'text', value: data.expenses?.water?.value },
-      { key: 'gas', label: 'Gas', type: 'text', value: data.expenses?.gas?.value },
-      { key: 'electricity', label: 'Electricity', type: 'text', value: data.expenses?.electricity?.value },
-      {
-        key: 'hvac',
-        label: 'HVAC',
-        type: 'text',
-        value: data.expenses?.hvac?.value,
-        citation: data.expenses?.hvac?.citation,
-      },
-      {
-        key: 'cleaning',
-        label: 'Cleaning',
-        type: 'text',
-        value: data.expenses?.cleaning?.value,
-        citation: data.expenses?.cleaning?.citation,
-      },
-    ];
+  private resolveAiFieldType(field: any): AiFieldType {
+    const sectionDetail = field.formItemSectionDetail ?? {};
+    const formItemTypeName = (
+      field.formItemType?.formItemType ??
+      field.formItemType?.FormItemType ??
+      field.formItemTypeName ??
+      ''
+    ).toString();
 
-    return { key: 'expenses', title: 'Expenses', fields: expenseFields };
+    switch (formItemTypeName) {
+      case 'List Box':
+        return 'dropdown';
+      case 'Comment Area':
+        return 'textarea';
+      case 'EmailAddress':
+        return 'email';
+      case 'Image':
+      case 'Dyn Form Image':
+        return 'image';
+      case 'Checkbox':
+        return 'boolean';
+      case 'Radio Button':
+        return 'radio';
+      case 'Multi-Select(Dropdown Based)':
+      case 'Multi-Select (SQL Based)':
+        return 'multiselect';
+      case 'Hidden':
+      case 'Filler':
+        return 'hidden';
+      case 'Text only':
+        return 'textonly';
+      case 'Password':
+        return 'password';
+    }
+
+    if (field.formItemTypeID === FormWizardTypeID.LIST_BOX) return 'dropdown';
+    switch (field.dataTypeID ?? sectionDetail.dataTypeID) {
+      case FormWizardDataTypeID.DATE: return 'date';
+      case FormWizardDataTypeID.CURRENCY: return 'currency';
+      case FormWizardDataTypeID.PERCENT: return 'percent';
+      case FormWizardDataTypeID.INTEGER:
+      case FormWizardDataTypeID.SMALL_INT:
+      case FormWizardDataTypeID.DOUBLE:
+      case FormWizardDataTypeID.NUMBER: return 'number';
+      default: return 'text';
+    }
+  }
+
+  private getFieldSectionId(field: any): number | null {
+    return field.formSectionID ?? field.formItemSectionDetail?.formSectionID ?? null;
+  }
+
+  private getFieldSortOrder(field: any): number {
+    return field.formItemSortOrder ?? field.formItemSectionDetail?.formItemSortOrder ?? Number.MAX_SAFE_INTEGER;
+  }
+
+  private getFieldColumn(field: any): number {
+    const column = Number(field.formItemSectionDetail?.columnNum ?? field.columnNum ?? 1);
+
+    if (!Number.isFinite(column) || column <= 0) {
+      return 1;
+    }
+
+    return Math.floor(column);
+  }
+
+  private normalizeSectionColumns(columns: any): number {
+    const parsedColumns = Number(columns);
+    if (!Number.isFinite(parsedColumns) || parsedColumns <= 0) {
+      return 1;
+    }
+
+    return Math.min(Math.floor(parsedColumns), 4);
+  }
+
+  private isParentLinkField(field: any): boolean {
+    const candidates = [
+      field?.formItemSystemName,
+      field?.formItemName,
+      field?.formItemFriendlyName,
+      field?.formItemLabel,
+      field?.formItemSectionDetail?.formItemLabel,
+    ]
+      .filter(Boolean)
+      .map((value: string) => value.toLowerCase());
+
+    return candidates.includes('lease_parentlink');
+  }
+
+  private buildParentBuildingLink(
+    detail: any,
+    buildingFormId: number | null | undefined
+  ): { label: string; queryParams: Record<string, number> } | null {
+    if (!detail?.buildingId || !detail?.buildingName || !buildingFormId) {
+      return null;
+    }
+
+    return {
+      label: `Building: ${detail.buildingName}`,
+      queryParams: {
+        fid: Number(buildingFormId),
+        oid: Number(detail.buildingId),
+        otid: ObjectType.BUILDING,
+        ottid: ObjectTypeType.Building,
+      },
+    };
+  }
+
+  navigateToParentBuilding(): void {
+    if (!this.parentBuildingLink) {
+      return;
+    }
+
+    this.router.navigate(['/crem/forms/render-form'], {
+      queryParams: this.parentBuildingLink.queryParams,
+    });
+  }
+
+  private updateBreadcrumbTitle(titleName: string): void {
+    this.mangoAppFacade.breadcrumbs$
+      .pipe(take(1))
+      .subscribe((breadcrumbs: BreadCrumb[] | null | undefined) => {
+        if (!breadcrumbs?.length) {
+          return;
+        }
+
+        const updated = [...breadcrumbs];
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          label: titleName,
+        };
+
+        this.mangoAppFacade.setBreadcrumbs(updated);
+      });
+  }
+
+  private normalizeDropdownItems(items: any[]): AiDropdownItem[] {
+    if (!Array.isArray(items)) {
+      return [];
+    }
+
+    return items
+      .map((item) => ({
+        id:
+          item?.id ??
+          item?.value ??
+          item?.Value ??
+          item?.lookupID ??
+          item?.formItemID,
+        name:
+          item?.name ??
+          item?.display ??
+          item?.Display ??
+          item?.text ??
+          item?.label ??
+          item?.value ??
+          item?.Value,
+      }))
+      .filter((item) => item.id !== undefined && item.id !== null);
+  }
+
+  private parseFormItemParameters(parameters: string | null | undefined) {
+    if (!parameters) {
+      return undefined;
+    }
+
+    const options = parameters
+      .split('|')
+      .map((param) => {
+        const [valuePart, labelPart] = param.split(',');
+        const value = valuePart?.split('=')[1]?.trim();
+        const display = labelPart?.split('=')[1]?.trim();
+
+        if (!value || !display) {
+          return null;
+        }
+
+        return { value, display };
+      })
+      .filter(Boolean);
+
+    return options.length ? options : undefined;
+  }
+
+  private resolveFieldDisplayValue(field: any, detail?: any): string | undefined {
+    if (!detail) {
+      return undefined;
+    }
+
+    const candidates = [
+      field?.formItemSystemName,
+      field?.formItemName,
+      field?.formItemFriendlyName,
+      field?.formItemLabel,
+      field?.formItemSectionDetail?.formItemLabel,
+    ]
+      .filter(Boolean)
+      .map((value: string) => value.toLowerCase());
+
+    if (
+      candidates.some((value) =>
+        ['portfolio', 'portfolioid', 'mastergroup', 'company', 'companyid'].includes(value)
+      )
+    ) {
+      return detail?.portfolioName ?? undefined;
+    }
+
+    if (
+      candidates.some((value) =>
+        ['building', 'buildingid', 'parentbuildingid', 'buildingname'].includes(value)
+      )
+    ) {
+      return detail?.buildingName ?? undefined;
+    }
+
+    return undefined;
   }
 
   // ─── Form Group Builder ──────────────────────────────────────────────────────
@@ -265,12 +681,54 @@ export class AiLeaseFormComponent implements OnInit, OnDestroy {
       const sectionControls: { [key: string]: FormControl } = {};
 
       section.fields.forEach((field) => {
-        sectionControls[field.key] = new FormControl({ value: field.value ?? '', disabled: true });
+        sectionControls[field.key] = new FormControl({
+          value: this.getInitialFieldValue(field),
+          disabled: true,
+        });
       });
 
       root[section.key] = new FormGroup(sectionControls);
     });
 
     return new FormGroup(root);
+  }
+
+  private getInitialFieldValue(field: AiFormField): any {
+    if (field.type === 'boolean') {
+      return this.toBoolean(field.value);
+    }
+
+    if (field.type === 'multiselect') {
+      if (Array.isArray(field.value)) {
+        return field.value;
+      }
+
+      if (typeof field.value === 'string' && field.value.trim().length) {
+        return field.value
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean);
+      }
+
+      return [];
+    }
+
+    return field.value ?? null;
+  }
+
+  private toBoolean(value: any): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+
+    if (typeof value === 'string') {
+      return ['true', '1', 'yes', 'y'].includes(value.trim().toLowerCase());
+    }
+
+    return false;
   }
 }
