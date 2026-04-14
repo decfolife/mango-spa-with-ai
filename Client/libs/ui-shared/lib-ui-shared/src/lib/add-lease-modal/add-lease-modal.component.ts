@@ -124,7 +124,7 @@ export class AddLeaseModalComponent implements OnInit, OnDestroy {
     private dashboardService: DashboardService,
     private router: Router,
     private dataService: DataService,
-    private toastService: CremToastService,
+    protected toastService: CremToastService,
     private facade: MangoAppFacade,
     @Inject(MAT_DIALOG_DATA)
     public data: {
