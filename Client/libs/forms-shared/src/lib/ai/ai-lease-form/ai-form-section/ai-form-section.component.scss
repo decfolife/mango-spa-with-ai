@@ -101,6 +101,34 @@ mat-card.mat-mdc-card {
   }
 }
 
+// Search-in-document link
+.ai-field-search-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1d4f91;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  line-height: 1.4;
+
+  &:hover {
+    color: #5f8cc3;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1d4f91;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
 // Citation block (AI-specific)
 .ai-citation {
   display: flex;

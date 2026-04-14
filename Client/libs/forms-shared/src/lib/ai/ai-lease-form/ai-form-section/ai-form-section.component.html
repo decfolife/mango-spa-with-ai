@@ -86,6 +86,17 @@
             <crem-icon icon="faQuoteLeft" size="xs"></crem-icon>
             <span>{{ field.citation }}</span>
           </div>
+
+          <!-- Search in document -->
+          <button
+            *ngIf="!editMode && hasSearchableValue(field)"
+            type="button"
+            class="ai-field-search-link"
+            (click)="searchInDocument(field)"
+            title="Search for this value in the source document"
+          >
+            Search in document
+          </button>
         </div>
       </div>
     </div>

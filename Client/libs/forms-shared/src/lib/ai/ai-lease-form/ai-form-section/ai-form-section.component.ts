@@ -2,6 +2,7 @@ import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { AiFormField, AiFormSection, AiRentScheduleSection } from '../../models/ai-form.model';
+import { AiSidebarService } from '../../ai-sidebar/ai-sidebar.service';
 
 @Component({
   selector: 'mango-ai-form-section',
@@ -18,6 +19,8 @@ export class AiFormSectionComponent implements OnInit {
   sectionLabelMenuEntered = false;
 
   rentSchedule: AiRentScheduleSection | null = null;
+
+  constructor(private readonly aiSidebarService: AiSidebarService) {}
 
   readonly rentScheduleColumns = [
     { dataField: 'startMonth', caption: 'Start Mo.', width: 90 },
@@ -72,6 +75,21 @@ export class AiFormSectionComponent implements OnInit {
 
   hasAbatements(): boolean {
     return (this.rentSchedule?.abatementItems?.length ?? 0) > 0;
+  }
+
+  hasSearchableValue(field: AiFormField): boolean {
+    if (['boolean', 'image', 'password', 'hidden'].includes(field.type)) {
+      return false;
+    }
+    const display = this.formatDisplayValue(field);
+    return display !== '—' && display.trim() !== '';
+  }
+
+  searchInDocument(field: AiFormField): void {
+    const query = this.formatDisplayValue(field);
+    if (query && query !== '—') {
+      this.aiSidebarService.searchDocument(query);
+    }
   }
 
   openSectionLabelMenu(): void {
