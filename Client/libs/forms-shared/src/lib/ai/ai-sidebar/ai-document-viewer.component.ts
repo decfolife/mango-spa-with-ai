@@ -45,6 +45,7 @@ export class AiDocumentViewerComponent
 
   @Input() src: DocumentSource | null = null;
   @Input() filename?: string;
+  @Input() searchQuery: string | null = null;
 
   private _hostRef: ElementRef<HTMLDivElement> | undefined;
   private root: Root | null = null;
@@ -100,6 +101,7 @@ export class AiDocumentViewerComponent
         filename: this.filename,
         toolbar: this.toolbar,
         darkMode: false,
+        ...(this.searchQuery ? { searchQuery: this.searchQuery } : {}),
         onLoad: () => {
           this.viewerError = null;
           this.isLoaded = true;

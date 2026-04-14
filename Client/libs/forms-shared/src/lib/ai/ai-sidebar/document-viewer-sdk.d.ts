@@ -33,6 +33,7 @@ declare module 'document-viewer-sdk' {
     darkMode?: boolean;
     className?: string;
     style?: React.CSSProperties;
+    searchQuery?: string;
     onLoad?: (...args: any[]) => void;
     onError?: (...args: any[]) => void;
   }

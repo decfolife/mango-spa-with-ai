@@ -8,6 +8,7 @@ import {
   AiRentScheduleSection,
   AiRadioOption,
 } from '../../models/ai-form.model';
+import { AiSidebarService } from '../../ai-sidebar/ai-sidebar.service';
 
 @Component({
   selector: 'mango-ai-form-section',
@@ -23,7 +24,10 @@ export class AiFormSectionComponent implements OnInit {
 
   rentSchedule: AiRentScheduleSection | null = null;
 
-  constructor(private readonly formWizardService: FormWizardService) {}
+  constructor(
+    private readonly formWizardService: FormWizardService,
+    private readonly aiSidebarService: AiSidebarService
+  ) {}
 
   readonly rentScheduleColumns = [
     { dataField: 'startMonth', caption: 'Start Mo.', width: 90 },
@@ -108,6 +112,21 @@ export class AiFormSectionComponent implements OnInit {
     }
 
     window.open(`/Forms/admin/formitemAE.asp?fFormItemID=${field.key}`, '_blank');
+  }
+
+  hasSearchableValue(field: AiFormField): boolean {
+    if (['boolean', 'image', 'password', 'hidden', 'textonly'].includes(field.type)) {
+      return false;
+    }
+    const display = this.formatDisplayValue(field);
+    return display !== '—' && display.trim() !== '';
+  }
+
+  searchInDocument(field: AiFormField): void {
+    const query = this.formatDisplayValue(field);
+    if (query && query !== '—') {
+      this.aiSidebarService.searchDocument(query);
+    }
   }
 
   getFieldControl(fieldKey: string): any {

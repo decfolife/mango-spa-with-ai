@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, Subject } from 'rxjs';
-import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { IAIOutput } from '../models/ai-output.model';
 import {
@@ -49,6 +49,7 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
   isOpen = false;
   isLoading = false;
   errorMessage: string | null = null;
+  searchQuery: string | null = null;
   sections: SidebarSection[] = [];
   rentScheduleItems: any[] = [];
   abatementItems: any[] = [];
@@ -182,6 +183,20 @@ export class AiSidebarComponent implements OnInit, OnDestroy {
           this.currentAiAbstractionId = null;
           this.loadedDocumentContextId = null;
           this.activeTabIndex = 1;
+        }
+      });
+
+    this.aiSidebarService.state$
+      .pipe(
+        takeUntil(this.destroy$),
+        map((s) => s.searchQuery),
+        distinctUntilChanged()
+      )
+      .subscribe((searchQuery) => {
+        this.searchQuery = searchQuery;
+        if (searchQuery) {
+          this.activeTabIndex = 0;
+          this.ensureDocumentContextLoaded();
         }
       });
   }

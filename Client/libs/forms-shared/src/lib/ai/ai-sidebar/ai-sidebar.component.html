@@ -97,6 +97,7 @@
     <mango-ai-document-viewer
       [src]="documentSource"
       [filename]="documentFileName || undefined"
+      [searchQuery]="searchQuery"
     ></mango-ai-document-viewer>
     <div *ngIf="documentLoadError" class="ai-sidebar__document-note">
       {{ documentLoadError }}
