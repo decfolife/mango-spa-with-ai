@@ -105,6 +105,7 @@
     "devextreme": "23.2.3",
     "devextreme-angular": "23.2.3",
     "document-register-element": "^1.14.10",
+    "document-viewer-sdk": "file:document-viewer-sdk-0.1.0.tgz",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "file-saver-es": "^2.0.5",
