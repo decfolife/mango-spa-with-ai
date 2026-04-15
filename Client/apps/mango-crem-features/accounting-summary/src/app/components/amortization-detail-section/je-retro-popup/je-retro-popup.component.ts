@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
 import { DatePipe } from '@angular/common';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-je-retro-popup',
@@ -49,6 +50,7 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService,
     private datePipe: DatePipe
   ) {}
 
@@ -186,9 +188,9 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
         const jeProcessingDetailsResponse = res;
 
         if (jeProcessingDetailsResponse === null) {
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (!jeProcessingDetailsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             jeProcessingDetailsResponse.clientErrorMessage
           );
         } else {
@@ -209,9 +211,9 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
         const jePaymentDetailsResponse = res;
 
         if (jePaymentDetailsResponse === null) {
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (!jePaymentDetailsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             jePaymentDetailsResponse.clientErrorMessage
           );
         } else {
@@ -227,11 +229,11 @@ export class JeRetroPopupComponent implements OnInit, OnChanges, OnDestroy {
         .getAmortizationDetails(leaseRecognitionScheduleID)
         .subscribe((response: any) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.retrospectiveAdjustmentPopupData = response.data;
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }

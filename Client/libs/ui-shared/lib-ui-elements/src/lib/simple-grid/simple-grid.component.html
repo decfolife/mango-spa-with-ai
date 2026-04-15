@@ -1,67 +1,79 @@
-  <dx-data-grid class="cremSimpleGrid"
-    #DataGrid
-    [dataSource]="dataSource"
-    [keyExpr]="keyExpr"
-    [allowColumnReordering]="allowColumnReordering"
-    [showColumnLines]="showColumnLines"
-    [showRowLines]="showRowLines"
-    [rowAlternationEnabled]="true"
-    [showBorders]="false"
-    [columnAutoWidth]="true"
-    [noDataText]="noDataText"
-    [allowColumnResizing]="true"
-    [height]="gridHeight"
-    [wordWrapEnabled]="wordWrapEnabled"
-    (onCellClick)="onCellClicked($event)"
-    [filterSyncEnabled]="true"
-    [filterValue]="filterValue"
-    (onSelectionChanged)="onSelectionChange($event)"
+<dx-data-grid
+  class="cremSimpleGrid"
+  #DataGrid
+  [dataSource]="dataSource"
+  [keyExpr]="keyExpr"
+  [allowColumnReordering]="allowColumnReordering"
+  [showColumnLines]="showColumnLines"
+  [showRowLines]="showRowLines"
+  [rowAlternationEnabled]="true"
+  [showBorders]="false"
+  [columnAutoWidth]="true"
+  [noDataText]="noDataText"
+  [allowColumnResizing]="true"
+  [height]="gridHeight"
+  [wordWrapEnabled]="wordWrapEnabled"
+  (onCellClick)="onCellClicked($event)"
+  [filterSyncEnabled]="true"
+  [filterValue]="filterValue"
+  (onSelectionChanged)="onSelectionChange($event)"
+>
+  <dxi-column
+    *ngFor="let col of columns"
+    [dataField]="col.dataField"
+    [alignment]="col.alignment"
+    [visible]="col.visible"
+    [dataType]="col.dataType"
+    [format]="col.format"
+    [caption]="col.caption"
+    [fixed]="col.fixed"
+    [width]="col.width"
+    [allowEditing]="col.allowEditing"
+    [cellTemplate]="col.cellTemplate"
+  >
+    <dxo-format
+      *ngIf="col.dataType == 'number' && col.precision >= 0"
+      type="fixedPoint"
+      [precision]="col.precision"
+    ></dxo-format>
+  </dxi-column>
+  <dxo-paging
+    [enabled]="paging"
+    [pageSize]="pageSize"
+    *ngIf="paging"
+  ></dxo-paging>
+  <dxo-pager
+    *ngIf="paging"
+    [showPageSizeSelector]="true"
+    [allowedPageSizes]="customPageSize"
+    [showInfo]="true"
+    [showNavigationButtons]="true"
+    [visible]="paging"
+  >
+  </dxo-pager>
+  <dxo-keyboard-navigation [enabled]="true"></dxo-keyboard-navigation>
+  <dxo-scrolling mode="standard"></dxo-scrolling>
+  <dxo-selection *ngIf="selectionChanged" mode="single"></dxo-selection>
+  <dxo-header-filter [visible]="true"></dxo-header-filter>
+  <dxo-master-detail
+    [enabled]="true"
+    template="detail"
+    *ngIf="enableMasterDetails"
+  ></dxo-master-detail>
+  <div *dxTemplate="let data of 'detail'">
+    <ng-container
+      *ngIf="bodyTemplateRef"
+      [ngTemplateOutlet]="bodyTemplateRef"
+      [ngTemplateOutletContext]="{ $implicit: data.data }"
     >
-    
-    <dxi-column *ngFor="let col of columns" 
-      [dataField]="col.dataField" 
-      [alignment]="col.alignment"
-      [visible]="col.visible"
-      [dataType]="col.dataType"
-      [format]="col.format"
-      [caption]="col.caption"
-      [fixed]="col.fixed"
-      [width]="col.width"
-      [allowEditing]="col.allowEditing"
-      [cellTemplate]="col.cellTemplate"
-      >
-      <dxo-format *ngIf="col.dataType == 'number' && col.precision >= 0 " type="fixedPoint" [precision]="col.precision"></dxo-format>
-    </dxi-column>
-    <dxo-paging [enabled]="paging" [pageSize]="pageSize" *ngIf="paging"></dxo-paging>
-    <dxo-pager *ngIf="paging"
-          [showPageSizeSelector]="true"
-          [allowedPageSizes]="customPageSize"
-          [showInfo]="true"
-          [showNavigationButtons]="true"
-          [visible]="paging"
-    >
-    </dxo-pager>
-    <dxo-scrolling mode="standard"></dxo-scrolling>
-    <dxo-selection *ngIf="selectionChanged" mode="single"></dxo-selection>
-    <dxo-header-filter [visible]="true"></dxo-header-filter>
-    <dxo-master-detail [enabled]="true" template="detail" *ngIf="enableMasterDetails"></dxo-master-detail>
-      <div *dxTemplate="let data of 'detail'">
-        <ng-container
-          *ngIf="bodyTemplateRef"
-          [ngTemplateOutlet]="bodyTemplateRef"
-          [ngTemplateOutletContext]="{$implicit:data.data}"
-        >
-        </ng-container>
-      </div>
-
-  </dx-data-grid>
-  <dx-load-panel shadingColor="rgba(255,255,255,0.2)"
-    [visible]="!dataSource"
-    [showIndicator]="true"
-    [showPane]="true"
-    [shading]="true"
-    [closeOnOutsideClick]="false"
-  ></dx-load-panel>
-
-
-
+    </ng-container>
+  </div>
+</dx-data-grid>
+<dx-load-panel
+  shadingColor="rgba(255,255,255,0.2)"
+  [visible]="!dataSource"
+  [showIndicator]="true"
+  [showPane]="true"
+  [shading]="true"
+  [closeOnOutsideClick]="false"
+></dx-load-panel>

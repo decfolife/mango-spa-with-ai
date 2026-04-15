@@ -13,8 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { GenericErrorComponent } from '../components/dashboard/modal/genericError/genericError.component';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { UtilitiesService } from '@mango/core-shared';
-
-import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
+import { AccountingToastService } from 'apps/mango-crem-features/accounting-summary/src/app/services/accounting-toast.service';
 
 @Injectable()
 export class DashboardService extends DataService {
@@ -30,7 +29,7 @@ export class DashboardService extends DataService {
     protected http: HttpClient,
     dialog: MatDialog,
     facade: MangoAppFacade,
-    private toastService: CremToastService
+    private toastService: AccountingToastService
   ) {
     super(http, dialog, facade);
   }
@@ -106,37 +105,33 @@ export class DashboardService extends DataService {
     message: string,
     type: string,
     title?: string,
-    duration?: number,
-    maxWidth?: string
+    duration?: number
   ) {
+    const sticky = !duration;
     if (isToastState(!type)) {
       console.error('An error occurred: ', message);
     }
 
     switch (type) {
       case ToastState.SUCCESS: {
-        this.toastService.show(
+        this.toastService.showToast(
           message ?? `Operation succeeded.`,
           title ?? 'Success',
           ToastState.SUCCESS,
-          {
-            maxWidth: maxWidth ?? '360px',
-            duration: duration ?? 180000,
-          }
+          sticky,
+          duration
         );
         break;
       }
       default:
       case ToastState.ERROR: {
         console.error('An error occurred: ', message);
-        this.toastService.show(
+        this.toastService.showToast(
           message ?? `An error occurred, please try again.`,
           title ?? 'Error',
           ToastState.ERROR,
-          {
-            maxWidth: maxWidth ?? '360px',
-            duration: duration ?? 180000,
-          }
+          sticky,
+          duration
         );
         break;
       }

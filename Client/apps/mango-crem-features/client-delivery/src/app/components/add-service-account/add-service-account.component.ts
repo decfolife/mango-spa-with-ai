@@ -77,9 +77,10 @@ export class AddServiceAccountComponent {
       email: this.serviceAccountForm.get('emailAddress').value,
     };
 
-    const emailExists = this.serviceAccounts.filter(
-      (account: any) => account.contactEmailAddress === request.email
-    ).length > 0;
+    const emailExists =
+      this.serviceAccounts.filter(
+        (account: any) => account.contactEmailAddress === request.email
+      ).length > 0;
 
     if (emailExists) {
       this.errorMsg = 'This email address already exists.';
@@ -87,23 +88,21 @@ export class AddServiceAccountComponent {
     }
 
     if (rowFG.valid) {
-      this.clientDeliveryService
-        .addServiceAccount(request)
-        .subscribe((res) => {
-          if (res.success) {
-            this.errorMsg = '';
-            this.toastService.show(
-              'Service account successfully added.',
-              'Success',
-              ToastState.SUCCESS
-            );
+      this.clientDeliveryService.addServiceAccount(request).subscribe((res) => {
+        if (res.success) {
+          this.errorMsg = '';
+          this.toastService.show(
+            'Service account successfully added.',
+            'Success',
+            ToastState.SUCCESS
+          );
 
-            this.dialogRef.close(request);
-          } else {
-            this.errorMsg =
-              'Failed to create the service account. Please try again or contact your administrator.';
-          }
-        });
+          this.dialogRef.close(request);
+        } else {
+          this.errorMsg =
+            'Failed to create the service account. Please try again or contact your administrator.';
+        }
+      });
     } else {
       this.errorMsg =
         request.email.length === 0

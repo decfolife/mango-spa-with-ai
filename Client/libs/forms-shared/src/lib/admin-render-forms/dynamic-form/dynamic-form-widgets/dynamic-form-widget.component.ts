@@ -169,7 +169,6 @@ export class DynamicFormWidgetComponent
   @Input() objectTypeId: number;
   @Input() objectTypeTypeId: number;
   @Input() formId: number;
-
   /**
    * Hides the button locally. Useful to hide the button here but still
    * show it on a parent component via canShowDownload output
@@ -631,9 +630,6 @@ export class DynamicFormWidgetComponent
         ) {
           const twoDecimalsFmt = '#,##0.00';
           acc.set(columnField.columnHeader, twoDecimalsFmt);
-          // Set so we can read this property in the template instead of calling a function
-          // and creating more work in each re-render.
-          columnField.dataTypeFormatString = twoDecimalsFmt;
         }
 
         return acc;

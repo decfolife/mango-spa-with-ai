@@ -9,40 +9,44 @@ import {
   QueryList,
   TemplateRef,
   ViewChildren,
-} from "@angular/core";
+} from '@angular/core';
 
-import { DxFormComponent } from "devextreme-angular/ui/form";
-import { DatePickerComponent } from "../date-picker/date-picker.component";
-import { DropdownComponent } from "../dropdown/dropdown.component";
-import { ToggleSliderComponent } from "../toggle-slider/toggle-slider.component";
+import { DxFormComponent } from 'devextreme-angular/ui/form';
+import { DatePickerComponent } from '../date-picker/date-picker.component';
+import { DropdownComponent } from '../dropdown/dropdown.component';
+import { ToggleSliderComponent } from '../toggle-slider/toggle-slider.component';
+import { HierarchyDropdownComponent } from '../hierarchy-dropdown/hierarchy-dropdown.component';
 
-import { InputComponent } from "../input";
-import { IForm } from "./definitions";
+import { InputComponent } from '../input';
+import { IForm } from './definitions';
 
 @Component({
-  selector: "crem-dynamic-form",
-  templateUrl: "./dynamic-form.component.html",
-  styleUrls: ["./dynamic-form.component.scss"]
+  selector: 'crem-dynamic-form',
+  templateUrl: './dynamic-form.component.html',
+  styleUrls: ['./dynamic-form.component.scss'],
 })
-
 export class DynamicFormComponent implements OnInit, AfterViewInit {
   @Input() config: IForm;
   @Input() configKey: any = {};
   @Input() initialFocusElement: string;
   @Input() dateFormat: string;
-  @Input() idPrefix = "";
-  @Input() labelPosition: "top" | "left" | "right" = "top"
+  @Input() idPrefix = '';
+  @Input() labelPosition: 'top' | 'left' | 'right' = 'top';
   @Input() readOnly: boolean;
   @Output() changeEvent = new EventEmitter();
   @Output() isLoading = new EventEmitter();
 
   @ViewChildren(DxFormComponent) form: QueryList<DxFormComponent>;
   @ViewChildren('CremDropdown') cremDropdown: QueryList<DropdownComponent>;
-  @ViewChildren('CremDatePicker') cremDatePicker: QueryList<DatePickerComponent>;
+  @ViewChildren('CremDatePicker')
+  cremDatePicker: QueryList<DatePickerComponent>;
   @ViewChildren('CremTextBox') cremTextBox: QueryList<InputComponent>;
-  @ViewChildren('CremToggleSlider') cremToggleSlider: QueryList<ToggleSliderComponent>;
-  @ContentChild(TemplateRef) templateRef : TemplateRef<any>;
-  
+  @ViewChildren('CremToggleSlider')
+  cremToggleSlider: QueryList<ToggleSliderComponent>;
+  @ViewChildren('CremHierarchyDropdown')
+  cremHierarchyDropdown: QueryList<HierarchyDropdownComponent>;
+  @ContentChild(TemplateRef) templateRef: TemplateRef<any>;
+
   public formValid = true;
   public loading = true;
   public dropdownFocusing = false;
@@ -109,20 +113,27 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
         }
       } else if (changeType === 'date' && event) {
         this.configKey[dataField].value = event.value;
-      } else if (changeType === "text" && event) {
+      } else if (changeType === 'text' && event) {
         this.configKey[dataField].value = event;
-      } else if (changeType === "checkbox" && event) {
+      } else if (changeType === 'checkbox' && event) {
         this.configKey[dataField].value = event.value;
-      } else if (changeType === "toFromDate1" && event) {
+      } else if (changeType === 'toFromDate1' && event) {
         this.configKey[dataField].value1 = event.value;
       } else if (changeType === 'toFromDate2' && event) {
         this.configKey[dataField].value2 = event.value;
+      } else if (changeType === 'hierarchyDropdown' && event) {
+        if (this.configKey[dataField].selectMode === 'multiple') {
+          this.configKey[dataField].value = event.map((item) => item.valueKey);
+        } else {
+          this.configKey[dataField].value =
+            event && event.length > 0 ? event[0].valueKey : null;
+        }
       }
-      
+
       if (this.changeEvent) {
         const data = {} as any;
         data.values = this.configKey;
-        data.dataField = dataField
+        data.dataField = dataField;
         this.changeEvent.emit(data);
       }
     }

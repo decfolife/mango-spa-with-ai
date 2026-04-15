@@ -40,6 +40,7 @@ export class CheckBoxComponent implements ControlValueAccessor, AfterViewInit {
   @Input() disabled = false;
   @Output() changeEvent = new EventEmitter();
   @Output() enterKeyEvent = new EventEmitter();
+  @Output() initialized = new EventEmitter<DxCheckBoxComponent>();
   @ViewChild(DxCheckBoxComponent, { static: false })
   checkBox: DxCheckBoxComponent;
 

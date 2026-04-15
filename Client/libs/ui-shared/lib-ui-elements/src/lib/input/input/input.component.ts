@@ -118,6 +118,9 @@ export class InputComponent
   @Input() minNumber?: number = Number.NEGATIVE_INFINITY;
   @Input() maxNumber?: number = Number.POSITIVE_INFINITY;
   @Input() disallowNegative?: boolean;
+  @Input() maxDecimalPlaces?: number;
+  @Input() maxIntegerDigits?: number;
+  @Input() showSpinButtons: boolean = true;
   @Input() debounceTime = 0;
   @Input() ariaLabel?: string;
   @Input() status: CremFormControlStatusType = 'default';
@@ -219,6 +222,29 @@ export class InputComponent
    * @ignore
    */
   writeValue(value: string): void {
+    if (this.inputType === 'number' && value != null) {
+      const parts = value.toString().split('.');
+      const sign = parts[0].startsWith('-') ? '-' : '';
+      const intPart = parts[0].replace(/^-/, '');
+
+      if (
+        this.maxIntegerDigits != null &&
+        intPart.length > this.maxIntegerDigits
+      ) {
+        parts[0] = sign + intPart.substring(0, this.maxIntegerDigits);
+        value = parts.join('.');
+      }
+
+      if (
+        this.maxDecimalPlaces != null &&
+        parts.length === 2 &&
+        parts[1].length > this.maxDecimalPlaces
+      ) {
+        parts[1] = parts[1].substring(0, this.maxDecimalPlaces);
+        value = parts.join('.');
+      }
+    }
+
     this.value = value;
     this.markAsTouched();
     this.valueChange.emit(this.value);
@@ -326,6 +352,55 @@ export class InputComponent
     this.onBlurChange.emit(value);
   }
 
+  // Blocks invalid keys and enforces maxDecimalPlaces/maxIntegerDigits on keydown.
+  onNumberKeyDown(event: KeyboardEvent) {
+    const key = event.key;
+
+    if (key === 'e' || key === 'E' || key === '+') {
+      event.preventDefault();
+      return;
+    }
+
+    if (!/^\d$/.test(key)) return;
+
+    const input = event.target as HTMLInputElement;
+    const { value, selectionStart: selStart, selectionEnd: selEnd } = input;
+    const dotIndex = value.indexOf('.');
+    const valueAfterReplacement =
+      value.substring(0, selStart) + value.substring(selEnd);
+    const dotInNew = valueAfterReplacement.indexOf('.');
+
+    if (
+      this.maxDecimalPlaces != null &&
+      dotIndex !== -1 &&
+      selStart > dotIndex
+    ) {
+      const decimalDigits =
+        dotInNew !== -1 ? valueAfterReplacement.length - dotInNew - 1 : 0;
+      if (decimalDigits >= this.maxDecimalPlaces) {
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // selectionStart is always null for type="number" inputs.
+    // When null, we cannot determine cursor position, so skip the keydown check.
+    // The formatInput handler on the (input) event still enforces maxIntegerDigits.
+    if (
+      this.maxIntegerDigits != null &&
+      selStart !== null &&
+      (dotIndex === -1 || selStart <= dotIndex)
+    ) {
+      const intPart =
+        dotInNew !== -1
+          ? valueAfterReplacement.substring(0, dotInNew)
+          : valueAfterReplacement;
+      if (intPart.replace(/^-/, '').length >= this.maxIntegerDigits) {
+        event.preventDefault();
+      }
+    }
+  }
+
   private formatInput(event): any {
     let value = event.target.value.trim();
     if (this.inputType === 'number' && this.disallowNegative) {
@@ -344,6 +419,32 @@ export class InputComponent
         if (value.length > 1 && value[0] === '0' && value[1] !== '.') {
           value = value.replace(/^0+/, '');
         }
+        event.target.value = value;
+      }
+    }
+
+    // Safety net for paste/autofill that bypasses the keydown guard.
+    if (this.inputType === 'number') {
+      const parts = value.split('.');
+      const sign = parts[0].startsWith('-') ? '-' : '';
+      const intPart = parts[0].replace(/^-/, '');
+
+      if (
+        this.maxDecimalPlaces != null &&
+        parts.length === 2 &&
+        parts[1].length > this.maxDecimalPlaces
+      ) {
+        parts[1] = parts[1].substring(0, this.maxDecimalPlaces);
+        value = parts.join('.');
+        event.target.value = value;
+      }
+
+      if (
+        this.maxIntegerDigits != null &&
+        intPart.length > this.maxIntegerDigits
+      ) {
+        const trimmed = sign + intPart.substring(0, this.maxIntegerDigits);
+        value = parts.length === 2 ? trimmed + '.' + parts[1] : trimmed;
         event.target.value = value;
       }
     }

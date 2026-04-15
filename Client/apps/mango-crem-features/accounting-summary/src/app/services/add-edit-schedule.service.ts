@@ -9,7 +9,6 @@ import { OtherCharge } from '@accounting-summary/models/other-charge.model';
 import { Subject } from 'rxjs';
 import { CalculateValues } from '@accounting-summary/models/interfaces/calculate-values.interfaces';
 import { AccountingEventPayload } from '@accounting-summary/models/interfaces/save-accounting-event.interfaces';
-import { Message, MessageService } from 'primeng/api';
 import { AccountingSummaryService } from './accounting-summary.service';
 
 @Injectable()
@@ -17,14 +16,13 @@ export class AddEditScheduleService extends EndpointService {
   private apiUrl: string;
   private leaseAbstractId: number;
   public chargeMinAndMaxDateOptionPopulated = new Subject<any>();
-  private messages: Message[] = []; // To keep track of added toast messages
+
   private dateOnlyRegex =
     /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])))$/;
 
   constructor(
     protected http: HttpClient,
     @Optional() facade: MangoAppFacade,
-    private messageService: MessageService,
     private accountingSummaryService: AccountingSummaryService
   ) {
     super(http, facade);
@@ -300,55 +298,5 @@ export class AddEditScheduleService extends EndpointService {
     const date = new Date(dateString);
     date.setHours(0, 0, 0, 0);
     return date;
-  }
-
-  /**
-   * Displays a toast message with the specified severity.
-   *
-   * @param summary - The summary text for the toast.
-   * @param detail - The detailed message text.
-   * @param severity - The severity level of the message. Possible values are:
-   *  - "success": Indicates a successful operation.
-   *  - "info": Provides informational messages.
-   *  - "warning": Warns about potential issues.
-   *  - "primary": Represents primary information.
-   *  - "help": Suggests help or guidance.
-   *  - "danger": Indicates a dangerous or critical situation.
-   *  - "secondary": Additional or less important information.
-   *  - "contrast": Highlights contrasting information.
-   * Default is "error" if not provided.
-   * @param sticky - Whether the toast should be sticky (remain visible until manually dismissed).
-   */
-  showToast(
-    summary: string,
-    detail: string,
-    severity = 'error',
-    sticky = true,
-    life = 6000
-  ) {
-    const message: Message = { severity, summary, detail, sticky, life };
-    this.messages.push(message); // Add to the local messages array
-    this.messageService.add(message);
-
-    // If sticky is false, set a timeout to clear the message after the specified life duration
-    if (!sticky) {
-      setTimeout(() => {
-        this.clearToastBySummary(summary);
-      }, life);
-    }
-  }
-
-  clearToastBySummary(summary: string) {
-    const remainingMessages = this.messages.filter(
-      (msg) => !msg.summary?.includes(summary)
-    );
-    this.messages = remainingMessages;
-    this.messageService.clear();
-    remainingMessages.forEach((msg) => this.messageService.add(msg));
-  }
-
-  clearAllToastMessages() {
-    this.messageService.clear();
-    this.messages = [];
   }
 }

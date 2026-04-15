@@ -30,14 +30,23 @@ import { CremRadioService } from './radio.service';
         *ngIf="canRenderDefaultTemplate()"
         class="crem-radio-input"
         type="radio"
-        [attr.role]="'radio'"
+        [attr.id]="radioId"
+        [attr.name]="name"
         [disabled]="disabled"
         [attr.aria-checked]="checked"
-        [attr.aria-label]="value"
-        [value]="[value]"
+        [value]="value"
         [checked]="value === this.radioGroup.value"
+        (change)="onInputChange()"
       />
-      <label class="crem-radio-label" [class.disabled]="disabled">
+      <label
+        class="crem-radio-label"
+        [class.disabled]="disabled"
+        [attr.for]="canRenderDefaultTemplate() ? radioId : null"
+        [attr.tabindex]="!canRenderDefaultTemplate() ? 0 : null"
+        [attr.role]="!canRenderDefaultTemplate() ? 'radio' : null"
+        [attr.aria-checked]="!canRenderDefaultTemplate() ? true : null"
+        [attr.aria-disabled]="!canRenderDefaultTemplate() ? true : null"
+      >
         <ng-content></ng-content>
       </label>
     </span>
@@ -90,6 +99,12 @@ export class CremRadioComponent
     public radioGroup: CremRadioGroupComponent
   ) {}
 
+  get radioId(): string {
+    return this.name != null && this.value != null
+      ? this.name + '-' + this.value.toString().replace(/\s+/g, '-')
+      : null;
+  }
+
   canRenderDefaultTemplate() {
     return !this.readOnly || this.readOnlyStyle === 'input';
   }
@@ -125,11 +140,17 @@ export class CremRadioComponent
     this.radioGroup.writeValue(value);
   }
 
+  onInputChange(): void {
+    if (!this.disabled) {
+      this.radioService.select(this.value);
+      this.onTouched();
+    }
+  }
+
   private setupClickListener(): Observable<MouseEvent> {
     return fromEvent<MouseEvent>(this.elementRef.nativeElement, 'click').pipe(
       tap((event) => {
         event.stopPropagation();
-        event.preventDefault();
         if (this.disabled) {
           return;
         }

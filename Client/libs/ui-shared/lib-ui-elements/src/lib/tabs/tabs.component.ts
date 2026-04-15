@@ -50,9 +50,63 @@ export class CremTabsComponent implements AfterContentInit {
     }
   }
 
-  onKeyDownEvent(e, tab: CremTabItemComponent) {
-    if (e.key == 'Enter') {
-      this.selectTab(tab);
+  onKeyDownEvent(e: KeyboardEvent, tabIndex: number) {
+    const tabs = this.tabs.toArray();
+    const currentTab = tabs[tabIndex];
+    if (!currentTab) {
+      return;
+    }
+
+    const normalizedKey = (e.key || '').toLowerCase();
+    const keyCode = e.keyCode;
+    const isEnter = normalizedKey === 'enter' || keyCode === 13;
+    const isSpace =
+      normalizedKey === ' ' || normalizedKey === 'spacebar' || keyCode === 32;
+    const isArrowRight =
+      normalizedKey === 'arrowright' ||
+      e.code === 'ArrowRight' ||
+      keyCode === 39;
+    const isArrowLeft =
+      normalizedKey === 'arrowleft' || e.code === 'ArrowLeft' || keyCode === 37;
+
+    if (isEnter || isSpace) {
+      e.preventDefault();
+      this.selectTab(currentTab);
+      return;
+    }
+
+    if (isArrowRight || isArrowLeft) {
+      e.preventDefault();
+      const enabledTabs = tabs.filter((tab) => !tab.disabled);
+      if (!enabledTabs.length) {
+        return;
+      }
+
+      const currentEnabledIndex = enabledTabs.findIndex(
+        (tab) => tab === currentTab
+      );
+      if (currentEnabledIndex < 0) {
+        return;
+      }
+
+      let nextIndex = currentEnabledIndex;
+      if (isArrowRight) {
+        nextIndex = (currentEnabledIndex + 1) % enabledTabs.length;
+      } else if (isArrowLeft) {
+        nextIndex =
+          (currentEnabledIndex - 1 + enabledTabs.length) % enabledTabs.length;
+      }
+
+      const nextTab = enabledTabs[nextIndex];
+      this.selectTab(nextTab);
+
+      const tabList = (e.currentTarget as HTMLElement)?.closest(
+        '[role="tablist"]'
+      );
+      const tabButtons = tabList?.querySelectorAll<HTMLElement>(
+        '[role="tab"]:not([disabled])'
+      );
+      tabButtons?.[nextIndex]?.focus();
     }
   }
 

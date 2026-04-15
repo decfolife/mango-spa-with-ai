@@ -17,6 +17,7 @@
   [headerFilter]="{ visible: true }"
   [height]="'100%'"
   [width]="'100%'"
+  [focusedRowEnabled]="true"
   (onSelectionChanged)="onGridSelectionChanged($event)"
   (filterValueChange)="updateFilterCount($event)"
   (onContentReady)="contentReady($event)"
@@ -24,6 +25,13 @@
   (onCellPrepared)="setSelectionControlState($event)"
   [loadPanel]="{ enabled: false }"
 >
+  <dxo-keyboard-navigation
+    [editOnKeyPress]="true"
+    enterKeyAction="moveFocus"
+    enterKeyDirection="column"
+  ></dxo-keyboard-navigation>
+  <dxo-editing mode="cell" [allowUpdating]="false"></dxo-editing>
+
   <dxo-filter-builder-popup
     [width]="600"
     [height]="600"
@@ -1928,8 +1936,11 @@
       [disabled]="isLoadingData || !isAlertDismissable(d.data)"
       [items]="dismissReasons"
       [splitButton]="!isDismissReasonRequired"
-      (onItemClick)="toggleAlert(d.data, $event)"
-      (onButtonClick)="toggleAlert(d.data, $event, true)"
+      [focusStateEnabled]="true"
+      [dropDownOptions]="dismissDropDownOptions"
+      (onItemClick)="onDismissItemClick(d.data, $event)"
+      (onButtonClick)="onDismissButtonClick(d.data, $event)"
+      (keydown)="onDropDownKeyDown($event, d)"
       class="lease-alerts-dismiss-button"
     ></dx-drop-down-button>
   </div>

@@ -67,6 +67,7 @@ import {
   DxValidatorModule,
 } from 'devextreme-angular';
 import { BalanceCardsContainerComponent } from './balance-cards-container/balance-cards-container/balance-cards-container.component';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-financial-card',
@@ -187,6 +188,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   rouMethodTouched = false;
   rouAmountTouched = false;
   currencyRateTouched = false;
+  readonly discountRateMaxDecimalPlaces = 14;
+  readonly discountRateMaxIntegerDigits = 4;
+  readonly functionalCurrencyRateMaxDecimalPlaces = 20;
+  readonly functionalCurrencyRateMaxIntegerDigits = 10;
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
@@ -196,14 +201,25 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     private formatService: FormattingService,
     public datePipe: DatePipe,
     private facade: MangoAppFacade,
-    private el: ElementRef
+    private el: ElementRef,
+    private accountingToastService: AccountingToastService
   ) {
     this.initialFinancialForm();
     this.getUserInfo();
     this.subscription.add(
       this.addEventFormService.DayOneRemeasure$.subscribe((dayOne) => {
         if (dayOne) {
-          this.financialForm.get('ROUMethod').setValue(2);
+          this.financialForm.get('ROUMethod')?.setValue(2);
+        } else {
+          if (this.rouMethodIDSelected) {
+            this.financialForm
+              .get('ROUMethod')
+              ?.setValue(this.rouMethodIDSelected);
+          } else {
+            this.financialForm
+              .get('ROUMethod')
+              ?.setValue(this.accountingEventsData?.rouAssetMethodID);
+          }
         }
       })
     );
@@ -567,7 +583,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
             this.classificationId === 3 ||
             this.classificationId === 4)
         ) {
-          this.addEditScheduleService.showToast(
+          this.accountingToastService.showToast(
             'Functional Currency Rate is Required',
             'Functional Currency Rate is required and cannot be zero.'
           );
@@ -575,7 +591,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           this.updateFinancialCardValidity(false, false);
           return;
         } else {
-          this.addEditScheduleService.clearToastBySummary(
+          this.accountingToastService.clearToastBySummary(
             'Functional Currency Rate is Required'
           );
           this.updateFinancialCardValidity(true, true);
@@ -723,7 +739,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
     );
 
     this.financialForm.valueChanges
-      .pipe(debounceTime(100), takeUntil(this.formSubscription$))
+      .pipe(debounceTime(300), takeUntil(this.formSubscription$))
       .subscribe(() => {
         setTimeout(() => {
           this.executeFinancialFormValueChanges();
@@ -1108,7 +1124,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       this.measureEvent === 'Initial'
         ? this.datePipe.transform(this.termBegin, this.dateFormat)
         : this.datePipe.transform(this.minROUActionDate, this.dateFormat)
-    } 
+    }
       and ${this.datePipe.transform(this.termEnd, this.dateFormat)}.`;
 
     if (
@@ -1120,7 +1136,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.measureEvent === 'Initial' &&
         (rouActionDate > this.termEnd || rouActionDate < this.termBegin)
       ) {
-        this.addEditScheduleService.showToast(
+        this.accountingToastService.showToast(
           'ROU Asset Obtained Action Date',
           rouDateValidationMessage
         );
@@ -1135,7 +1151,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         (rouActionDate < new Date(this.minROUActionDate) ||
           rouActionDate > this.termEnd)
       ) {
-        this.addEditScheduleService.showToast(
+        this.accountingToastService.showToast(
           'ROU Asset Obtained Action Date',
           rouDateValidationMessage
         );
@@ -1146,7 +1162,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
         this.updateFinancialCardValidity(true, false);
         return;
       } else {
-        this.addEditScheduleService.clearToastBySummary(
+        this.accountingToastService.clearToastBySummary(
           'ROU Asset Obtained Action Date'
         );
         this.rouDateStatus = 'default';
@@ -1528,9 +1544,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           termBeginShortDate,
           this.termInMonths
         )
+        .pipe(this.addEventFormService.trackPendingCall())
         .subscribe((response: any) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.discountRateOptions = response.data.filter(
               (profile) => profile.isActive
@@ -1576,9 +1593,11 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
               }
             }
           } else {
-            this.accountingSummaryService.errorNotify(
-              response.clientErrorMessage
-            );
+            if (!response.success && response.clientErrorMessage) {
+              this.accountingToastService.errorNotify(
+                response.clientErrorMessage
+              );
+            }
           }
         })
     );
@@ -1592,17 +1611,20 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           +this.discountRate,
           this.compoundFrequencyType
         )
+        .pipe(this.addEventFormService.trackPendingCall())
         .subscribe((response: any) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.effectiveRate = response.data;
             this.setDiscountRateSubTitle();
             this.addEventFormService.effectiveRate$.next(this.effectiveRate);
           } else {
-            this.accountingSummaryService.errorNotify(
-              response.clientErrorMessage
-            );
+            if (!response.success && response.clientErrorMessage) {
+              this.accountingToastService.errorNotify(
+                response.clientErrorMessage
+              );
+            }
           }
         })
     );
@@ -1619,7 +1641,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   formatEffectiveRate() {
-    return this.effectiveRate?.toFixed(4);
+    return this.effectiveRate?.toFixed(14);
   }
 
   getFunctionalCurrencyRateLookup() {
@@ -1658,9 +1680,11 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
               this.financialForm.get('currencyRate').disable();
             }
           } else {
-            this.accountingSummaryService.errorNotify(
-              response.clientErrorMessage
-            );
+            if (!response.success && response.clientErrorMessage) {
+              this.accountingToastService.errorNotify(
+                response.clientErrorMessage
+              );
+            }
           }
         })
     );
@@ -1687,10 +1711,10 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onAmortizationValueChanged(event: any) {
-    this.addEditScheduleService.clearToastBySummary(
+    this.accountingToastService.clearToastBySummary(
       'Amortization Profile and Classification'
     );
-    this.addEditScheduleService.clearToastBySummary('Amortization Profile');
+    this.accountingToastService.clearToastBySummary('Amortization Profile');
     const profile = event.value;
     if (!profile) {
       return;
@@ -1729,6 +1753,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
 
         this.financialForm.get('ROUAmount').setValue(openingAssetBalValue);
         this.addEventFormService.ignoreButtonReset.next(true);
+        if (this.addEventFormService.isSaveAllowed$.value) {
+          this.addEventFormService.calculateValuesClicked.next(true);
+        }
         this.financialForm.get('ROUAmount').disable();
         break;
       }
@@ -1742,6 +1769,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
 
         this.financialForm.get('ROUAmount').setValue(systemAssetAdjValue);
         this.addEventFormService.ignoreButtonReset.next(true);
+        if (this.addEventFormService.isSaveAllowed$.value) {
+          this.addEventFormService.calculateValuesClicked.next(true);
+        }
         this.financialForm.get('ROUAmount').disable();
         break;
       }
@@ -1760,6 +1790,9 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
       case 'Total Asset Adjustment': {
         this.financialForm.get('ROUAmount').setValue(this.totalAdjustment);
         this.addEventFormService.ignoreButtonReset.next(true);
+        if (this.addEventFormService.isSaveAllowed$.value) {
+          this.addEventFormService.calculateValuesClicked.next(true);
+        }
         this.financialForm.get('ROUAmount').disable();
         break;
       }
@@ -1820,7 +1853,7 @@ export class FinancialCardComponent implements OnChanges, OnInit, OnDestroy {
           .setValue(lastElement.profileID);
       }, 100);
     } else {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Manual Amortization Profile',
         'Amortization Profile Name is required.',
         'error',

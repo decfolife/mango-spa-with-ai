@@ -67,9 +67,37 @@ $disable-underline: true;
       max-height: 200px;
       overflow-y: auto;
       scrollbar-width: thin;
+
       li.childActive > a.childSelected > span,
       li.subChildActive > a.subChildSelected {
         font-weight: 500;
+      }
+
+      a {
+        &.selected {
+          font-weight: bold;
+          text-decoration: none;
+
+          span {
+            border-bottom: 3px solid map-get($color, color, danger);
+          }
+        }
+
+        &:visited {
+          font-weight: bold;
+          text-decoration: none;
+
+          span {
+            border-bottom: 3px solid map-get($color, color, danger);
+          }
+        }
+
+        &:focus {
+          // TODO: <a> tags allow focus without providing a tabindex attribute. We need to figure out why we're having to give a hacky tabindex
+          outline: 5px auto -webkit-focus-ring-color;
+          outline-offset: -2px;
+          @include costar(background-color, gray05);
+        }
       }
     }
   }
@@ -89,9 +117,48 @@ $disable-underline: true;
 
     button {
       padding-right: 0 !important;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      border: none;
+      background: none;
+      width: 100%;
+      height: 100%;
+
+      .flyout_anchor_button_content_div {
+        width: 100%;
+        padding-left: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
       &.default-cursor-nav-link {
         cursor: default;
+      }
+
+      &.selected {
+        font-weight: bold;
+        text-decoration: none;
+
+        span {
+          border-bottom: 3px solid map-get($color, color, danger);
+        }
+      }
+
+      &:visited {
+        font-weight: bold;
+        text-decoration: none;
+
+        span {
+          border-bottom: 3px solid map-get($color, color, danger);
+        }
+      }
+
+      &:focus {
+        // TODO: <a> tags allow focus without providing a tabindex attribute. We need to figure out why we're having to give a hacky tabindex
+        outline: 5px auto -webkit-focus-ring-color;
+        outline-offset: -2px;
+        @include costar(background-color, gray05);
       }
 
       & > .mat-mdc-menu-item-text {

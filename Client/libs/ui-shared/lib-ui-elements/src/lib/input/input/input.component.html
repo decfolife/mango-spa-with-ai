@@ -42,6 +42,7 @@
     type="number"
     [ariaLabel]="ariaLabel"
     [ngClass]="getCssClasses()"
+    [class.no-spin-buttons]="!showSpinButtons"
     [class]="className"
     [id]="id"
     [(ngModel)]="value"
@@ -54,6 +55,7 @@
     [attr.max]="maxNumber"
     (input)="onInputChange($event)"
     (blur)="onBlur($event)"
+    (keydown)="onNumberKeyDown($event)"
     (keydown.enter)="onEnter($event)"
     inputStateClass
   />

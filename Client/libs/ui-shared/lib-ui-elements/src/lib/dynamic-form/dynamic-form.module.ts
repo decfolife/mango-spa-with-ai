@@ -9,11 +9,12 @@ import {
   DxTextAreaModule,
   DxTextBoxModule,
   DxValidationSummaryModule,
-  DxValidatorModule
+  DxValidatorModule,
 } from 'devextreme-angular';
 import { InputComponent } from '../input';
 import { DatePickerModule } from '../date-picker';
 import { ToggleSliderComponent } from '../toggle-slider/toggle-slider.component';
+import { HierarchyDropdownModule } from '../hierarchy-dropdown';
 import { DynamicFormComponent } from './dynamic-form.component';
 import { CheckBoxComponent } from '../checkbox';
 
@@ -27,19 +28,16 @@ import { CheckBoxComponent } from '../checkbox';
     DxFormModule,
     DropdownModule,
     DatePickerModule,
+    HierarchyDropdownModule,
     DxValidatorModule,
     DxValidationSummaryModule,
     MatSlideToggleModule,
     ToggleSliderComponent,
     CheckBoxComponent,
-    InputComponent
+    InputComponent,
   ],
-  declarations: [
-    DynamicFormComponent
-  ],
+  declarations: [DynamicFormComponent],
   schemas: [NO_ERRORS_SCHEMA],
-  exports: [
-    DynamicFormComponent
-  ],
+  exports: [DynamicFormComponent],
 })
-export class DynamicFormModule { }
+export class DynamicFormModule {}

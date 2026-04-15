@@ -7,6 +7,7 @@
   <mat-sidenav
     #sidenav
     opened="true"
+    [disableClose]="true"
     class="shared-left-nav"
     [autoFocus]="false"
     (opened)="leftNavOpened(sideNavContainer)"
@@ -33,10 +34,15 @@
                   'left-nav__' +
                   link?.moduleID +
                   '-' +
-                  link?.dynamicName?.toLowerCase()?.replace(' ', '-')
+                  link?.dynamicName
+                    ?.toLowerCase()
+                    ?.replace(' ', '-')
+                    .replace('.', '_')
                 "
                 [ngClass]="activeLink === link.name ? 'selected' : ''"
                 (click)="onNavLinkClick(link)"
+                (keyup.enter)="onNavLinkClick(link)"
+                (keyup.space)="onNavLinkClick(link)"
                 [tabindex]="0"
               >
                 <span *ngIf="link.objectTypeName == null">{{
@@ -54,6 +60,7 @@
 
           <ng-container *ngIf="linkObj.category !== null">
             <li
+              class="listItem"
               [ngClass]="
                 activeLink === linkObj.category
                   ? linkObj.category + ' active'
@@ -89,10 +96,15 @@
                           'left-nav__' +
                           link?.moduleID +
                           '-' +
-                          link?.dynamicName?.toLowerCase()?.replace(' ', '-')
+                          link?.dynamicName
+                            ?.toLowerCase()
+                            ?.replace(' ', '-')
+                            .replace('.', '_')
                         "
                         [ngClass]="activeLink === link.name ? 'selected' : ''"
                         (click)="onNavLinkClick(link)"
+                        (keyup.enter)="onNavLinkClick(link)"
+                        (keyup.space)="onNavLinkClick(link)"
                         [tabindex]="0"
                       >
                         <span>{{ link.dynamicName }}</span>
@@ -106,12 +118,23 @@
 
           <ng-template #flyoutMenuTemplate>
             <div
-              [matMenuTriggerFor]="appMenu"
-              #trigger="matMenuTrigger"
               (mouseenter)="openFlyOutMenu(trigger, linkObj.category)"
               (mouseleave)="closeFlyOutMenu(trigger)"
             >
               <button
+                [matMenuTriggerFor]="appMenu"
+                #trigger="matMenuTrigger"
+                (menuOpened)="onFlyOutMenuOpened(trigger, linkObj.category)"
+                (menuClosed)="onFlyOutMenuClosed(linkObj.category)"
+                [id]="
+                  'left-nav__listItem__' +
+                  linkObj?.categoryModuleID +
+                  '-' +
+                  linkObj?.category
+                    ?.toLowerCase()
+                    ?.replace(' ', '-')
+                    .replace('.', '_')
+                "
                 class="flyout_anchor"
                 [ngClass]="
                   linkObj.categoryLinkUrl === null
@@ -122,14 +145,24 @@
                   $event.preventDefault();
                   onCategoryNavLinkClick($event, linkObj)
                 "
-                mat-menu-item
+                (keydown.space)="$event.preventDefault()"
+                (keyup.space)="
+                  openFlyOutMenu(trigger, linkObj.category, true);
+                  flyOutMenuEntered = true
+                "
+                [tabindex]="0"
+                [attr.aria-haspopup]="'menu'"
+                [attr.aria-expanded]="trigger.menuOpen"
               >
-                <div
-                  [ngClass]="activeLink === linkObj.category ? 'selected' : ''"
-                >
-                  {{ linkObj.category }}
-                </div>
-                <div class="div-arrow-right-icon">
+                <div class="flyout_anchor_button_content_div">
+                  <div
+                    [ngClass]="
+                      activeLink === linkObj.category ? 'selected' : ''
+                    "
+                  >
+                    {{ linkObj.category }}
+                  </div>
+
                   <mat-icon>keyboard_arrow_right</mat-icon>
                 </div>
               </button>
@@ -139,6 +172,10 @@
               hasBackdrop="false"
               #appMenu="matMenu"
               xPosition="after"
+              [aria-label]="
+                linkObj.category +
+                ' submenu. Press Escape to return to side navigation.'
+              "
             >
               <div
                 class="flyout-scroll"
@@ -156,12 +193,18 @@
                         'left-nav__' +
                         link?.moduleID +
                         '-' +
-                        link?.dynamicName?.toLowerCase()?.replace(' ', '-')
+                        link?.dynamicName
+                          ?.toLowerCase()
+                          ?.replace(' ', '-')
+                          .replace('.', '_')
                       "
                       [ngClass]="
                         link.isCurrentlyActiveLink ? 'childSelected' : ''
                       "
                       (click)="onNavLinkClick(link)"
+                      (keyup.enter)="onNavLinkClick(link)"
+                      (keyup.space)="onNavLinkClick(link)"
+                      (keydown)="keydownFlyout($event, link)"
                       class="flyout-navitem"
                       [tabindex]="0"
                     >
@@ -197,11 +240,24 @@
                     'left-nav__' +
                     subChildLink?.moduleID +
                     '-' +
-                    subChildLink?.dynamicName?.toLowerCase()?.replace(' ', '-')
+                    subChildLink?.dynamicName
+                      ?.toLowerCase()
+                      ?.replace(' ', '-')
+                      .replace('.', '_')
                   "
-                  [ngClass]="
-                    subChildLink.isCurrentlyActiveLink ? 'subChildSelected' : ''
-                  "
+                  [ngClass]="[
+                    subChildLink.isCurrentlyActiveLink
+                      ? 'subChildSelected'
+                      : '',
+                    subChildLink.subChildLevel > 0
+                      ? getParentLinkDynamicName(subChildLink)
+                          ?.toLowerCase()
+                          ?.replace(' ', '-')
+                          .replace('.', '_') +
+                        '_' +
+                        'subChildLevel_link'
+                      : ''
+                  ]"
                   [ngStyle]="{
                     color: subChildLink.subChildLevel > 0 ? '#162f5a' : '#000',
                     'font-size':
@@ -209,13 +265,16 @@
                     'padding-left': (1 + subChildLink.subChildLevel) * 16 + 'px'
                   }"
                   (click)="onNavLinkClick(subChildLink)"
+                  (keyup.enter)="onNavLinkClick(subChildLink)"
+                  (keyup.space)="onNavLinkClick(subChildLink)"
+                  (keydown)="keydownFlyout($event, subChildLink)"
                   class="flyout-navitem"
                   [tabindex]="0"
                   [innerHTML]="subChildLink.dynamicName"
                 >
                 </a>
               </li>
-              <span *ngIf="hasSubChildLevelMenuItems2(subChildLink)">
+              <span *ngIf="hasSubChildLevelMenuItems(subChildLink)">
                 <ng-container
                   *ngTemplateOutlet="
                     subChildLevelMenuItemsTemplate;
@@ -244,10 +303,15 @@
                 'left-nav__' +
                 link?.moduleID +
                 '-' +
-                link?.dynamicName?.toLowerCase()?.replace(' ', '-')
+                link?.dynamicName
+                  ?.toLowerCase()
+                  ?.replace(' ', '-')
+                  .replace('.', '_')
               "
               [ngClass]="activeLink === link.name ? 'selected' : ''"
               (click)="onNavLinkClick(link)"
+              (keyup.enter)="onNavLinkClick(link)"
+              (keyup.space)="onNavLinkClick(link)"
               [tabindex]="0"
             >
               <span>{{ link.dynamicName }}</span>

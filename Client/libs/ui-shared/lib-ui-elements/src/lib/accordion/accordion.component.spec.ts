@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AccordionComponent } from './accordion.component';
-import { IconModule } from '../icon/icon.module';
+import { AccordionModule } from './accordion.module';
+import { DataIdBreadcrumbProviderService } from '@mango/core-shared';
+import { of } from 'rxjs';
 
 describe('AccordionComponent', () => {
   let component: AccordionComponent;
@@ -8,8 +10,13 @@ describe('AccordionComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [IconModule],
-      declarations: [AccordionComponent],
+      imports: [AccordionModule],
+      providers: [
+        {
+          provide: DataIdBreadcrumbProviderService,
+          useValue: { getBreadcrumbs: () => of([]) },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -22,5 +29,4 @@ describe('AccordionComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
 });

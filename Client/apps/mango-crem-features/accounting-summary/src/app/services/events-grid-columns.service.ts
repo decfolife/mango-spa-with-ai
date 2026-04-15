@@ -366,7 +366,7 @@ export class EventsGridColumnsService {
       appendsCurrency: 'false',
       usesLocalFormat: 'false',
       usesFunctionalFormat: 'false',
-      format: (value) => value.toFixed(4),
+      format: (value) => value.toFixed(14),
     });
 
     columns.push({

@@ -343,6 +343,7 @@
     .dx-datagrid-summary-item {
       padding: 5px;
     }
+
     table.dx-datagrid-table {
       tbody {
         tr.dx-row.dx-data-row {
@@ -365,8 +366,13 @@
     .dx-datagrid-content .dx-datagrid-table .dx-header-row > td {
       cursor: default;
     }
+
     .dx-datagrid-content .dx-datagrid-table .dx-row > td,
     .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td {
+      padding: 5px 6px;
+    }
+
+    .dx-datagrid-content .dx-datagrid-table td[role='columnheader'] {
       padding: 6px;
     }
 
@@ -444,9 +450,11 @@
     padding: 10px;
     font-size: 14px;
   }
+
   #amortization-period-popup-tabs-section {
     padding: 12px;
   }
+
   .mat-icon {
     height: 28px;
     padding-left: 3px;

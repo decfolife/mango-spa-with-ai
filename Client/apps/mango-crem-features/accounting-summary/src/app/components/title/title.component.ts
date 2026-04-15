@@ -1,6 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AccountingSummaryService } from '../../services/accounting-summary.service';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { ObjectInfoComponent } from '@mango/ui-shared/lib-ui-shared';
 
 @Component({
   selector: 'mango-accounts-summary-title',
@@ -8,15 +10,18 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./title.component.scss'],
 })
 export class TitleComponent implements OnInit, OnDestroy {
-  leaseName: string;
+  leaseName = '';
   componentName = 'accounting-summary-lease';
   showTooltip = false;
   isLocked = false;
   isArchived = false;
-  lockedReason: string;
+  lockedReason = '';
   private subscription = new Subscription();
 
-  constructor(public accountingSummaryService: AccountingSummaryService) {}
+  constructor(
+    public accountingSummaryService: AccountingSummaryService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
     this.subscription.add(
@@ -35,8 +40,7 @@ export class TitleComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  // Temporarily commented out until ready
-  // showObjectInfoPopup() {
-  //   alert('will open object information');
-  // }
+  showObjectInfoPopup() {
+    this.dialog.open(ObjectInfoComponent);
+  }
 }

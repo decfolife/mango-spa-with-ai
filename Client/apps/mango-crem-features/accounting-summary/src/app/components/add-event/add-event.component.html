@@ -32,7 +32,7 @@
           )
         "
         type="primary"
-        [disabled]="!isCalculateValuesAllowed"
+        [disabled]="!isCalculateValuesAllowed || calculateValuesLoading"
         [icon]="calculateValuesLoading ? 'faSpinner' : ''"
         [iconPack]="calculateValuesLoading ? 'solid' : ''"
         [iconAnimation]="calculateValuesLoading ? 'spin' : ''"
@@ -48,7 +48,7 @@
           accountingSummaryService.getId(componentName, 'save-close', 'button')
         "
         type="primary"
-        [disabled]="!isSaveAllowed"
+        [disabled]="!isSaveAllowed || isApplyClicked"
         [icon]="isSaveAndCloseClicked ? 'faSpinner' : ''"
         [iconPack]="isSaveAndCloseClicked ? 'solid' : ''"
         [iconAnimation]="isSaveAndCloseClicked ? 'spin' : ''"
@@ -62,7 +62,7 @@
       <crem-button
         [id]="accountingSummaryService.getId(componentName, 'apply', 'button')"
         type="secondary"
-        [disabled]="!isApplyAllowed"
+        [disabled]="!isApplyAllowed || isApplyClicked"
         [icon]="isApplyClicked ? 'faSpinner' : ''"
         [iconPack]="isApplyClicked ? 'solid' : ''"
         [iconAnimation]="isApplyClicked ? 'spin' : ''"
@@ -73,65 +73,69 @@
     </div>
   </div>
 </div>
-<dx-load-panel
-  [(visible)]="
+<crem-block-ui
+  [isBlocking]="
     calculateValuesLoading || isApplyClicked || isSaveAndCloseClicked
   "
-  shadingColor="rgba(0, 0, 0, 0.6)"
-  [position]="{ of: '#addEventsBody' }"
-></dx-load-panel>
-<div id="addEventsBody" class="add-events-body">
-  <mango-schedule-details
-    [commonDropdowns]="commonDropdowns"
-    [eventsGridData]="eventsGridData"
-    [pageMode]="pageMode"
-    [measureEvent]="measureEvent"
-    [classificationSettings]="classificationSettings"
-    [accountingEventsData]="accountingEventsData"
-    [eventDateOptions]="eventDateOptions"
-    (classificationChanged)="onClassificationChanged($event)"
-    (scheduleDetailsData)="scheduleDetailsDataChanged($event)"
-  >
-  </mango-schedule-details>
+  [message]="blockerText"
+  size="lg"
+  spinnerPosition="viewport"
+>
+  <div id="addEventsBody" class="add-events-body">
+    <mango-schedule-details
+      [commonDropdowns]="commonDropdowns"
+      [eventsGridData]="eventsGridData"
+      [pageMode]="pageMode"
+      [measureEvent]="measureEvent"
+      [classificationSettings]="classificationSettings"
+      [accountingEventsData]="accountingEventsData"
+      [eventDateOptions]="eventDateOptions"
+      (classificationChanged)="onClassificationChanged($event)"
+      (scheduleDetailsData)="scheduleDetailsDataChanged($event)"
+    >
+    </mango-schedule-details>
 
-  <mango-classification-tests
-    *ngIf="
-      classificationId !== undefined &&
-      classificationId !== 4 &&
-      classificationId !== 5
-    "
-    [accountingEventsData]="accountingEventsData"
-    [classificationId]="classificationId"
-    [pageMode]="pageMode"
-  >
-  </mango-classification-tests>
+    <mango-classification-tests
+      *ngIf="
+        classificationId !== undefined &&
+        classificationId !== 4 &&
+        classificationId !== 5
+      "
+      [accountingEventsData]="accountingEventsData"
+      [classificationId]="classificationId"
+      [pageMode]="pageMode"
+    >
+    </mango-classification-tests>
 
-  <mango-residual-value
-    *ngIf="classificationId && classificationId !== 0 && classificationId !== 5"
-    [accountingEventsData]="accountingEventsData"
-    [pageMode]="pageMode"
-  >
-  </mango-residual-value>
+    <mango-residual-value
+      *ngIf="
+        classificationId && classificationId !== 0 && classificationId !== 5
+      "
+      [accountingEventsData]="accountingEventsData"
+      [pageMode]="pageMode"
+    >
+    </mango-residual-value>
 
-  <mango-financial-card
-    *ngIf="classificationId !== null && classificationId !== undefined"
-    [pageMode]="pageMode"
-    [measureEvent]="measureEvent"
-    [classificationId]="classificationId"
-    [classificationSettings]="classificationSettings"
-    [scheduleDetailsData]="scheduleDetailsData"
-    [accountingEventsData]="accountingEventsData"
-    [amortizationProfiles]="amortizationProfiles"
-    [currencyList]="currencyList"
-    [rouAssetMethodsList]="rouAssetMethodsList"
-    [minROUActionDate]="minROUActionDate"
-  ></mango-financial-card>
+    <mango-financial-card
+      *ngIf="classificationId !== null && classificationId !== undefined"
+      [pageMode]="pageMode"
+      [measureEvent]="measureEvent"
+      [classificationId]="classificationId"
+      [classificationSettings]="classificationSettings"
+      [scheduleDetailsData]="scheduleDetailsData"
+      [accountingEventsData]="accountingEventsData"
+      [amortizationProfiles]="amortizationProfiles"
+      [currencyList]="currencyList"
+      [rouAssetMethodsList]="rouAssetMethodsList"
+      [minROUActionDate]="minROUActionDate"
+    ></mango-financial-card>
 
-  <mango-payments-grid
-    *ngIf="classificationId !== null && classificationId !== undefined"
-  >
-  </mango-payments-grid>
-</div>
+    <mango-payments-grid
+      *ngIf="classificationId !== null && classificationId !== undefined"
+    >
+    </mango-payments-grid>
+  </div>
+</crem-block-ui>
 <p-toast
   position="bottom-right"
   preventOpenDuplicates="true"

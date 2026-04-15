@@ -21,10 +21,10 @@ import {
   byItemMoreMenuOptions,
 } from 'libs/ui-shared/lib-ui-elements/src/lib/dropdown/definitions';
 import { ReportsService } from '@reports/services/reports.service';
-import { CremToastService } from '@mango/ui-shared/lib-ui-elements';
 import { UserService } from '@mango/core-shared';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { environment } from '@mangoSpa/src/environments/environment.local';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 export interface DropdownSelection {
   // Todo: Move to type definition file
@@ -90,7 +90,7 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private facade: MangoAppFacade,
     public dialog: MatDialog,
-    private toastService: CremToastService
+    private toastService: AccountingToastService
   ) {
     this.itemMenuInnerOptions = [
       // todo: This needs to be moved to a conf file
@@ -438,14 +438,10 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
 
   public export() {
     this.exportingReport = true;
-    this.toastService.show(
+    this.toastService.showToast(
       'A link to the report will be emailed to you shortly.',
-      undefined,
-      ToastState.SUCCESS,
-      {
-        maxWidth: '360px',
-        duration: 3000,
-      }
+      'Processing Export',
+      ToastState.SUCCESS
     );
     this.inAppDisclosureService
       .exportIADData(
@@ -542,14 +538,10 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
           } else {
             this.getSegments(this.selectedView, false);
           }
-          this.toastService.show(
+          this.toastService.showToast(
             'Segment archived successfully.',
-            undefined,
-            ToastState.SUCCESS,
-            {
-              maxWidth: '500px',
-              duration: 5000,
-            }
+            '',
+            ToastState.SUCCESS
           );
         } else {
           //error
@@ -559,14 +551,10 @@ export class DashboardWrapperComponent implements OnInit, OnDestroy {
       this.reportsService.unarchiveSegment(request).subscribe((result) => {
         if (result) {
           this.getSegments(this.selectedView, false);
-          this.toastService.show(
+          this.toastService.showToast(
             'Segment unarchived successfully.',
-            undefined,
-            ToastState.SUCCESS,
-            {
-              maxWidth: '500px',
-              duration: 5000,
-            }
+            '',
+            ToastState.SUCCESS
           );
         } else {
           //error

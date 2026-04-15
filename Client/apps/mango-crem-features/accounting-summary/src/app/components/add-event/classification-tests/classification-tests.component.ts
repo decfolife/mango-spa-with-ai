@@ -33,6 +33,7 @@ import { AddEventFormService } from '@accounting-summary/services/add-event-form
 import { DxNumberBoxModule } from 'devextreme-angular/ui/number-box';
 import { PreviousAccountingEvent } from '@accounting-summary/models/previous-accounting-event.model';
 import { accountingTerms } from '@accounting-summary/models/interfaces/balance-card-interfaces';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-classification-tests',
@@ -105,7 +106,8 @@ export class ClassificationTestsComponent
     public accountingSummaryService: AccountingSummaryService,
     private fb: FormBuilder,
     private addEditScheduleService: AddEditScheduleService,
-    public addEventFormService: AddEventFormService
+    public addEventFormService: AddEventFormService,
+    private accountingToastService: AccountingToastService
   ) {
     this.initializeClassificationForm();
     this.subscriptions.push(
@@ -197,13 +199,13 @@ export class ClassificationTestsComponent
             fairMarketValue &&
             result > 2
           ) {
-            this.addEditScheduleService.showToast(
+            this.accountingToastService.showToast(
               'Fair Market Value',
               `FMV is less than 50% of PV + PV of Amount Not Reflected in Payments.`,
               'info'
             );
           } else {
-            this.addEditScheduleService.clearToastBySummary(
+            this.accountingToastService.clearToastBySummary(
               'Fair Market Value'
             );
           }
@@ -364,8 +366,8 @@ export class ClassificationTestsComponent
       fairMarketValue: new FormControl({ value: null, disabled: false }),
       classificationTest1: new FormControl({ value: 3, disabled: false }),
       classificationTest2: new FormControl({ value: 3, disabled: false }),
-      classificationTest3: new FormControl({ value: null, disabled: true }),
-      classificationTest4: new FormControl({ value: null, disabled: true }),
+      classificationTest3: new FormControl({ value: null, disabled: false }),
+      classificationTest4: new FormControl({ value: null, disabled: false }),
       classificationTest5: new FormControl({ value: 3, disabled: false }),
     });
   }
@@ -526,7 +528,7 @@ export class ClassificationTestsComponent
           )
           .subscribe((res) => {
             if (res === null) {
-              this.accountingSummaryService.displayContactSystemAdminMessage();
+              this.accountingToastService.displayContactSystemAdminMessage();
             } else if (res.success) {
               this.isResultsIncomplete = res?.data?.testResult
                 ?.toLowerCase()
@@ -536,7 +538,7 @@ export class ClassificationTestsComponent
               this.classificationResultReason = res.data.resultReason;
               this.title = `Classification Tests | Test Result: ${this.classificationResult}`;
             } else {
-              this.accountingSummaryService.errorNotify(res.clientErrorMessage);
+              this.accountingToastService.errorNotify(res.clientErrorMessage);
             }
           })
       );

@@ -1,6 +1,7 @@
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 import { AmortizationGridColumnsService } from '@accounting-summary/services/amortization-grid-columns.service';
 import { FormattingService } from '@accounting-summary/services/formatting.service';
 import { DatePipe } from '@angular/common';
@@ -69,6 +70,7 @@ export class AmortizationDetailSectionComponent
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService,
     private columnService: AmortizationGridColumnsService,
     private formatService: FormattingService,
     private datePipe: DatePipe
@@ -192,7 +194,7 @@ export class AmortizationDetailSectionComponent
           );
           this.getGridPreferences();
         } else if (!amortizationDetailsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             amortizationDetailsResponse.clientErrorMessage
           );
         }
@@ -210,7 +212,7 @@ export class AmortizationDetailSectionComponent
         .getGridPreferences()
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.gridState = response.data;
             let state = JSON.parse(
@@ -266,15 +268,15 @@ export class AmortizationDetailSectionComponent
         .resetGridPreferences(this.classificationID, this.gridName)
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.amortizationDataGrid.instance.state({});
             this.gridPreferencesUpdated = false;
-            this.accountingSummaryService.successNotify(
+            this.accountingToastService.successNotify(
               'Value Reset Successfully'
             );
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }
@@ -333,15 +335,15 @@ export class AmortizationDetailSectionComponent
         .saveGridPreferences(this.classificationID, this.gridName, columns)
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.initialState = newState;
             this.gridPreferencesUpdated = true;
-            this.accountingSummaryService.successNotify(
+            this.accountingToastService.successNotify(
               response.clientErrorMessage
             );
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }

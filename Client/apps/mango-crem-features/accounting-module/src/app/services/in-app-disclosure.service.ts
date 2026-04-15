@@ -391,7 +391,7 @@ export class InAppDisclosureService extends EndpointService {
           )
           .subscribe({
             error: (error: { code: string; message: string }) =>
-              this.dashboardService.showToast(error.message, 'error'),
+              this.dashboardService.showToast(error.message, 'error', 'Error'),
           })
       );
     }

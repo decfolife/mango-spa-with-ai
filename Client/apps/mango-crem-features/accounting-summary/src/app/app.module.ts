@@ -14,6 +14,9 @@ import { AccountingSummaryService } from './services/accounting-summary.service'
 import { createCustomElement } from '@angular/elements';
 import { StorageService } from '@mango/core-shared';
 import { CommonModule } from '@angular/common';
+import { AccountingToastService } from './services/accounting-toast.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 @NgModule({
   declarations: [AppComponent],
@@ -23,9 +26,15 @@ import { CommonModule } from '@angular/common';
     BrowserAnimationsModule,
     BrowserModule,
     AppRoutingModule,
+    ToastModule,
   ],
 
-  providers: [AccountingSummaryService, StorageService],
+  providers: [
+    AccountingSummaryService,
+    StorageService,
+    AccountingToastService,
+    MessageService,
+  ],
 
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],

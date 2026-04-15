@@ -24,6 +24,7 @@ export class SplitButtonComponent {
   @Input() color: 'primary' | 'secondary' | 'warning' | 'danger' = 'primary';
   @Input() btnStyle: 'flat' | 'basic' | 'stroked' = 'flat';
   @Input() iconAnimation?: string;
+  @Input() optionsBtnAriaLabel?: string = 'Show Options';
 
   @Output() mainButtonClick = new EventEmitter<boolean>();
   @Output() selectedOption = new EventEmitter<string>();

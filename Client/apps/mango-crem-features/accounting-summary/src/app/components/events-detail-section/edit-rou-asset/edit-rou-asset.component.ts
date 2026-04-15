@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import {
   ButtonModule,
   CremFormsModule,
-  CremToastService,
   DatePickerModule,
   DropdownModule,
   InputComponent,
@@ -28,6 +27,7 @@ import { ToastState } from '@mango/data-models/lib-data-models';
 import { takeUntil } from 'rxjs/operators';
 import { DxTooltipModule } from 'devextreme-angular';
 import { DatePipe } from '@angular/common';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 @Component({
   selector: 'mango-edit-rou-asset',
   standalone: true,
@@ -71,7 +71,8 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
     public addEditScheduleService: AddEditScheduleService,
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public accountingEventROUAssetData: any,
-    private toastService: CremToastService,
+    private accountingToastService: AccountingToastService,
+
     private datePipe: DatePipe
   ) {
     this.getROUAssetMethods();
@@ -246,11 +247,11 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
               this.rouAssetMethods = response.data.rouAssetMethods;
             }
           } else if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else {
-            this.toastService.show(
-              response.clientErrorMessage,
+            this.accountingToastService.showToast(
               'Error',
+              response.clientErrorMessage,
               ToastState.ERROR
             );
           }
@@ -294,11 +295,11 @@ export class EditRouAssetComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.closeModal(response);
           } else if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else {
-            this.toastService.show(
-              response.clientErrorMessage,
+            this.accountingToastService.showToast(
               'Error',
+              response.clientErrorMessage,
               ToastState.ERROR
             );
           }

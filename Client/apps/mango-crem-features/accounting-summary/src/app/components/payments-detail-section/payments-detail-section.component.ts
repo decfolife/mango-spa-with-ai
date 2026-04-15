@@ -1,9 +1,11 @@
 import { HistoricalPayment } from '@accounting-summary/models/interfaces/historical-payments.interfaces';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 import { PaymentsGridColumnsService } from '@accounting-summary/services/payments-grid-columns.service';
 import {
   Component,
+  ElementRef,
   Input,
   OnChanges,
   OnDestroy,
@@ -20,6 +22,7 @@ import { Subscription } from 'rxjs';
 })
 export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
   @ViewChild('PaymentsDataGrid') paymentsDataGrid: DxDataGridComponent;
+  @ViewChild('sortLiveRegion') sortLiveRegion: ElementRef<HTMLElement>;
   @Input() eventScheduleData: any;
   @Input() gridState: any;
   @Input() classificationID: number;
@@ -55,6 +58,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
 
   constructor(
     public accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService,
     private paymentsGridColumnService: PaymentsGridColumnsService
   ) {
     this.preferenceSavePendingMessage =
@@ -109,7 +113,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
 
         if (paymentDetailsResponse === null) {
           this.paymentsDataGrid.instance.state(null);
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (paymentDetailsResponse.success) {
           this.paymentsGridData = paymentDetailsResponse.data;
           this.isEuroDateFormat = this.userInfo?.useDateEU;
@@ -148,7 +152,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
             this.paymentsGridHeight = '65px';
           }
         } else if (!paymentDetailsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             paymentDetailsResponse.clientErrorMessage
           );
         }
@@ -162,7 +166,7 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
         .getGridPreferences()
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.gridState = response.data;
             let state = JSON.parse(
@@ -206,6 +210,100 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
       this.paymentsDataGrid.instance.state(this.initialState);
       this.contentLoaded = true;
     }
+    this.announceSortState();
+  }
+
+  private previousSortKey = '';
+
+  private announceSortState() {
+    if (!this.sortLiveRegion?.nativeElement) {
+      return;
+    }
+    const columns = this.paymentsDataGrid.instance.getVisibleColumns();
+    const sorted = columns.find((c) => c.sortOrder);
+    let message: string;
+    let sortKey: string;
+    if (sorted) {
+      const direction = sorted.sortOrder === 'asc' ? 'ascending' : 'descending';
+      sortKey = `${sorted.caption || sorted.dataField}-${direction}`;
+      message = `Payments table sorted by ${
+        sorted.caption || sorted.dataField
+      }, ${direction}`;
+    } else {
+      sortKey = 'none';
+      message = 'Payments table sort cleared';
+    }
+
+    // Prevent duplicate announcements on repeated content-ready events.
+    if (sortKey === this.previousSortKey) {
+      return;
+    }
+
+    this.previousSortKey = sortKey;
+    // Write to the external live region after loading so screen readers announce the final sort state.
+    // Announce only after DevExtreme loading overlay is hidden.
+    this.waitForLoadPanelHidden(() => {
+      this.sortLiveRegion.nativeElement.textContent = message;
+    });
+  }
+
+  private waitForLoadPanelHidden(callback: () => void) {
+    const gridEl = this.paymentsDataGrid.instance.element();
+    const loadPanel = gridEl.querySelector('.dx-loadpanel');
+    if (!loadPanel || loadPanel.classList.contains('dx-state-invisible')) {
+      callback();
+      return;
+    }
+    // Watch load panel visibility and run callback when it closes.
+    const observer = new MutationObserver(() => {
+      if (loadPanel.classList.contains('dx-state-invisible')) {
+        observer.disconnect();
+        callback();
+      }
+    });
+    observer.observe(loadPanel, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  }
+
+  onCellPrepared(event: {
+    rowType?: string;
+    column?: {
+      caption?: string;
+      dataField?: string;
+      allowSorting?: boolean;
+      sortOrder?: string;
+    };
+    cellElement?: HTMLElement;
+  }) {
+    if (event.rowType !== 'header' || !event.column || !event.cellElement) {
+      return;
+    }
+
+    const caption = event.column.caption || event.column.dataField;
+    if (!caption) {
+      return;
+    }
+
+    const isSortable = event.column.allowSorting !== false;
+    const sortState =
+      event.column.sortOrder === 'asc'
+        ? 'ascending'
+        : event.column.sortOrder === 'desc'
+        ? 'descending'
+        : 'none';
+
+    if (isSortable) {
+      // Provide clear keyboard sorting guidance to screen readers.
+      let ariaLabel = `${caption}, sortable, press Enter to sort`;
+      if (sortState !== 'none') {
+        ariaLabel += `, sorted ${sortState}`;
+      }
+      event.cellElement.setAttribute('aria-label', ariaLabel);
+    }
+
+    event.cellElement.setAttribute('aria-sort', sortState);
   }
 
   resetGridPreferences() {
@@ -214,15 +312,15 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
         .resetGridPreferences(this.classificationID, this.gridName)
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.paymentsDataGrid.instance.state({});
             this.gridPreferencesUpdated = false;
-            this.accountingSummaryService.successNotify(
+            this.accountingToastService.successNotify(
               'Value Reset Successfully'
             );
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }
@@ -262,15 +360,15 @@ export class PaymentsDetailSectionComponent implements OnChanges, OnDestroy {
         .saveGridPreferences(this.classificationID, this.gridName, columns)
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.initialState = newState;
             this.gridPreferencesUpdated = true;
-            this.accountingSummaryService.successNotify(
+            this.accountingToastService.successNotify(
               response.clientErrorMessage
             );
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }

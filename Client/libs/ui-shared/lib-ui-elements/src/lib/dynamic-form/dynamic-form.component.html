@@ -198,6 +198,37 @@
             </div>
           </div>
 
+          <div *dxTemplate="let data of 'hierarchyDropdown'">
+            <div [id]="idPrefix + data.dataField" class="item_wrapper">
+              <crem-hierarchy-dropdown
+                #CremHierarchyDropdown
+                [id]="idPrefix + data.dataField + '_hierarchy_dropdown'"
+                [dataSource]="configKey[data.dataField].dataSource"
+                [placeholder]="
+                  configKey[data.dataField].placeholder || 'Select...'
+                "
+                [displayExpr]="
+                  configKey[data.dataField].displayExpr || 'displayKey'
+                "
+                [valueExpr]="configKey[data.dataField].valueExpr || 'valueKey'"
+                [parentIdExpr]="
+                  configKey[data.dataField].parentIdExpr || 'parentIdExpr'
+                "
+                [rootValue]="configKey[data.dataField].rootValue"
+                [showClearButton]="true"
+                [selectMode]="configKey[data.dataField].selectMode || 'single'"
+                [initialSelectedValue]="configKey[data.dataField].value"
+                [dropDownContainerCustomClass]="
+                  configKey[data.dataField].dropDownContainerCustomClass ||
+                  'dynamicFormHierarchyDropDown'
+                "
+                (selectedItems)="
+                  onChange($event, 'hierarchyDropdown', data.dataField)
+                "
+              ></crem-hierarchy-dropdown>
+            </div>
+          </div>
+
           <div *dxTemplate="let data of 'date'">
             <div [id]="idPrefix + data.dataField" class="item_wrapper">
               <crem-date-picker

@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SplitButtonComponent } from './split-button.component';
+import { DataIdBreadcrumbProviderService } from '@mango/core-shared';
+import { of } from 'rxjs';
 
 describe('SplitButtonComponent', () => {
   let component: SplitButtonComponent;
@@ -9,6 +11,12 @@ describe('SplitButtonComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SplitButtonComponent],
+      providers: [
+        {
+          provide: DataIdBreadcrumbProviderService,
+          useValue: { getBreadcrumbs: () => of([]) },
+        },
+      ],
     });
     fixture = TestBed.createComponent(SplitButtonComponent);
     component = fixture.componentInstance;

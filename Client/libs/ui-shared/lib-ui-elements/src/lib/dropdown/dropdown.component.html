@@ -34,11 +34,7 @@
     [searchMode]="searchMode"
     [searchTimeout]="searchTimeout"
     [searchExpr]="searchExpr"
-    [inputAttr]="{
-      title: hoverText ? hoverText : placeholder,
-      'aria-controls': id + '_select-box',
-      'aria-label': hoverText ? hoverText : placeholder
-    }"
+    [inputAttr]="selectBoxInputAttr"
   >
     <!-- Dropdown's header options -->
     <div *dxTemplate="let data of 'selectBoxCustomGroupTemplate'">
@@ -244,11 +240,7 @@
     (onKeyUp)="onSelectBoxDropDownKeyUp($event)"
     [deferRendering]="false"
     (onOpened)="openDropdown($event)"
-    [inputAttr]="{
-      title: placeholder,
-      'aria-controls': id + 'dropdownContainer',
-      'aria-label': placeholder
-    }"
+    [inputAttr]="dropDownBoxInputAttr"
     (onBlur)="onBlur($event)"
   >
     <!-- Validators -->
@@ -304,6 +296,7 @@
           [showColumnHeaders]="showColumnHeader"
           [selectedRowKeys]="selections"
           [showColumnLines]="false"
+          [focusedRowEnabled]="true"
           (onKeyDown)="onGridKeyDown($event, cell)"
           (onSelectionChanged)="getSelectedRowsData($event)"
           [scrolling]="{ mode: 'standard' }"
@@ -314,6 +307,7 @@
           (onCellClick)="onCellClick($event)"
           (keyup)="onKeyUp($event)"
         >
+          <dxo-keyboard-navigation [enabled]="true"></dxo-keyboard-navigation>
           <dxo-filter-row [visible]="allowSearch"></dxo-filter-row>
           <dxo-selection
             [mode]="selectMode"

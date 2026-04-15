@@ -7,6 +7,7 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
+  AfterViewInit,
   Output,
   QueryList,
   SimpleChanges,
@@ -62,7 +63,7 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { environment } from '@mangoSpa/src/environments/environment.local';
-import { DxDataGridComponent, DxListModule } from 'devextreme-angular';
+import { DxDataGridComponent } from 'devextreme-angular';
 import { DxSortableTypes } from 'devextreme-angular/ui/sortable';
 import { DevExpressModule } from 'libs/ui-shared/lib-external-libraries/src/lib/3rdParty/dev-express.module';
 import { CheckBoxComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/checkbox';
@@ -161,7 +162,6 @@ const falsyRadioVals = ['0', 'false', 'no', false, 'n'];
     MatCardModule,
     DropdownModule,
     DevExpressModule,
-    DxListModule,
     InputComponent,
     SkeletonModule,
     DynamicFormEditFieldDialogComponent,
@@ -189,7 +189,7 @@ const falsyRadioVals = ['0', 'false', 'no', false, 'n'];
   ],
 })
 export class DynamicFormSectionComponent
-  implements OnInit, OnDestroy, OnChanges
+  implements OnInit, OnDestroy, OnChanges, AfterViewInit
 {
   @ViewChild('availableFieldsGrid') availableFieldsGrid: DxDataGridComponent;
   @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
@@ -343,6 +343,10 @@ export class DynamicFormSectionComponent
     private toastService: CremToastService
   ) {}
 
+  ngAfterViewInit(): void {
+    this.onContentReady();
+  }
+
   ngOnInit(): void {
     this.isLoading = true;
     this._skeletonInstances = 3; // TODO: Dynamically calculate the shape of the skeleton, instead of being hard-coded
@@ -439,17 +443,15 @@ export class DynamicFormSectionComponent
           next: ([fields, renderFormData]) => {
             if (this.isRenderForm) {
               this.selectRenderFormData = renderFormData;
-              fields.forEach((element) => {
-                element.formObjectId = renderFormData.filter(
-                  (s) => s.formObjectId
-                )
-                  ? Number(
-                      renderFormData.filter((s) => s.formObjectId)[0]
-                        ?.formObjectId
-                    )
-                  : 0;
-              });
-              this.processFormFields(fields);
+              const formObjectId = renderFormData.filter(
+                (s) => s.formObjectId
+              )?.[0]?.formObjectId;
+
+              const clonedFields = fields.map((element) => ({
+                ...element,
+                formObjectId: formObjectId ? Number(formObjectId) : 0,
+              }));
+              this.processFormFields(clonedFields);
               this.setupRenderFormDropdownsSubscription();
               this.filterRenderFormData();
               this.updateChildFormAddRenderFormData();
@@ -1016,6 +1018,17 @@ export class DynamicFormSectionComponent
     }
   }
 
+  onAccordionEnterKey(e: Event) {
+    if (this.isSuperUser && !this.editMode) {
+      e.preventDefault();
+      if (!this.sectionLabelEntered) {
+        this.openSectionLabelMenu();
+      } else {
+        this.closeSectionLabelMenu();
+      }
+    }
+  }
+
   handleKeyboardEventsSection(e) {
     if (this.trigger.menuOpen) {
       if (e.key === 'ArrowDown') {
@@ -1308,6 +1321,35 @@ export class DynamicFormSectionComponent
     return sanitizedValue;
   }
 
+  getAccessibleReadOnlyText(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const html = String(value);
+    const textContainer = document.createElement('div');
+    textContainer.innerHTML = html;
+
+    return (textContainer.textContent || textContainer.innerText || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  getAccessibleFieldValue(value: any): string {
+    const text = this.getAccessibleReadOnlyText(value);
+    return text.length ? text : 'No value';
+  }
+
+  isHtmlContent(value: any): boolean {
+    if (!value) return false;
+    const str = value.toString().toLowerCase();
+    return (
+      str.includes('a href') ||
+      str.includes('a target') ||
+      str.includes('img src')
+    );
+  }
+
   // leaving this here till we know more about section groups
   getFormSectionGroupId(sectionGroup) {
     // this format is driven by the API
@@ -1349,7 +1391,7 @@ export class DynamicFormSectionComponent
       if (widget.getElementsByClassName('dx-datagrid-nodata'))
         widget.parentElement.remove();
 
-      if (!card.getElementsByClassName('dx-item dx-list-item').length)
+      if (!card.getElementsByClassName('df-formSection-field').length)
         card.remove();
     }
 

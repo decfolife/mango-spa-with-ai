@@ -1,5 +1,59 @@
 @use 'styles' as *;
 
+// Accordion heading + trigger
+.df-accordion-heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  flex: 1;
+}
+
+.df-accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  @include costar(color, dark);
+  font-size: inherit;
+  font-weight: bold;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid var(--costar-color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.df-accordion-title {
+  flex: 1;
+}
+
+.df-accordion-icon {
+  flex-shrink: 0;
+}
+
+.df-dropdown-readonly-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.df-superuser-menu-trigger {
+  // Visually hidden but still focusable for superuser menu
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none;
+  position: absolute;
+}
+
 mat-card.mat-mdc-card {
   box-shadow: none !important;
   @include costar(border, gray04);
@@ -57,8 +111,13 @@ mat-card.mat-mdc-card {
           }
         }
 
-        .dx-item.dx-list-item {
-          // FIXME: Currently set at 99% for formSection but is affecting the widget (grid)
+        .df-formSection-columnList
+          > ng-container
+          > ng-container
+          > ng-container
+          > ng-container
+          > .df-formSection-field {
+          // Field items inside the column list
           width: 100% !important;
           &:has(.field-container) {
             @include costar(padding, 2);
@@ -97,13 +156,13 @@ mat-card.mat-mdc-card {
 
   // Styles for view/edit mode
   .view-mode {
-    .dx-item[role='option'] {
+    .df-formSection-field {
       @include costar(transition, fast);
       &:hover {
         @include costar(background-color, primary-lightest);
       }
     }
-    .dx-item:has(mango-dynamic-form-widget) {
+    .df-formSection-field:has(mango-dynamic-form-widget) {
       &:hover {
         // Don't add hover effect to Dynamic Widgets
         cursor: unset;
@@ -172,17 +231,35 @@ ngx-skeleton-loader[id^='skelDropdown'] {
 
 .df-formSection-labelContainer {
   display: flex;
-  width: 150px;
-  height: 30px;
+  align-items: center;
+  width: 200px;
+  min-height: 30px;
   margin-right: 40px;
   word-wrap: normal;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
+  .df-infoHistoryData {
+    flex-shrink: 0;
+    width: 34px;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+
+    ::ng-deep .dx-field {
+      min-height: unset;
+    }
+  }
+
+  .df-formSection-fieldLabel {
+    margin-left: 4px;
+  }
+
   span[id^='df-accountingWorkFlow'],
   span[id^='df-leaseVerification'] {
     height: 24px;
+    flex-shrink: 0;
   }
 }
 
@@ -211,34 +288,6 @@ crem-date-picker {
   position: relative;
   top: 5px;
   left: 5px;
-}
-
-::ng-deep .dx-list-item {
-  align-items: center;
-  border-top: none;
-  cursor: default;
-
-  .dx-field-value-static {
-    width: unset !important; // FIXME: Global styles are messing up the crem-icon within the .dx-field-value-static
-  }
-
-  .dx-field {
-    min-height: unset !important; // FIXME: dx.generic is globally overriding this value
-  }
-
-  .dx-template-wrapper {
-    align-items: start; // FIXME: `my-devextreme.scss` is messing the form's labels alignment.
-  }
-}
-
-::ng-deep .dx-list-item.dx-state-focused {
-  background-color: transparent !important;
-  color: #000000 !important;
-}
-
-::ng-deep .dx-list-item.dx-state-active {
-  background-color: transparent !important;
-  color: #000000 !important;
 }
 
 fa-icon {
@@ -333,12 +382,6 @@ span.links {
 mango-dynamic-form-widget {
   width: 100%;
 }
-::ng-deep .dx-item.dx-list-item.dx-state-active,
-::ng-deep .dx-item.dx-list-item.dx-state-focused {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
 
 ::ng-deep .df-section {
   .df-sectionContent {
@@ -354,10 +397,10 @@ mango-dynamic-form-widget {
     }
   }
 
-  .df-formSection-columnList .dx-list-items .dx-item.dx-list-item {
-    width: 99%;
-
+  .df-formSection-columnList {
     .df-formSection-field {
+      display: flex;
+      align-items: start;
       text-wrap: wrap;
       margin: 2px 0;
       padding: 4px 1%;

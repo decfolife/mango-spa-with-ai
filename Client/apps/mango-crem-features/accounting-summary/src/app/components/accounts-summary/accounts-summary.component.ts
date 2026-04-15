@@ -4,11 +4,11 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { LeaseInfoResponse } from '../../models/lease-info-response.modal';
 import { Subscription, combineLatest } from 'rxjs';
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
-import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
 import { AccountingEventSelector } from '@accounting-summary/models/interfaces/accounting-events-selector.interfaces';
 import { WorkFlowStatusHistory } from '@accounting-summary/models/interfaces/workflow-status-history.interfaces';
 import { WorkflowStatusInformation } from '@accounting-summary/models/interfaces/workflow-status-information.interface';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-accounts-summary',
@@ -56,7 +56,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     public accountingSummaryService: AccountingSummaryService,
     public router: Router,
     private activatedRoute: ActivatedRoute,
-    public addEditScheduleService: AddEditScheduleService
+    private accountingToastService: AccountingToastService
   ) {
     this.subscription.add(
       this.accountingSummaryService.lockAddButton.subscribe((lockAddButton) => {
@@ -88,11 +88,11 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.accountingSummaryService.getUserInformation().subscribe((res) => {
         if (res === null) {
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (res.success) {
           this.userInfo = res.data;
         } else {
-          this.accountingSummaryService.errorNotify(res.clientErrorMessage);
+          this.accountingToastService.errorNotify(res.clientErrorMessage);
         }
       })
     );
@@ -161,7 +161,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
         .subscribe((response) => {
           this.sendToExcelClicked = false;
           if (!response?.data) {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               'Downloading the Accounting Event Summary failed.'
             );
           } else {
@@ -250,7 +250,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
         .getWorkflowStatusHistory()
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.workflowStatusHistory = response.data.map((item) => ({
               ...item,
@@ -271,7 +271,7 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
                 this.workflowStatusHistory[0]?.comment ?? '';
             }
           } else if (!response.success) {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }
@@ -317,17 +317,17 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
           userNavPageWithLeaseRightsResponse === null ||
           leaseInformationResponse === null
         ) {
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (!userNavPageRightResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             userNavPageRightResponse.clientErrorMessage
           );
         } else if (!userNavPageWithLeaseRightsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             userNavPageWithLeaseRightsResponse.clientErrorMessage
           );
         } else if (!leaseInformationResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             leaseInformationResponse.clientErrorMessage
           );
         } else {
@@ -384,9 +384,9 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
     this.subscription.add(
       workflowStatusOptions.subscribe((workflowStatusOptionsResponse) => {
         if (workflowStatusOptionsResponse === null) {
-          this.accountingSummaryService.displayContactSystemAdminMessage();
+          this.accountingToastService.displayContactSystemAdminMessage();
         } else if (!workflowStatusOptionsResponse.success) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             workflowStatusOptionsResponse.clientErrorMessage
           );
         } else {
@@ -395,13 +395,13 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
             'SetToReviewWorkflowStatus'
           ) {
             this.getWorkflowHistoryInfo();
-            this.addEditScheduleService.showToast(
+            this.accountingToastService.showToast(
               'Workflow Status',
               'The prior active lease status has been marked as inactive. Due to this the status has been changed to the active review status.',
               'info'
             );
           } else {
-            this.addEditScheduleService.clearToastBySummary('Workflow Status');
+            this.accountingToastService.clearToastBySummary('Workflow Status');
           }
           this.workflowStatusInfo = workflowStatusOptionsResponse.data;
           this.wfStatusRights = {
@@ -429,12 +429,12 @@ export class AccountsSummaryComponent implements OnInit, OnDestroy {
         .getPortfolioSettings()
         .subscribe((response) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.accountingSummaryService.setPortfolioSettings(response.data);
             this.portfolioSettings = response.data;
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               response.clientErrorMessage
             );
           }

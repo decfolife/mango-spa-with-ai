@@ -1,4 +1,5 @@
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 import {
   Component,
   ElementRef,
@@ -50,7 +51,8 @@ export class WorkflowDropdownComponent {
 
   constructor(
     protected facade: MangoAppFacade,
-    public accountingSummaryService: AccountingSummaryService
+    public accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService
   ) {
     if (this.facade) {
       this.subscription.add(
@@ -127,7 +129,7 @@ export class WorkflowDropdownComponent {
 
   saveWorkFlowComment() {
     if (this.isCommentsRequired && this.commentText === '') {
-      this.accountingSummaryService.errorNotify(
+      this.accountingToastService.errorNotify(
         'A comment is required to save the workflow status'
       );
       this.commentTextArea.nativeElement.focus();
@@ -149,15 +151,15 @@ export class WorkflowDropdownComponent {
         .pipe(
           concatMap((response: any) => {
             if (response === null) {
-              this.accountingSummaryService.displayContactSystemAdminMessage();
+              this.accountingToastService.displayContactSystemAdminMessage();
               return of(false);
             } else if (response.success) {
-              this.accountingSummaryService.successNotify(
+              this.accountingToastService.successNotify(
                 'Workflow status saved successfully.'
               );
               return of(true);
             } else {
-              this.accountingSummaryService.errorNotify(
+              this.accountingToastService.errorNotify(
                 response.clientErrorMessage
               );
               return of(false);

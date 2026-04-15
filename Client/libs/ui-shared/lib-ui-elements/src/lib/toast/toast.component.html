@@ -4,6 +4,8 @@
   [ngStyle]="getWrapperCSS()"
   (click)="closeOnClick && close()"
   *ngIf="visible"
+  role="alert"
+  aria-atomic="true"
 >
   <div class="icon-container">
     <div class="icon-wrapper" [ngClass]="getIconBgColorClasses()">
@@ -12,47 +14,60 @@
         size="xl"
         pack="solid"
         icon="faCircleInfo"
-        [attr.aria-label]="state"
+        aria-hidden="true"
       ></crem-icon>
       <crem-icon
         *ngIf="state == 'success'"
         size="xl"
         pack="solid"
         icon="faCircleCheck"
-        [attr.aria-label]="state"
+        aria-hidden="true"
       ></crem-icon>
       <crem-icon
         *ngIf="state == 'warning'"
         size="xl"
         pack="solid"
         icon="faCircleExclamation"
-        [attr.aria-label]="state"
+        aria-hidden="true"
       ></crem-icon>
       <crem-icon
         *ngIf="state == 'error'"
         size="xl"
         pack="solid"
         icon="faCircleXmark"
-        [attr.aria-label]="state"
+        aria-hidden="true"
       ></crem-icon>
     </div>
   </div>
   <div
     [ngClass]="{'message':true, 'no-header': messageHeader === '' || !messageHeader,}"
   >
-    <div *ngIf="messageHeader" class="message-header">{{ messageHeader }}</div>
+    <div
+      *ngIf="messageHeader"
+      class="message-header"
+      [id]="'toast-header-' + createdAt"
+    >
+      {{ messageHeader }}
+    </div>
     <div *ngIf="!!showBody" class="message-content">{{ message }}</div>
     <div *ngIf="!!showBody" [innerHTML]="contentTemplate"></div>
   </div>
   <div class="close-button-wrapper" *ngIf="showCloseButton">
-    <crem-icon
+    <button
+      type="button"
       class="close-button"
-      size="m"
-      pack="crem"
-      color="gray03"
-      icon="cremXMark"
+      [attr.aria-label]="
+        'Toast notification' + (messageHeader ? ': ' + messageHeader : '')
+      "
       (click)="close()"
-      [attr.aria-label]="'close-toast'"
-    ></crem-icon>
+    >
+      <crem-icon
+        aria-hidden="true"
+        size="m"
+        pack="crem"
+        color="gray03"
+        icon="cremXMark"
+      ></crem-icon>
+    </button>
   </div>
 </div>

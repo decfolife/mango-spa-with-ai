@@ -19,6 +19,7 @@ import { AccountingSummaryService } from '@accounting-summary/services/accountin
 import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
 import { Subscription } from 'rxjs';
 import { FormattingService } from '@accounting-summary/services/formatting.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-balance-card',
@@ -67,6 +68,7 @@ export class BalanceCardComponent implements OnInit, OnDestroy {
 
   constructor(
     private accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService,
     private addEventService: AddEventFormService,
     private formatService: FormattingService
   ) {}
@@ -186,7 +188,7 @@ export class BalanceCardComponent implements OnInit, OnDestroy {
         .exportPresentValuePreviewFile(data)
         .subscribe((presentValueResponse: any) => {
           if (!presentValueResponse.data) {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               'Downloading the present value table failed.'
             );
           } else {

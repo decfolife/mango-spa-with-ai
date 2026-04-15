@@ -72,19 +72,18 @@ export class ProjectsDashboardLeftNavService extends EndpointService {
     if (!!redirectorMappings) {
       let redirectorMap: RedirectorMapping = null;
 
-      //Make sure urls do not end with /
-      redirectorMappings.forEach((rm) => {
-        if (rm.cremUrl?.endsWith('/')) {
-          rm.cremUrl = rm.cremUrl.slice(0, -1);
-        }
-
-        if (rm.spaUrl?.endsWith('/')) {
-          rm.spaUrl = rm.spaUrl.slice(0, -1);
-        }
-      });
+      // Clone the mappings to avoid mutating NgRx store state (frozen in dev mode).
+      // Also normalize URLs by stripping trailing slashes for consistent comparison.
+      const mappings = redirectorMappings.map((rm) => ({
+        ...rm,
+        cremUrl: rm.cremUrl?.endsWith('/')
+          ? rm.cremUrl.slice(0, -1)
+          : rm.cremUrl,
+        spaUrl: rm.spaUrl?.endsWith('/') ? rm.spaUrl.slice(0, -1) : rm.spaUrl,
+      }));
 
       // Compare just page name (ignore params)
-      let redirectorMaps = redirectorMappings.filter(
+      let redirectorMaps = mappings.filter(
         (x) =>
           x.spaUrl.split('?')[0].toLowerCase() ===
           url.split('?')[0].toLowerCase()

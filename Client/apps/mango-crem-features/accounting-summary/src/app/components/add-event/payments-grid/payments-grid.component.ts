@@ -1,19 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import {
-  ButtonModule,
-  CardModule,
-  CremToastService,
-} from '@mango/ui-shared/lib-ui-elements';
+import { ButtonModule, CardModule } from '@mango/ui-shared/lib-ui-elements';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
 import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
 import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
 import { SchedulePaymentsGridColumnsService } from '@accounting-summary/services/schedule-payments-grid-columns.service';
 import { FormattingService } from '@accounting-summary/services/formatting.service';
 import { DevExtremeModule, DxDataGridComponent } from 'devextreme-angular';
-import { combineLatest, Subject, Subscription } from 'rxjs';
+import { combineLatest, Subject, Subscription, timer } from 'rxjs';
 import { SchedulePayment } from '@accounting-summary/models/schedule-payment-model';
-import { debounceTime, takeUntil } from 'rxjs/operators';
+import {
+  debounceTime,
+  finalize,
+  map,
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
 import { RemeasureType } from '@accounting-summary/shared/enums/remeasure-type.enum';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { ScheduleTransactionsPopupComponent } from './schedule-transactions-popup/schedule-transactions-popup.component';
@@ -21,6 +23,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddEditOtherChargeModalComponent } from './add-edit-other-charge-modal/add-edit-other-charge-modal.component';
 import { SelectedPayments } from '@accounting-summary/models/interfaces/selected-payments.interfaces';
 import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-payments-grid',
@@ -96,7 +99,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
     private schedulePaymentsGridColumnsService: SchedulePaymentsGridColumnsService,
     private dialog: MatDialog,
     private formattingService: FormattingService,
-    private toastService: CremToastService
+    private toastService: AccountingToastService
   ) {}
 
   ngOnInit(): void {
@@ -105,7 +108,22 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
       this.addEventFormService.financialFormData$,
       this.addEventFormService.commonDropdownsData$,
     ])
-      .pipe(takeUntil(this.subscription$), debounceTime(600))
+      .pipe(
+        takeUntil(this.subscription$),
+        switchMap(([scheduleDetails, financialData, commonDropdownsData]) => {
+          this.addEventFormService.pendingApiCalls$.next(
+            this.addEventFormService.pendingApiCalls$.value + 1
+          );
+          return timer(600).pipe(
+            finalize(() =>
+              this.addEventFormService.pendingApiCalls$.next(
+                Math.max(0, this.addEventFormService.pendingApiCalls$.value - 1)
+              )
+            ),
+            map(() => [scheduleDetails, financialData, commonDropdownsData])
+          );
+        })
+      )
       .subscribe(([scheduleDetails, financialData, commonDropdownsData]) => {
         if (scheduleDetails && financialData) {
           this.processScheduleDetails(scheduleDetails);
@@ -160,7 +178,24 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
       (key) => currentState[key] !== this.previousState[key]
     );
 
-    if (hasChanged) {
+    const portfolioSettings = this.addEventFormService.portfolioSettings;
+
+    let validDates = true;
+    if (currentState.fromDate && currentState.toDate) {
+      const from = new Date(currentState.fromDate);
+      const to = new Date(currentState.toDate);
+      if (
+        from < new Date(portfolioSettings.calendarMinDate) ||
+        from > new Date(portfolioSettings.calendarMaxDate) ||
+        to < new Date(portfolioSettings.calendarMinDate) ||
+        to > new Date(portfolioSettings.calendarMaxDate) ||
+        from > to
+      ) {
+        validDates = false;
+      }
+    }
+
+    if (hasChanged && validDates) {
       this.previousState = { ...currentState };
       this.getSchedulePayments();
     }
@@ -346,7 +381,7 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
         if (saveRes?.chargeSaved) {
           this.glEventIDs = [...saveRes.glEventIDs];
           if (saveRes.showSaveMsg) {
-            this.toastService.show(
+            this.toastService.showToast(
               'The other charge was saved successfully.',
               'Other Charge Saved',
               ToastState.SUCCESS
@@ -384,14 +419,14 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
           editDialogRef.afterClosed().subscribe((saveRes) => {
             if (saveRes?.chargeSaved || saveRes?.chargeDeleted) {
               if (saveRes.showSaveMsg) {
-                this.toastService.show(
+                this.toastService.showToast(
                   'The other charge was saved successfully.',
                   'Other Charge Saved',
                   ToastState.SUCCESS
                 );
               }
               if (saveRes.showDeleteMsg) {
-                this.toastService.show(
+                this.toastService.showToast(
                   'Delete charge successful.',
                   'Other Charge Deleted',
                   ToastState.SUCCESS
@@ -580,18 +615,23 @@ export class PaymentsGridComponent implements OnInit, OnDestroy {
           this.fromDate,
           this.toDate
         )
-        .pipe(takeUntil(this.subscription$))
+        .pipe(
+          this.addEventFormService.trackPendingCall(),
+          takeUntil(this.subscription$)
+        )
         .subscribe((response: any) => {
           if (response && response.success) {
             this.schedulePaymentsData = response.data;
             this.setupPaymentsGrid();
             this.findMinAndMaxDateOptionFromPaymentCharges();
           } else {
-            this.toastService.show(
-              response.clientErrorMessage,
-              'Error',
-              ToastState.ERROR
-            );
+            if (!response.success && response?.clientErrorMessage) {
+              this.toastService.showToast(
+                'Error',
+                response.clientErrorMessage,
+                ToastState.ERROR
+              );
+            }
           }
         });
     }

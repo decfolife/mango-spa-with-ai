@@ -1,3 +1,4 @@
+//export * from './lib/forms-shared.module';
 export * from './lib/ai/ai.module';
 export * from './lib/ai/models/ai-output.model';
 export * from './lib/ai/models/ai-form.model';

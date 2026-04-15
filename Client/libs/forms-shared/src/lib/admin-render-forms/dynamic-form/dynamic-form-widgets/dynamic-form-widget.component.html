@@ -37,7 +37,13 @@
               objTypeList.includes(widget.objectTypeID)) ||
             (editMode && widget.allowCreation)
           "
-          (click)="onAddWidget(widget)"
+          (buttonClick)="onAddWidget(widget)"
+          [attr.title]="
+            'Add new ' + (widget.widgetDisplayName ?? widget.widgetName)
+          "
+          [ariaLabel]="
+            'Add new ' + (widget.widgetDisplayName ?? widget.widgetName)
+          "
           >Add</crem-button
         >
 
@@ -67,8 +73,16 @@
           [icon]="isCreatingExport ? 'faSpinner' : 'cremExportToExcel'"
           [text]="isCreatingExport ? 'Sending to Excel' : 'Send to Excel'"
           className="send-to-excel"
-          title="Download as an Excel file"
-          ariaLabel="Download as an Excel file"
+          [attr.title]="
+            (isCreatingExport ? 'Sending for ' : 'Download for ') +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            (isCreatingExport ? ' to Excel' : ' as an Excel file')
+          "
+          [ariaLabel]="
+            (isCreatingExport ? 'Sending for ' : 'Download for ') +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            (isCreatingExport ? ' to Excel' : ' as an Excel file')
+          "
           [dataId]="{
             suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
           }"
@@ -91,7 +105,14 @@
           [historyGridConfiguration]="
             dynamicWidgetConfiguration.historyGridConf
           "
-          [attr.title]="'History Details ' + widget.widgetName"
+          [ariaLabel]="
+            'History Details for ' +
+            (widget.widgetDisplayName ?? widget.widgetName)
+          "
+          [attr.title]="
+            'History Details for ' +
+            (widget.widgetDisplayName ?? widget.widgetName)
+          "
         ></crem-field-history>
 
         <!-- Widget Preferences -->
@@ -140,8 +161,15 @@
       (onContentReady)="SummaryRowTabs()"
       #widgetDataGrid
       [ngClass]="{
-        'grid-no-alt': !(gridMasterDetail.masterView | isObjectEmpty)
+        'grid-no-alt': !(gridMasterDetail.masterView | isObjectEmpty),
+        'grid-empty':
+          !widget.renderFormWidgetData ||
+          widget.renderFormWidgetData?.length === 0
       }"
+      [attr.aria-hidden]="
+        !widget.renderFormWidgetData ||
+        widget.renderFormWidgetData?.length === 0
+      "
       *ngIf="widget && dynamicWidgetConfiguration.gridView === 'dataGrid'"
       [dataSource]="widget.renderFormWidgetData"
       [noDataText]="isRenderForm && dynamicWidgetConfiguration.noDataText"
@@ -177,7 +205,7 @@
         dataId: 'grid',
         suffix: (widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID,
       }"
-      (onContentReady)="addTabIndex()"
+      (onContentReady)="addTabIndex(isExpanded)"
     >
       <dxo-load-panel [enabled]="true"></dxo-load-panel>
       <!-- Columns  -->
@@ -196,7 +224,10 @@
           [alignment]="'left'"
           [caption]="columnField.columnHeader"
           [dataField]="columnField.dataFieldTableField | lowercase"
-          [format]="columnField.dataTypeFormatString"
+          [format]="
+            columnFormatMap?.get(columnField.columnHeader) ??
+            columnField.dataTypeFormatString
+          "
           [visible]="columnField.visible"
           [cellTemplate]="'textWithNewlines'"
         >
@@ -232,8 +263,18 @@
           btnStyle="basic"
           color="secondary"
           className="cremOpenFile"
-          ariaLabel="Open File"
-          [attr.title]="'Open File'"
+          [attr.title]="
+            'Open file for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
+          [ariaLabel]="
+            'Open file for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
           (buttonClick)="onOpenFileClick(data)"
           [cremDataId]="{
               prefix: 'row',
@@ -249,8 +290,18 @@
           btnStyle="basic"
           color="secondary"
           className="cremEdit"
-          ariaLabel="Edit Row"
-          [attr.title]="'Edit'"
+          [attr.title]="
+            'Edit for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
+          [ariaLabel]="
+            'Edit for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
           (buttonClick)="onEditClick(data, widget)"
           [cremDataId]="{
               prefix: 'row',
@@ -272,8 +323,18 @@
           btnStyle="basic"
           color="secondary"
           className="cremDelete"
-          ariaLabel="Delete Row"
-          [attr.title]="'Delete'"
+          [attr.title]="
+            'Delete for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
+          [ariaLabel]="
+            'Delete for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
           (buttonClick)="onDeleteClick(data, widget)"
           [cremDataId]="{
               prefix: 'row',
@@ -294,7 +355,18 @@
           btnStyle="basic"
           color="secondary"
           className="cremGoTo"
-          ariaLabel="Go to Row"
+          [attr.title]="
+            'Go for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
+          [ariaLabel]="
+            'Go for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data?.rowIndex + 1)
+          "
           (buttonClick)="onGoClick(data, widget)"
           [cremDataId]="{
               prefix: 'row',
@@ -317,7 +389,18 @@
           [historyGridConfiguration]="
             dynamicWidgetConfiguration.historyGridConf
           "
-          [attr.title]="'History Details ' + widget.widgetName"
+          [attr.title]="
+            'View change history for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data.rowIndex + 1)
+          "
+          [ariaLabel]="
+            'View change history for ' +
+            (widget.widgetDisplayName ?? widget.widgetName) +
+            ' row ' +
+            (data.rowIndex + 1)
+          "
           [cremDataId]="{
               prefix: 'row',
               suffix: ((widget.formWidgetTypeID | widgetName) ?? widget.formWidgetTypeID),

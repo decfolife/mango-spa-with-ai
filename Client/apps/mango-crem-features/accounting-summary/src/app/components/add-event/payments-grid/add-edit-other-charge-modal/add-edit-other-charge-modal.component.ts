@@ -12,7 +12,6 @@ import { RemeasureType } from '@accounting-summary/shared/enums/remeasure-type.e
 import {
   ButtonModule,
   CremFormsModule,
-  CremToastService,
   DatePickerComponent,
   DatePickerModule,
   DropdownModule,
@@ -40,6 +39,7 @@ import {
   Currency,
 } from '@accounting-summary/models/common-dropdowns.model';
 import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-add-edit-other-charge-modal',
@@ -142,12 +142,12 @@ export class AddEditOtherChargeModalComponent implements OnInit {
 
   constructor(
     private formatService: FormattingService,
-    private toastService: CremToastService,
     public dialogRef: MatDialogRef<AddEditOtherChargeModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     public addEditScheduleService: AddEditScheduleService,
     public accountingSummaryService: AccountingSummaryService,
-    public addEditFormServices: AddEventFormService
+    public addEditFormServices: AddEventFormService,
+    private accountingToastService: AccountingToastService
   ) {
     this.isEdit = data.isEdit;
     this.dateFormat = data.dateFormat;
@@ -355,9 +355,9 @@ export class AddEditOtherChargeModalComponent implements OnInit {
           this.lastAmount = res.data.lastPaymentAmount;
           this.firstRecurringDate = res.data.firstRecurringDate;
         } else {
-          this.toastService.show(
-            res.clientErrorMessage,
+          this.accountingToastService.showToast(
             'Error',
+            res.clientErrorMessage,
             ToastState.ERROR
           );
         }
@@ -590,16 +590,16 @@ export class AddEditOtherChargeModalComponent implements OnInit {
               this.otherChargeDeleted = false;
               if (keepModalOpen) {
                 this.resetModalValues();
-                this.toastService.show(
-                  'The other charge was saved successfully.',
+                this.accountingToastService.showToast(
                   'Charge Saved',
+                  'The other charge was saved successfully.',
                   ToastState.SUCCESS
                 );
               } else {
                 this.closeModal();
               }
             } else {
-              this.addEditScheduleService.showToast(
+              this.accountingToastService.showToast(
                 'Save Other Charges',
                 'There was an issue saving the other charge.',
                 'error',
@@ -623,7 +623,7 @@ export class AddEditOtherChargeModalComponent implements OnInit {
             this.otherChargeDeleted = true;
             this.closeModal();
           } else {
-            this.addEditScheduleService.showToast(
+            this.accountingToastService.showToast(
               'Delete Other Charges',
               'There was an issue deleting the other charge.',
               'error',

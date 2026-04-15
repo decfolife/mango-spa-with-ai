@@ -52,6 +52,16 @@
     }
   }
 
+  input.no-spin-buttons {
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
   input,
   textarea {
     outline: 0;

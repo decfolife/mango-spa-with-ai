@@ -26,11 +26,15 @@
 
           <!-- 5 -->
           <li
+            value="5"
             class="classification-tests__form__list__item"
             [id]="accountingSummaryService.getId(componentName, 'test', '5')"
           >
             <div class="ct-li-div">
-              <label class="classification-tests__form__list__item__label">
+              <label
+                id="classification-tests-common-test5-label"
+                class="classification-tests__form__list__item__label"
+              >
                 <span class="ct-bold-text">Alternative Use:</span>
                 Is the underlying asset of a specialized nature?
               </label>
@@ -53,6 +57,7 @@
                   [containerized]="true"
                   [showClearButton]="false"
                   formControlName="classificationTest5"
+                  [labelledby]="'classification-tests-common-test5-label'"
                 >
                 </crem-dropdown>
               </div>
@@ -66,11 +71,15 @@
       <ng-template #commonTests>
         <!-- 1 -->
         <li
+          value="1"
           class="classification-tests__form__list__item"
           [id]="accountingSummaryService.getId(componentName, 'test', '1')"
         >
           <div class="ct-li-div">
-            <label class="classification-tests__form__list__item__label">
+            <label
+              id="classification-tests-common-test1-label"
+              class="classification-tests__form__list__item__label"
+            >
               <span class="ct-bold-text">Transfer of ownership:</span>
               Does ownership transfer at end of lease term?
             </label>
@@ -93,6 +102,7 @@
                 [containerized]="true"
                 [showClearButton]="false"
                 formControlName="classificationTest1"
+                [labelledby]="'classification-tests-common-test1-label'"
               >
               </crem-dropdown>
             </div>
@@ -101,11 +111,15 @@
 
         <!-- 2 -->
         <li
+          value="2"
           class="classification-tests__form__list__item"
           [id]="accountingSummaryService.getId(componentName, 'test', '2')"
         >
           <div class="ct-li-div">
-            <label class="classification-tests__form__list__item__label">
+            <label
+              id="classification-tests-common-test2-label"
+              class="classification-tests__form__list__item__label"
+            >
               <span class="ct-bold-text">Purchase Option:</span>
               Does the lease contain a purchase option?
             </label>
@@ -128,6 +142,7 @@
                 [containerized]="true"
                 [showClearButton]="false"
                 formControlName="classificationTest2"
+                [labelledby]="'classification-tests-common-test2-label'"
               >
               </crem-dropdown>
             </div>
@@ -136,6 +151,7 @@
 
         <!-- 3 do we need calc engine for economic life-->
         <li
+          value="3"
           class="classification-tests__form__list__item"
           [id]="accountingSummaryService.getId(componentName, 'test', '3')"
         >
@@ -173,14 +189,59 @@
                 [required]="false"
                 formControlName="classificationTest3"
                 [value]="classificationTest3"
+                readOnly="true"
               >
               </crem-input>
             </div>
           </div>
         </li>
 
+        <!-- Remaining Economic Life -->
+        <li
+          class="classification-tests__form__list__item side ct-side-li ct-side-li--rel"
+        >
+          <crem-input-label
+            [id]="
+              accountingSummaryService.getId(
+                componentName,
+                'remaining-economic-life',
+                'label'
+              )
+            "
+            class="classification-tests__form__list__item__label"
+            label="Remaining Economic Life"
+            [showInfo]="false"
+            name="classification-tests-Remaining-Economic-Life-Input"
+          >
+          </crem-input-label>
+          <crem-input
+            [id]="
+              accountingSummaryService.getId(
+                componentName,
+                'Remaining-Economic-Life',
+                'Input'
+              )
+            "
+            [inputType]="'number'"
+            [value]="economicLifeYears"
+            [placeholder]="'In Years'"
+            [required]="false"
+            [rows]="4"
+            [cols]="30"
+            [disallowNegative]="true"
+            [showHint]="false"
+            [showInfo]="false"
+            [ariaLabel]="'Remaining Economic Life in Years'"
+            (onBlurChange)="economicLifeChange()"
+            formControlName="remainingEconomicLife"
+            [showSpinButtons]="false"
+          >
+          </crem-input>
+        </li>
+
         <!-- 4-->
         <li
+          value="4"
           class="classification-tests__form__list__item"
           [id]="accountingSummaryService.getId(componentName, 'test', '4')"
         >
@@ -228,110 +289,16 @@
                 [required]="false"
                 formControlName="classificationTest4"
                 [value]="classificationTest4"
+                readOnly="true"
               >
               </crem-input>
             </div>
           </div>
         </li>
-      </ng-template>
 
-      <ng-template #testResults>
-        <li>
-          <div class="ct-testResults-horizontal-line"></div>
-          <div class="ct-testResults-div">
-            <div class="results-text-div">Test Result</div>
-            <div
-              class="result-match-div"
-              [ngClass]="{
-                'match-incomplete': isResultsIncomplete,
-                'match-success': isClassificationMatched,
-                'match-fail': !isResultsIncomplete && !isClassificationMatched
-              }"
-            >
-              <crem-icon
-                class="result-match-success-icon"
-                *ngIf="isClassificationMatched"
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'match-success',
-                    'icon'
-                  )
-                "
-                pack="solid"
-                size="lg"
-                icon="faCircleCheck"
-              >
-              </crem-icon>
-              <crem-icon
-                class="result-match-fail-icon"
-                *ngIf="!isResultsIncomplete && !isClassificationMatched"
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'match-fail',
-                    'icon'
-                  )
-                "
-                pack="solid"
-                size="lg"
-                icon="faCircleExclamation"
-              >
-              </crem-icon>
-              <span class="ct-bold-text">{{ classificationResult }}</span>
-            </div>
-          </div>
-          <div class="results-reason-text-div">
-            <span class="ct-sub-text"
-              >Test Result Reason: {{ classificationResultReason }}</span
-            >
-          </div>
-        </li>
-      </ng-template>
-    </div>
-
-    <div class="classification-tests__form__controls">
-      <ul class="classification-tests__form__list--unordered">
-        <li class="classification-tests__form__list__item side">
-          <crem-input-label
-            [id]="
-              accountingSummaryService.getId(
-                componentName,
-                'remaining-economic-life',
-                'label'
-              )
-            "
-            class="classification-tests__form__list__item__label"
-            label="Remaining Economic Life"
-            [showInfo]="false"
-            name="classification-tests-Remaining-Economic-Life-Input"
-          >
-          </crem-input-label>
-          <crem-input
-            [id]="
-              accountingSummaryService.getId(
-                componentName,
-                'Remaining-Economic-Life',
-                'Input'
-              )
-            "
-            class="classification-tests__form__list__item__label"
-            [inputType]="'number'"
-            [value]="economicLifeYears"
-            [placeholder]="'In Years'"
-            [required]="false"
-            [rows]="4"
-            [cols]="30"
-            [disallowNegative]="true"
-            [showHint]="false"
-            [showInfo]="false"
-            (onBlurChange)="economicLifeChange()"
-            formControlName="remainingEconomicLife"
-          >
-          </crem-input>
-        </li>
-
-        <li class="classification-tests__form__list__item side">
+        <li
+          class="classification-tests__form__list__item side ct-side-li ct-side-li--fmv"
+        >
           <crem-input-label
             [id]="
               accountingSummaryService.getId(
@@ -359,13 +326,17 @@
             [format]="formatCurrencyInput()"
             (onValueChanged)="fairMarketChange()"
             (onFocusOut)="fairMarketChange()"
-            [inputAttr]="{ 'aria-label': 'Fair Market Value' }"
+            [inputAttr]="{
+              'aria-label': 'Fair Market Value',
+              'aria-labelledby': 'classification-tests-fair-market-value-label'
+            }"
           >
           </dx-number-box>
         </li>
 
+        <!-- Implicit Interest Rate -->
         <li
-          class="classification-tests__form__list__item side"
+          class="classification-tests__form__list__item side ct-side-li ct-side-li--implicit"
           *ngIf="isfairMarketHasValue"
         >
           <crem-input-label
@@ -394,8 +365,12 @@
                 'Input'
               )
             "
+            tabindex="0"
+            [attr.aria-label]="
+              'Implicit Interest Rate: ' + implicitInterestRate + '%'
+            "
           >
-            {{ implicitInterestRate }}%
+            <span aria-hidden="true">{{ implicitInterestRate }}%</span>
           </div>
 
           <div
@@ -405,6 +380,11 @@
               implicitInterestRate !== undefined
             "
             class="implicit-rate-warning-message"
+            role="alert"
+            tabindex="0"
+            [attr.aria-label]="
+              'Implicit Interest Rate Warning: ' + implicitRateWarningMessage
+            "
           >
             <crem-icon
               [id]="
@@ -417,12 +397,78 @@
               pack="solid"
               size="sm"
               icon="faTriangleExclamation"
+              aria-hidden="true"
             >
             </crem-icon>
-            {{ implicitRateWarningMessage }}
+            <span aria-hidden="true">{{ implicitRateWarningMessage }}</span>
           </div>
         </li>
-      </ul>
+      </ng-template>
+
+      <ng-template #testResults>
+        <li class="ct-testResults-li">
+          <div class="ct-testResults-horizontal-line" aria-hidden="true"></div>
+          <div
+            class="ct-testResults-div"
+            tabindex="0"
+            [attr.aria-label]="'Test Result: ' + classificationResult"
+          >
+            <div class="results-text-div">Test Result</div>
+            <div
+              class="result-match-div"
+              [ngClass]="{
+                'match-incomplete': isResultsIncomplete,
+                'match-success': isClassificationMatched,
+                'match-fail': !isResultsIncomplete && !isClassificationMatched
+              }"
+            >
+              <crem-icon
+                class="result-match-success-icon"
+                *ngIf="isClassificationMatched"
+                [id]="
+                  accountingSummaryService.getId(
+                    componentName,
+                    'match-success',
+                    'icon'
+                  )
+                "
+                pack="solid"
+                size="lg"
+                icon="faCircleCheck"
+                aria-hidden="true"
+              >
+              </crem-icon>
+              <crem-icon
+                class="result-match-fail-icon"
+                *ngIf="!isResultsIncomplete && !isClassificationMatched"
+                [id]="
+                  accountingSummaryService.getId(
+                    componentName,
+                    'match-fail',
+                    'icon'
+                  )
+                "
+                pack="solid"
+                size="lg"
+                icon="faCircleExclamation"
+                aria-hidden="true"
+              >
+              </crem-icon>
+              <span class="ct-bold-text">{{ classificationResult }}</span>
+            </div>
+          </div>
+          <div class="results-reason-text-div" aria-hidden="true">
+            <span
+              tabindex="0"
+              [attr.aria-label]="
+                'Test Result Reason: ' + classificationResultReason
+              "
+              class="ct-sub-text"
+              >Test Result Reason: {{ classificationResultReason }}</span
+            >
+          </div>
+        </li>
+      </ng-template>
     </div>
   </form>
 </crem-accordion>

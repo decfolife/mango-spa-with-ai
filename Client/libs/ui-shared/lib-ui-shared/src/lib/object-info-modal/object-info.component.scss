@@ -1,0 +1,61 @@
+crem-popup {
+  float: left;
+}
+
+.crem-popup__body {
+  overflow: hidden;
+}
+
+.info-left {
+  font-weight: bold;
+  margin-left: 2%;
+  flex: 35%;
+}
+
+.info-right {
+  width: auto;
+  text-align: left;
+  flex: 65%;
+}
+
+.info-error {
+  font-weight: 400;
+  color: red;
+}
+
+.info-loading {
+  font-weight: 400;
+  margin: auto;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.object-info-accordion {
+  width: 100%;
+}
+
+.object-info-card {
+  padding: 8px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.object-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.object-info-row {
+  width: 100%;
+  min-height: 1rem;
+  display: flex;
+  flex-direction: row;
+}

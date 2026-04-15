@@ -3,6 +3,7 @@
     <dx-check-box
       [(value)]="value"
       (onValueChanged)="onValueChanged($event)"
+      (onInitialized)="initialized.emit(checkBox)"
       [elementAttr]="elementAttr"
       [disabled]="disabled"
     >

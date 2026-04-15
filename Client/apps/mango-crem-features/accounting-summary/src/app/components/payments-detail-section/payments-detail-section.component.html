@@ -27,6 +27,18 @@
             (click)="openMoreMenu($event)"
             (keydown)="openMoreMenu($event)"
             [disabled]="isAccountingEventEmpty"
+            [attr.aria-label]="
+              'Payments' +
+              (!isAccountingEventEmpty
+                ? ' | ' +
+                  classificationType +
+                  ' | ' +
+                  amortizationProfileName +
+                  ' ' +
+                  overrideAmortizationProfile
+                : '') +
+              ' More Options'
+            "
           >
             More
             <mat-icon
@@ -136,6 +148,13 @@
       </div>
     </div>
     <div class="card-content">
+      <!-- Keep this live region outside dx-data-grid because the grid re-renders its DOM on sort. -->
+      <div
+        #sortLiveRegion
+        class="sr-only"
+        aria-live="assertive"
+        aria-atomic="true"
+      ></div>
       <dx-data-grid
         #PaymentsDataGrid
         [id]="
@@ -156,6 +175,7 @@
         [showBorders]="true"
         [height]="paymentsGridHeight"
         (onOptionChanged)="onGridOptionChanged($event)"
+        (onCellPrepared)="onCellPrepared($event)"
         (onRowClick)="onRowClick($event)"
         (onContentReady)="onGridContentReady()"
       >
@@ -193,6 +213,8 @@
           <dxo-selection allowSelectAll="true" recursive="true">
           </dxo-selection>
         </dxo-column-chooser>
+
+        <dxo-keyboard-navigation [enabled]="true"></dxo-keyboard-navigation>
 
         <div *dxTemplate="let info of 'amortizationHeader'">
           <p title="{{ info.column.caption }}" class="header-column-caption">

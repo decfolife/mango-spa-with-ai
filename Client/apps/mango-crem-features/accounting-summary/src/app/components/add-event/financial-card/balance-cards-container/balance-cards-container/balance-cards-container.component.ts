@@ -13,7 +13,6 @@ import { DxNumberBoxModule } from 'devextreme-angular';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { FormattingService } from '@accounting-summary/services/formatting.service';
 import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
-import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
 import { combineLatest, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { FinancialModel } from '@accounting-summary/models/financial-cards.model';
@@ -26,6 +25,7 @@ import { CheckBoxComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/checkb
 import { DropdownModule } from '@mango/ui-shared/lib-ui-elements';
 import { PreviousAccountingEvent } from '@accounting-summary/models/previous-accounting-event.model';
 import { AccountingSummaryService } from '@accounting-summary/services/accounting-summary.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 @Component({
   selector: 'mango-balance-cards-container',
   standalone: true,
@@ -67,9 +67,9 @@ export class BalanceCardsContainerComponent implements OnInit, OnDestroy {
   };
 
   constructor(
-    public addEditScheduleService: AddEditScheduleService,
     public addEventFormService: AddEventFormService,
     public accountingSummaryService: AccountingSummaryService,
+    private accountingToastService: AccountingToastService,
     private fb: FormBuilder,
     public formatService: FormattingService
   ) {
@@ -133,7 +133,10 @@ export class BalanceCardsContainerComponent implements OnInit, OnDestroy {
 
     this.balanceCardForm
       .get('manualAssetAdjustment')
-      .valueChanges.pipe(takeUntil(this.subscription$))
+      .valueChanges.pipe(
+        takeUntil(this.subscription$),
+        debounceTime(this.debounce)
+      )
       .subscribe((manualAssetAdjustment) => {
         this.addEventFormService.manualAssetAdjustment$.next(
           manualAssetAdjustment
@@ -405,7 +408,7 @@ export class BalanceCardsContainerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.subscription$))
       .subscribe((presentValueResponse: any) => {
         if (!presentValueResponse?.data) {
-          this.accountingSummaryService.errorNotify(
+          this.accountingToastService.errorNotify(
             'Downloading the present value table failed.'
           );
         } else {

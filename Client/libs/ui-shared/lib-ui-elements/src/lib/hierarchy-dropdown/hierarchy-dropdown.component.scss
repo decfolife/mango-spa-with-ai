@@ -1,4 +1,4 @@
-@use "styles" as *;
+@use 'styles' as *;
 
 .dx-template-wrapper .dx-item-content .dx-treeview-item-content {
   @include costar(color, dark);
@@ -6,7 +6,28 @@
 
 .select-box-dropdown-data-grid {
   .tree-view {
-    &__item{
+    &__item {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    &__item-content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+  }
+}
+
+.dx-field-value {
+  display: flex !important;
+  align-items: start !important;
+  width: 100% !important;
+}
+
+.hierarch-dx-tree-view {
+  .dx-treeview {
+    &__item {
       white-space: nowrap;
       overflow: hidden;
     }

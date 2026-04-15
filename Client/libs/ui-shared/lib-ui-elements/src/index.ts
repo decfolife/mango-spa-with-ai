@@ -36,3 +36,4 @@ export * from './lib/checkbox';
 export * from './lib/error-tooltip';
 export * from './lib/base';
 export * from './lib/empty-state';
+export * from './lib/block-ui';

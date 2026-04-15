@@ -13,6 +13,7 @@ import {
 } from '@mango/ui-shared/lib-ui-elements';
 import { ToastState } from '@mango/data-models/lib-data-models';
 import { ContentReadyEvent, RowClickEvent } from 'devextreme/ui/data_grid';
+import { CookieService } from '@mango/core-shared';
 
 @Component({
   selector: 'mango-quick-search',
@@ -47,6 +48,10 @@ export class IndexComponent implements OnInit {
         this.fmodule = res['fmodule'];
 
         if (this.flikeclause && this.fmodule) {
+          CookieService.setQuickSearchCookieProperties(
+            this.flikeclause,
+            String(this.fmodule)
+          );
           this.getSearchResultsData(this.flikeclause, this.fmodule);
           this.quickSearchService
             .getRedirectorLinkList()

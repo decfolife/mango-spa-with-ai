@@ -39,6 +39,7 @@
             [showClearButton]="false"
             [initialSelectedValue]="selectedClassificationID"
             (selectedItems)="onClassificationValueChanged($event)"
+            (selectionClosed)="onClassificationSelectionClosed()"
             formControlName="classificationId"
             [containerized]="true"
             (blur)="classificationBlur = true"
@@ -101,204 +102,211 @@
 
       <div class="terms-container" id="termRows">
         <div class="terms-row">
-          <div class="controls">
-            <div class="labels">
-              <crem-input-label
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termBegin',
-                    'label'
-                  )
-                "
-                [label]="'Accounting Term Begin'"
-                [showInfo]="false"
-                [required]="true"
-              >
-              </crem-input-label>
+          <div>
+            <div class="controls">
+              <div class="labels">
+                <crem-input-label
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termBegin',
+                      'label'
+                    )
+                  "
+                  [label]="'Accounting Term Begin'"
+                  [showInfo]="false"
+                  [required]="true"
+                >
+                </crem-input-label>
+              </div>
+              <div class="controls-container">
+                <crem-dropdown
+                  #termBeginDropdownDD
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termBegin',
+                      'dropdown'
+                    )
+                  "
+                  [placeholder]="'Select Term Begin...'"
+                  displayExpr="accountingEventBeginDateDisplay"
+                  [isSearchable]="false"
+                  [dataSource]="beginDateOptionsForEvents"
+                  [allowSearch]="false"
+                  value="optionID"
+                  valueExpr="optionID"
+                  [required]="true"
+                  [showClearButton]="false"
+                  (selectedItems)="setTermBeginDate($event)"
+                  [initialSelectedValue]="selectedBeginDateID"
+                  formControlName="accountingEventBeginDateDropdown"
+                  [customRequireValidation]="!termBeginBlur"
+                  [containerized]="true"
+                  (blur)="termBeginBlur = true"
+                  [status]="termBeginStatus"
+                  [statusMessage]="termBeginStatusMessage"
+                ></crem-dropdown>
+                <crem-date-picker
+                  #termBeginDatePicker
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termBegin',
+                      'date-picker'
+                    )
+                  "
+                  [value]="termBeginDate"
+                  [useMaskBehavior]="false"
+                  [dateFormat]="dateFormat"
+                  [invalidDateMessage]="'Invalid date'"
+                  [showClearButton]="false"
+                  [isRequired]="true"
+                  (changeEvent)="onTermBeginDateChange($event)"
+                  formControlName="accountingEventBeginDate"
+                  (blur)="termBeginBlur = true"
+                >
+                </crem-date-picker>
+              </div>
             </div>
-            <div class="controls-container">
-              <crem-dropdown
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termBegin',
-                    'dropdown'
-                  )
-                "
-                [placeholder]="'Select Term Begin...'"
-                displayExpr="accountingEventBeginDateDisplay"
-                [isSearchable]="false"
-                [dataSource]="beginDateOptionsForEvents"
-                [allowSearch]="false"
-                value="optionID"
-                valueExpr="optionID"
-                [required]="true"
-                [showClearButton]="false"
-                (selectedItems)="setTermBeginDate($event)"
-                [initialSelectedValue]="selectedBeginDateID"
-                formControlName="accountingEventBeginDateDropdown"
-                [customRequireValidation]="!termBeginBlur"
-                [containerized]="true"
-                (blur)="termBeginBlur = true"
-                [status]="termBeginStatus"
-                [statusMessage]="termBeginStatusMessage"
-              ></crem-dropdown>
-              <crem-date-picker
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termBegin',
-                    'date-picker'
-                  )
-                "
-                [value]="termBeginDate"
-                [useMaskBehavior]="false"
-                [dateFormat]="dateFormat"
-                [invalidDateMessage]="'Invalid date'"
-                [showClearButton]="false"
-                [isRequired]="true"
-                (changeEvent)="onTermBeginDateChange($event)"
-                formControlName="accountingEventBeginDate"
-                (blur)="termBeginBlur = true"
-              >
-              </crem-date-picker>
+            <div class="term-validation" *ngIf="termsValidationFailed">
+              <div class="terms-checkbox">
+                <crem-check-box
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'include-charges',
+                      'checkbox'
+                    )
+                  "
+                  formControlName="notFirstDayOfTheMonth"
+                  [elementAttr]="{
+                    'aria-label': 'Include charges from the first of the month'
+                  }"
+                  (initialized)="onNotFirstDayCheckboxInit($event)"
+                >
+                </crem-check-box>
+                <crem-input-label
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'include-charges',
+                      'label'
+                    )
+                  "
+                  [label]="'Include charges from the first of the month?'"
+                  [name]="'details-include-charges-checkbox'"
+                >
+                </crem-input-label>
+              </div>
             </div>
           </div>
 
-          <div class="controls">
-            <div class="labels">
-              <crem-input-label
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termEnd',
-                    'label'
-                  )
-                "
-                [label]="'Accounting Term End'"
-                [showInfo]="false"
-                [required]="true"
-              >
-              </crem-input-label>
-            </div>
-            <div class="controls-container">
-              <crem-dropdown
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termEnd',
-                    'dropdown'
-                  )
-                "
-                [placeholder]="'Select Term End...'"
-                displayExpr="accountingEventEndDateDisplay"
-                [dataSource]="endDateOptionsForEvents"
-                value="optionID"
-                valueExpr="optionID"
-                [required]="true"
-                [showClearButton]="false"
-                (selectedItems)="setTermEndDate($event)"
-                [initialSelectedValue]="selectedEndDateID"
-                formControlName="accountingEventEndDateDropdown"
-                [containerized]="true"
-                (blur)="termEndBlur = true"
-                [customRequireValidation]="!termEndBlur"
-                [status]="termEndStatus"
-                [statusMessage]="termEndStatusMessage"
-              ></crem-dropdown>
+          <div>
+            <div class="controls">
+              <div class="labels">
+                <crem-input-label
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termEnd',
+                      'label'
+                    )
+                  "
+                  [label]="'Accounting Term End'"
+                  [showInfo]="false"
+                  [required]="true"
+                >
+                </crem-input-label>
+              </div>
+              <div class="controls-container">
+                <crem-dropdown
+                  #termEndDropdownDD
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termEnd',
+                      'dropdown'
+                    )
+                  "
+                  [placeholder]="'Select Term End...'"
+                  displayExpr="accountingEventEndDateDisplay"
+                  [dataSource]="endDateOptionsForEvents"
+                  value="optionID"
+                  valueExpr="optionID"
+                  [required]="true"
+                  [showClearButton]="false"
+                  (selectedItems)="setTermEndDate($event)"
+                  [initialSelectedValue]="selectedEndDateID"
+                  formControlName="accountingEventEndDateDropdown"
+                  [containerized]="true"
+                  (blur)="termEndBlur = true"
+                  [customRequireValidation]="!termEndBlur"
+                  [status]="termEndStatus"
+                  [statusMessage]="termEndStatusMessage"
+                ></crem-dropdown>
 
-              <crem-date-picker
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'termEnd',
-                    'date-picker'
-                  )
-                "
-                [value]="termEndDate"
-                [dateFormat]="dateFormat"
-                [useMaskBehavior]="false"
-                [invalidDateMessage]="'Invalid date'"
-                [showClearButton]="false"
-                [isRequired]="true"
-                formControlName="accountingEventEndDate"
-                (changeEvent)="onTermEndDateChange($event)"
-                (blur)="termEndBlur = true"
-              >
-              </crem-date-picker>
+                <crem-date-picker
+                  #termEndDatePicker
+                  [id]="
+                    accountingSummaryService.getId(
+                      componentName,
+                      'termEnd',
+                      'date-picker'
+                    )
+                  "
+                  [value]="termEndDate"
+                  [dateFormat]="dateFormat"
+                  [useMaskBehavior]="false"
+                  [invalidDateMessage]="'Invalid date'"
+                  [showClearButton]="false"
+                  [isRequired]="true"
+                  formControlName="accountingEventEndDate"
+                  (changeEvent)="onTermEndDateChange($event)"
+                  (blur)="termEndBlur = true"
+                >
+                </crem-date-picker>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="terms-row">
-          <div class="term-validation" *ngIf="termsValidationFailed">
-            <div class="terms-checkbox">
-              <crem-check-box
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'include-charges',
-                    'checkbox'
-                  )
-                "
-                formControlName="notFirstDayOfTheMonth"
-                [elementAttr]="{
-                  'aria-label': 'Include charges from the first of the month'
-                }"
+            <div
+              class="term-hint"
+              *ngIf="
+                termBeginDate &&
+                termEndDate &&
+                measureEvent !== 'Full Termination'
+              "
+            >
+              <span
+                title="Accounting Term (Years, Months, Days)"
+                *ngIf="termString"
+                >{{ termString }} |</span
               >
-              </crem-check-box>
-              <crem-input-label
-                [id]="
-                  accountingSummaryService.getId(
-                    componentName,
-                    'include-charges',
-                    'label'
-                  )
-                "
-                [label]="'Include charges from the first of the month?'"
-                [name]="'details-include-charges-checkbox'"
+              <span
+                title="Accounting Term (Number of Periods)"
+                *ngIf="portfolioSettings?.leaseRecognitionCalendarID !== 1"
               >
-              </crem-input-label>
+                {{ termInPeriods }} Periods |</span
+              >
+              <span title="Accounting Term (Number of Months)">
+                {{ termInMonths | number: '1.2-2' }} Months |
+              </span>
+              <span title="Accounting Term (Number of Days)"
+                >{{ termInDays | number: '1.0-0' }} Days</span
+              >
             </div>
-          </div>
-          <div
-            class="term-hint"
-            *ngIf="
-              termBeginDate &&
-              termEndDate &&
-              measureEvent !== 'Full Termination'
-            "
-          >
-            <span
-              title="Accounting Term (Years, Months, Days)"
-              *ngIf="termString"
-              >{{ termString }} |</span
-            >
-            <span
-              title="Accounting Term (Number of Periods)"
-              *ngIf="portfolioSettings?.leaseRecognitionCalendarID !== 1"
-            >
-              {{ termInPeriods }} Periods |</span
-            >
-            <span title="Accounting Term (Number of Months)">
-              {{ termInMonths | number: '1.2-2' }} Months |
-            </span>
-            <span title="Accounting Term (Number of Days)"
-              >{{ termInDays | number: '1.0-0' }} Days</span
-            >
-          </div>
 
-          <div
-            class="term-hint"
-            *ngIf="
-              termBeginDate &&
-              termEndDate &&
-              measureEvent === 'Full Termination'
-            "
-          >
-            <span title="Accounting Terms">
-              0 Periods | 0.00 Months | 0 Days</span
+            <div
+              class="term-hint"
+              *ngIf="
+                termBeginDate &&
+                termEndDate &&
+                measureEvent === 'Full Termination'
+              "
             >
+              <span title="Accounting Terms">
+                0 Periods | 0.00 Months | 0 Days</span
+              >
+            </div>
           </div>
         </div>
       </div>

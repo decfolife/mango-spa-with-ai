@@ -1,0 +1,191 @@
+<crem-popup
+  id="object_info_modal"
+  [title]="modalTitle"
+  [visible]="true"
+  [showCloseButton]="false"
+  [showFooter]="false"
+  width="600"
+  height="98%"
+>
+  <div body class="object-info-content">
+    <div *ngIf="isLoading" class="info-loading">Object Data is loading...</div>
+    <div *ngIf="isError" class="info-error">
+      An error occurred while fetching object data. Please try again later.
+    </div>
+    <div *ngIf="!isLoading && !isError" class="object-info-container">
+      <crem-accordion
+        title="Object"
+        class="object-info-accordion"
+        [isOpen]="true"
+        [contentPadding]="true"
+      >
+        <div class="object-info-card">
+          <div class="object-info-row">
+            <label class="info-left">Object ID:</label>
+            <span class="info-right">{{ data.objectID }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">System ID:</label>
+            <span class="info-right">{{ data.objectSystemID }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Source Import ID:</label>
+            <span class="info-right">{{ data.objectSourceImportID }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Portfolio:</label>
+            <span class="info-right">{{ data.objectPortfolio }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Lease Hierarchy:</label>
+            <span class="info-right">{{ data.leaseHierarchy }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Building Hierarchy:</label>
+            <span class="info-right">{{ data.buildingHierarchy }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Site Hierarchy Setting:</label>
+            <span class="info-right">{{ data.siteHierarchySetting }}</span>
+          </div>
+        </div>
+      </crem-accordion>
+      <crem-accordion
+        title="Page"
+        class="object-info-accordion"
+        [isOpen]="true"
+        [contentPadding]="true"
+      >
+        <div class="object-info-card">
+          <div class="object-info-row">
+            <label class="info-left">Left Nav Page:</label>
+            <span class="info-right">{{ data.leftNavPageName }}</span>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">Nav Display Page:</label>
+            <span class="info-right">{{ data.navPageID }}</span>
+          </div>
+        </div>
+      </crem-accordion>
+      <crem-accordion
+        title="Object Rights"
+        class="object-info-accordion"
+        [isOpen]="true"
+        [contentPadding]="true"
+      >
+        <div class="object-info-card">
+          <div class="object-info-row">
+            <label class="info-left">My Groups:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="
+                  let part of listFormat(data.userSecurityGroupsObjectRight)
+                "
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Inherited Groups:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="
+                  let part of listFormat(data.userInheritedGroupsObjectRight)
+                "
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Explicit Right:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="let part of listFormat(data.userExplicitObjectRight)"
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Evaluated Right:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="let part of listFormat(data.userEvaluatedObjectRight)"
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </crem-accordion>
+      <crem-accordion
+        title="Page Rights"
+        class="object-info-accordion"
+        [isOpen]="true"
+        [contentPadding]="true"
+      >
+        <div class="object-info-card">
+          <div class="object-info-row">
+            <label class="info-left">My Groups:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="
+                  let part of listFormat(data.userSecurityGroupsPageRight)
+                "
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Inherited Groups:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="
+                  let part of listFormat(data.userInheritedGroupsPageRight)
+                "
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Explicit Right:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="let part of listFormat(data.userExplicitPageRight)"
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+          <div class="object-info-row">
+            <label class="info-left">My Evaluated Right:</label>
+            <div class="info-list info-right">
+              <span
+                *ngFor="let part of listFormat(data.userEvaluatedPageRight)"
+                class="info-right"
+                >{{ part }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </crem-accordion>
+      <crem-accordion
+        title="User"
+        class="object-info-card"
+        [isOpen]="true"
+        [contentPadding]="true"
+      >
+        <div class="object-info-card">
+          <div class="object-info-row">
+            <label class="info-left">My User Info:</label>
+            <span class="info-right">{{ data.userDisplay }}</span>
+          </div>
+        </div>
+      </crem-accordion>
+    </div>
+  </div>
+</crem-popup>

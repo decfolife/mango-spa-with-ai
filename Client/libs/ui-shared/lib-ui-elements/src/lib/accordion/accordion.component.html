@@ -2,6 +2,11 @@
   <div
     class="accordion-header"
     tabindex="0"
+    role="button"
+    [attr.aria-expanded]="isOpen"
+    [attr.aria-label]="
+      (title || '') + (isOpen ? ': click to Collapse' : ': click to Expand')
+    "
     (click)="isOpen = !isOpen"
     (keydown.space)="isOpen = !isOpen"
     (keydown.enter)="isOpen = !isOpen"

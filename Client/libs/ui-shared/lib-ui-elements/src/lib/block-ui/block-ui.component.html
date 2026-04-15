@@ -1,0 +1,45 @@
+<div
+  class="ub-content"
+  [attr.inert]="_visible ? '' : null"
+  [attr.aria-hidden]="_visible ? 'true' : null"
+>
+  <ng-content></ng-content>
+</div>
+
+<div
+  *ngIf="_visible"
+  class="ub-overlay"
+  [class.ub-overlay--light]="variant === 'light'"
+  [class.ub-overlay--dark]="variant === 'dark'"
+  [class.ub-overlay--transparent]="variant === 'transparent'"
+  [class.ub-overlay--viewport]="spinnerPosition === 'viewport'"
+  aria-hidden="true"
+>
+  <div
+    class="ub-panel"
+    [class.ub-panel--sm]="size === 'sm'"
+    [class.ub-panel--md]="size === 'md'"
+    [class.ub-panel--lg]="size === 'lg'"
+  >
+    <div
+      class="ub-spinner"
+      [class.ub-spinner--sm]="size === 'sm'"
+      [class.ub-spinner--md]="size === 'md'"
+      [class.ub-spinner--lg]="size === 'lg'"
+      aria-hidden="true"
+    ></div>
+    <span
+      *ngIf="message"
+      class="ub-message"
+      [class.ub-message--sm]="size === 'sm'"
+      [class.ub-message--md]="size === 'md'"
+      [class.ub-message--lg]="size === 'lg'"
+      aria-hidden="true"
+      >{{ message }}</span
+    >
+  </div>
+</div>
+
+<div class="ub-sr-only" role="status" aria-live="polite" aria-atomic="true">
+  {{ _visible ? message || 'Loading' : '' }}
+</div>

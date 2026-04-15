@@ -14,8 +14,8 @@
           "e2e",
           "build-storybook"
         ],
-        "parallel": 3,
-        "useDaemonProcess": false
+        "parallel": 8,
+        "useDaemonProcess": true
       }
     }
   },

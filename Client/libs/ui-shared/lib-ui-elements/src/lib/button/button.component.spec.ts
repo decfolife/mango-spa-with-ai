@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ButtonComponent } from './button.component';
 import { ButtonModule } from './button.module';
 import { SimpleChange } from '@angular/core';
+import { DataIdBreadcrumbProviderService } from '@mango/core-shared';
+import { of } from 'rxjs';
 
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
@@ -13,12 +15,18 @@ describe('ButtonComponent', () => {
     iconPosition: new SimpleChange(undefined, undefined, true),
   };
 
-  let getCssClassesResponseMock = {}
+  let getCssClassesResponseMock = {};
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ButtonModule],
       declarations: [ButtonComponent],
+      providers: [
+        {
+          provide: DataIdBreadcrumbProviderService,
+          useValue: { getBreadcrumbs: () => of([]) },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ButtonComponent);
@@ -38,6 +46,7 @@ describe('ButtonComponent', () => {
       'btn-icon-left': false,
       'btn-icon-right': false,
       'no-text': true,
+      'text-nowrap': false,
     };
   });
 

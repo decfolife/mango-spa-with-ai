@@ -1,4 +1,4 @@
-@use "styles" as *;
+@use 'styles' as *;
 
 .tabs-nav {
   display: flex;
@@ -18,14 +18,23 @@
 .tab-item {
   &__link {
     position: relative;
-
-    cursor: pointer;
     padding: 11px 16px 8px 16px;
     color: #000;
     line-height: 17px;
     @include costar(font-weight, medium);
     @include costar(font-size, small);
     border-bottom: 3px solid transparent;
+
+    > button {
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      line-height: inherit;
+    }
 
     &:hover {
       background-color: #cfcbcb66;

@@ -6,13 +6,11 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatDialog } from '@angular/material/dialog';
 import { faChartBar } from '@fortawesome/free-solid-svg-icons';
 import { environment } from '../../../../../../../mango/src/environments/environment.local';
-import {
-  SimpleGridComponent,
-  CremToastService,
-} from '@mango/ui-shared/lib-ui-elements';
+import { SimpleGridComponent } from '@mango/ui-shared/lib-ui-elements';
 import { CremPivotTableComponent } from 'libs/ui-shared/lib-ui-elements/src/lib/crem-pivot-table/crem-pivot-table.component';
 import { NgStateObject } from '../../../shared/models/app-state.model';
 import { DataService } from '../../../services/data.service';
@@ -21,6 +19,7 @@ import { ColumnLimitComponent } from '../modal/column-limit/column-limit.compone
 import { ColumnArray } from '../../../shared/models/dashboard-model';
 import DataSource from 'devextreme/data/data_source';
 import { ToastState } from '@mango/data-models/lib-data-models';
+import { AccountingToastService } from 'apps/mango-crem-features/accounting-summary/src/app/services/accounting-toast.service';
 
 interface ISummationTypeConfig {
   showSummationTypeConfig: boolean;
@@ -74,7 +73,7 @@ export class DashboardCardComponent implements OnInit {
     private dataService: DataService,
     private dialog: MatDialog,
     private dashboardService: DashboardService,
-    private toastService: CremToastService
+    private toastService: AccountingToastService
   ) {
     this.summationTypeConfig = {
       showSummationTypeConfig: false,
@@ -285,26 +284,20 @@ export class DashboardCardComponent implements OnInit {
   exportNotification(type: 'success' | 'error') {
     switch (type) {
       case 'success': {
-        this.toastService.show(
+        this.toastService.showToast(
+          'Success',
           'Report exported successfully.',
-          '',
           ToastState.SUCCESS,
-          {
-            position: 'bottom right',
-            maxWidth: '350px',
-          }
+          false,
+          6000
         );
         break;
       }
       case 'error': {
-        this.toastService.show(
+        this.toastService.showToast(
+          'Export Failed',
           'Error encountered during export. Please try again.',
-          '',
-          ToastState.ERROR,
-          {
-            position: 'bottom right',
-            maxWidth: '350px',
-          }
+          ToastState.ERROR
         );
         break;
       }

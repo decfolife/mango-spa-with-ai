@@ -69,4 +69,22 @@
   .custom-dx-text-area {
     height: calc(100% - 40px);
   }
+
+  tr.dx-row.dx-data-row.dx-row-focused > td {
+    color: black !important;
+    background-color: white !important;
+  }
+
+  tr.dx-row.dx-data-row.dx-row-focused > tr > td {
+    color: black !important;
+    background-color: white !important;
+  }
+
+  .dx-popup-normal {
+    .dx-popup-bottom {
+      .btn-primary {
+        padding: 8px;
+      }
+    }
+  }
 }

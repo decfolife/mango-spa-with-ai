@@ -9,7 +9,7 @@ class EnvironmentsCrem implements Environment {
   // Only needed for localhost. Otherwise use `${window.location.origin}/api`
   baseApiUrl = 'https://api.costarremanager.com/';
   logRocketAppId = '6vmxfr/prod-sqsdk';
-  rootHostName =  '*.costarremanager.com';
+  rootHostName = '*.costarremanager.com';
 }
 
 export const environment = new EnvironmentsCrem();

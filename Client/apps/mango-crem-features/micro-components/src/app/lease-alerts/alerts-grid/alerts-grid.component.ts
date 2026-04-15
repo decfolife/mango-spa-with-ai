@@ -85,7 +85,6 @@ export class AlertsGridComponent implements OnInit {
   currentLeaseStatusFilter: string;
   customMessageAlert: LeaseAlert;
   isInitialLoading = true;
-  firstPageLoad = true;
   isLoadingData = false;
   isArchived = false;
   filterBuilderVisible = false;
@@ -94,6 +93,7 @@ export class AlertsGridComponent implements OnInit {
   isDismissed = false;
 
   customReasonString = 'Enter Custom Reason';
+  private pendingFocusLeaseAlertID: number | null = null;
   selectedDismissToggleReason = '';
   dismissReasonText = '';
   dismissToggleReasonText = '';
@@ -512,6 +512,7 @@ export class AlertsGridComponent implements OnInit {
       return;
     }
 
+    this.captureFocusTarget(leaseAlert.leaseAlertID);
     this.setIsLoading(true);
 
     this.toggleLeaseAlerts([leaseAlert.leaseAlertID]);
@@ -677,6 +678,24 @@ export class AlertsGridComponent implements OnInit {
     this.saveSessionState();
     this.checkGrouping(contentReadyEvent);
     this.sortFilterFields();
+
+    if (this.pendingFocusLeaseAlertID != null) {
+      const targetKey = this.pendingFocusLeaseAlertID;
+      this.pendingFocusLeaseAlertID = null;
+      const grid = contentReadyEvent?.component;
+      if (grid) {
+        grid.navigateToRow(targetKey).then(() => {
+          grid.option('focusedRowKey', targetKey);
+          const rowIndex = grid.getRowIndexByKey(targetKey);
+          if (rowIndex >= 0) {
+            const cellEl = grid.getCellElement(rowIndex, 0) as Element;
+            if (cellEl) {
+              grid.focus(cellEl);
+            }
+          }
+        });
+      }
+    }
   }
 
   checkGrouping(contentReadyEvent) {
@@ -873,14 +892,10 @@ export class AlertsGridComponent implements OnInit {
 
     this.buildGridDataSource();
 
-    if (this.firstPageLoad) {
-      this.isInitialLoading = true;
-      // This timeout is required to use devextreme's function to load preferences from session state
-      setTimeout(() => {
-        this.isInitialLoading = false;
-      }, 10);
-      this.firstPageLoad = false;
-    }
+    this.isInitialLoading = true;
+    setTimeout(() => {
+      this.isInitialLoading = false;
+    }, 10);
 
     this.selectedColumnsCopy = JSON.parse(JSON.stringify(this.selectedColumns));
   }
@@ -1002,6 +1017,22 @@ export class AlertsGridComponent implements OnInit {
     return filterCount;
   }
 
+  private captureFocusTarget(leaseAlertID: number): void {
+    const grid = this.leaseAlertsGrid?.instance;
+    if (!grid) return;
+    const rowIndex = grid.getRowIndexByKey(leaseAlertID);
+    const visibleRows = grid.getVisibleRows();
+    if (rowIndex >= 0 && visibleRows?.length) {
+      const nextRow =
+        visibleRows.slice(rowIndex + 1).find((r) => r.rowType === 'data') ??
+        visibleRows
+          .slice(0, rowIndex)
+          .reverse()
+          .find((r) => r.rowType === 'data');
+      this.pendingFocusLeaseAlertID = nextRow?.data?.leaseAlertID ?? null;
+    }
+  }
+
   private resetPopupData() {
     this.selectedKeys = [];
 
@@ -1063,5 +1094,57 @@ export class AlertsGridComponent implements OnInit {
 
   private isObject(object) {
     return object != null && typeof object === 'object';
+  }
+
+  dismissDropDownOptions = {
+    closeOnOutsideClick: true,
+    onShown: (e: any) => {
+      const popupContent = e.component.content();
+      if (popupContent) {
+        const escHandler = (event: KeyboardEvent) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            e.component.hide();
+            popupContent.removeEventListener('keydown', escHandler);
+          }
+        };
+        popupContent.addEventListener('keydown', escHandler);
+      }
+    },
+  };
+
+  onDismissItemClick(data: any, event: any): void {
+    event.event?.stopPropagation();
+    this.toggleAlert(data, event);
+  }
+
+  onDismissButtonClick(data: any, event: any): void {
+    event.event?.stopPropagation();
+    this.toggleAlert(data, event, true);
+  }
+
+  onDropDownKeyDown(e: KeyboardEvent, cellInfo?: any): void {
+    if (e.key === ' ' || e.key === 'Enter') {
+      this.onDismissButtonClick(cellInfo.data, e);
+      return;
+    }
+
+    if (e.key !== 'Escape' && e.key !== 'Tab') return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (e.key === 'Escape') return;
+
+    const grid = this.leaseAlertsGrid?.instance;
+    if (!grid || !cellInfo) return;
+
+    const nextRowIndex = cellInfo.rowIndex + 1;
+    if (nextRowIndex >= grid.getVisibleRows().length) return;
+
+    const cellEl = grid.getCellElement(nextRowIndex, 0) as Element;
+    if (cellEl) {
+      grid.focus(cellEl);
+    }
   }
 }

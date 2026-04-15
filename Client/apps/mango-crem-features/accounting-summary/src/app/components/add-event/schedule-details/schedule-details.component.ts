@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Component,
+  ElementRef,
   EventEmitter,
   Input,
   OnChanges,
@@ -30,12 +31,17 @@ import {
   JournalEntryProfile,
   LookupOption,
 } from '@accounting-summary/models/common-dropdowns.model';
-import { DropdownComponent } from '@mango/ui-shared/lib-ui-elements';
+import {
+  DatePickerComponent,
+  DropdownComponent,
+} from '@mango/ui-shared/lib-ui-elements';
+import { DxCheckBoxComponent } from 'devextreme-angular';
 import {
   AccountingTerms,
   ScheduleDetailsTermsInformation,
   TermDateOption,
 } from '@accounting-summary/models/interfaces/schedule-details-form-interfaces';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-schedule-details',
@@ -57,7 +63,18 @@ export class ScheduleDetailsComponent
     new EventEmitter();
   @ViewChild('jeProfileDD') jeProfileDD: DropdownComponent;
   @ViewChild('ClassificationDD') classificationDD: DropdownComponent;
-
+  @ViewChild('termBeginDropdownDD') termBeginDropdownDD: DropdownComponent;
+  @ViewChild('termEndDropdownDD') termEndDropdownDD: DropdownComponent;
+  @ViewChild('termBeginDatePicker') termBeginDatePicker: DatePickerComponent;
+  @ViewChild('termEndDatePicker') termEndDatePicker: DatePickerComponent;
+  @ViewChild('termBeginDropdownDD', { read: ElementRef })
+  termBeginDropdownDDEl: ElementRef;
+  @ViewChild('termEndDropdownDD', { read: ElementRef })
+  termEndDropdownDDEl: ElementRef;
+  @ViewChild('termBeginDatePicker', { read: ElementRef })
+  termBeginDatePickerEl: ElementRef;
+  @ViewChild('termEndDatePicker', { read: ElementRef })
+  termEndDatePickerEl: ElementRef;
   title = 'Accounting Event Details ';
   subtitle = '';
   componentName = 'details';
@@ -100,6 +117,13 @@ export class ScheduleDetailsComponent
   private subscription = new Subscription();
   private formSubscription$ = new Subject<void>();
   reportExceptionValidationPopup = false;
+  private lastActiveTermControl:
+    | 'beginDropdown'
+    | 'endDropdown'
+    | 'beginDate'
+    | 'endDate'
+    | null = null;
+  private focusScheduled = false;
   compoundFrequency: number;
   selectedExceptionReason = 'string';
   dayOneDate: Date;
@@ -107,6 +131,7 @@ export class ScheduleDetailsComponent
   isRetro: boolean;
   classificationName: string;
   classificationBlur = false;
+  private hasInitialFocusBeenSet = false;
   jeProfileBlur = false;
   jeProfileStatus = 'default';
   jeProfileStatusMessage = '';
@@ -134,7 +159,8 @@ export class ScheduleDetailsComponent
     private router: Router,
     private fb: FormBuilder,
     public datePipe: DatePipe,
-    private facade: MangoAppFacade
+    private facade: MangoAppFacade,
+    private accountingToastService: AccountingToastService
   ) {
     this.getUserInfo();
     this.subscription.add(
@@ -152,15 +178,7 @@ export class ScheduleDetailsComponent
     );
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      if (!this.classificationDD.isDisabled) {
-        this.classificationDD.focusDropdown();
-      } else {
-        this.jeProfileDD.focusDropdown();
-      }
-    }, 300);
-  }
+  ngAfterViewInit(): void {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (
@@ -227,6 +245,19 @@ export class ScheduleDetailsComponent
       } else if (this.router.url.includes('remeasureEvent')) {
         this.loadScheduleDataforRemeasure();
       }
+
+      if (!this.hasInitialFocusBeenSet) {
+        this.hasInitialFocusBeenSet = true;
+        // Delay to allow DevExtreme to complete its initialSelectedValue selection event
+        // before re-applying focus to the correct dropdown.
+        setTimeout(() => {
+          if (this.classificationDD && !this.classificationDD.isDisabled) {
+            this.classificationDD.focusDropdown();
+          } else if (this.jeProfileDD) {
+            this.jeProfileDD.focusDropdown();
+          }
+        }, 100);
+      }
     }
   }
 
@@ -261,7 +292,7 @@ export class ScheduleDetailsComponent
   loadScheduleDataforRemeasure() {
     this.title =
       'Accounting Event Details |' +
-      ` ${'Measure Event: '}  ${this.measureEvent} 
+      ` ${'Measure Event: '}  ${this.measureEvent}
     ${
       this.isRetro && this.measureEvent !== 'Initial'
         ? ' | Retrospective Adjustment'
@@ -323,7 +354,12 @@ export class ScheduleDetailsComponent
   }
 
   handleFormValueChanges() {
-    const debounce = 300;
+    /**
+     * Delay form value change handling to reduce date validation calls while the
+     * user is editing values. This debounce interval is applied consistently to
+     * value changes in this form to reduce API calls.
+     */
+    const debounce = 700;
     combineLatest([
       this.scheduleDetailsForm
         .get('accountingEventBeginDate')
@@ -369,7 +405,21 @@ export class ScheduleDetailsComponent
             this.resetAccountingTerms();
             this.emitAccountingTerms();
           } else {
-            this.getEventsDateOptions(termBeginDate, termEndDate);
+            const termBeginDateValue = new Date(termBeginDate);
+            const termEndDateValue = new Date(termEndDate);
+            const calendarMinDateValue = new Date(
+              this.portfolioSettings.calendarMinDate
+            );
+            const calendarMaxDateValue = new Date(
+              this.portfolioSettings.calendarMaxDate
+            );
+
+            if (
+              termBeginDateValue > calendarMinDateValue &&
+              termEndDateValue < calendarMaxDateValue
+            ) {
+              this.getEventsDateOptions(termBeginDate, termEndDate);
+            }
           }
         } else {
           this.resetAccountingTerms();
@@ -494,17 +544,17 @@ export class ScheduleDetailsComponent
       this.measureEvent !== 'Initial'
     ) {
       this.addEventFormService.isOperatingRetrospectiveAdjustment$.next(true);
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Retroactive Adjustment is not allowed',
         `You are attempting to do a retroactive adjustment on an ${this.classificationName} which is not allowed.`
       );
       this.updateScheduleDetailsValidity(true, false);
       return;
     } else {
-      this.addEditScheduleService.clearToastBySummary(
+      this.accountingToastService.clearToastBySummary(
         'Retroactive Adjustment is not allowed'
       );
-      this.addEditScheduleService.clearToastBySummary('Unsupported Action');
+      this.accountingToastService.clearToastBySummary('Unsupported Action');
       this.addEventFormService.isOperatingRetrospectiveAdjustment$.next(false);
       this.updateScheduleDetailsValidity(true, true);
     }
@@ -528,14 +578,14 @@ export class ScheduleDetailsComponent
         termEndDate < calendarMinDate ||
         termEndDate > calendarMaxDate
       ) {
-        this.addEditScheduleService.showToast(
+        this.accountingToastService.showToast(
           'Accounting Term Begin Or End',
           `Saving is disabled because an error was thrown: The Period From or Period To is either outside the calendar range, or not properly configured for Calendar: ${this.portfolioSettings.leaseRecognitionCalendarID}`
         );
         this.updateScheduleDetailsValidity(false, false);
         return;
       } else {
-        this.addEditScheduleService.clearToastBySummary(
+        this.accountingToastService.clearToastBySummary(
           'Accounting Term Begin Or End'
         );
         this.updateScheduleDetailsValidity(true, true);
@@ -544,7 +594,7 @@ export class ScheduleDetailsComponent
 
     if (this.measureEvent === 'Full Termination') {
       if (this.pageMode === 'Edit Event' && termEnd >= priorEventEndDate) {
-        this.addEditScheduleService.showToast(
+        this.accountingToastService.showToast(
           'Term End Date',
           `Remeasurement date cannot be greater than or equal to ${priorEventEndDate} when performing full termination.`
         );
@@ -554,14 +604,14 @@ export class ScheduleDetailsComponent
         this.pageMode !== 'Edit Event' &&
         termEnd >= accountingEventEndDate
       ) {
-        this.addEditScheduleService.showToast(
+        this.accountingToastService.showToast(
           'Term End Date',
           `Remeasurement date cannot be greater than or equal to ${accountingEventEndDate} when performing full termination.`
         );
         this.updateScheduleDetailsValidity(false, false);
         return;
       } else {
-        this.addEditScheduleService.clearToastBySummary('Term End Date');
+        this.accountingToastService.clearToastBySummary('Term End Date');
         this.updateScheduleDetailsValidity(true, true);
       }
     }
@@ -577,7 +627,7 @@ export class ScheduleDetailsComponent
       this.compoundFrequency === 1 &&
       termBegin !== accountingEventBeginDate
     ) {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Period From Must Start on the First Of The Month',
         'Period From must start on the first of the month because this is a remeasured schedule and is a Classification with the interest component.',
         'info',
@@ -589,14 +639,14 @@ export class ScheduleDetailsComponent
     }
 
     if (termBegin < priorEventBeginDate && this.measureEvent !== 'Initial') {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Term Begin Date',
         `Remeasurements cannot start before the min future adjustment date of ${priorEventBeginDate}`
       );
       this.updateScheduleDetailsValidity(false, false);
       return;
     } else {
-      this.addEditScheduleService.clearToastBySummary('Term Begin Date');
+      this.accountingToastService.clearToastBySummary('Term Begin Date');
       this.updateScheduleDetailsValidity(true, true);
     }
 
@@ -672,7 +722,7 @@ export class ScheduleDetailsComponent
 
   onClassificationValueChanged(event: any) {
     if (event) {
-      this.addEditScheduleService.clearAllToastMessages();
+      this.accountingToastService.clearAllToastMessages();
       this.classificationName = event[0].classificationType;
       this.isTermBeginDirectEntry = true;
       this.isTermEnDirectEntry = true;
@@ -778,7 +828,7 @@ export class ScheduleDetailsComponent
   }
 
   onJournalEntryProfileValueChanged(event) {
-    this.addEditScheduleService.clearToastBySummary('Journal Entry Profile');
+    this.accountingToastService.clearToastBySummary('Journal Entry Profile');
   }
 
   addNoExceptionEntry(originalArray: any[]): any[] {
@@ -887,6 +937,7 @@ export class ScheduleDetailsComponent
   }
 
   setTermBeginDate(event: any) {
+    this.lastActiveTermControl = 'beginDropdown';
     if (event.length === 0) {
       this.termBeginDate = null;
       this.resetAccountingTerms();
@@ -924,6 +975,7 @@ export class ScheduleDetailsComponent
   }
 
   setTermEndDate(event: any) {
+    this.lastActiveTermControl = 'endDropdown';
     if (event.length === 0) {
       this.termEndDate = null;
       this.resetAccountingTerms();
@@ -953,11 +1005,13 @@ export class ScheduleDetailsComponent
   }
 
   onTermBeginDateChange(event: any) {
+    this.lastActiveTermControl = 'beginDate';
     this.termBeginDate = event.value ? new Date(event.value) : null;
     this.validateDates();
   }
 
   onTermEndDateChange(event: any) {
+    this.lastActiveTermControl = 'endDate';
     this.termEndDate = event.value ? new Date(event.value) : null;
     if (this.measureEvent === 'Full Termination') {
       this.termBeginDate = this.termEndDate;
@@ -976,6 +1030,11 @@ export class ScheduleDetailsComponent
       (this.pageMode === 'Add Event' ||
         (this.pageMode === 'Edit Event' && remeasureEvent === 'Initial')) &&
       new Date(this.termBeginDate).getDate() > 1;
+  }
+
+  onNotFirstDayCheckboxInit(checkBox: DxCheckBoxComponent): void {
+    checkBox.instance.option('focusStateEnabled', true);
+    checkBox.instance.option('tabIndex', 0);
   }
 
   resetAccountingTerms() {
@@ -1019,9 +1078,10 @@ export class ScheduleDetailsComponent
     this.subscription.add(
       this.addEditScheduleService
         .getTermCalculations(termBeginDate, termEndDate)
+        .pipe(this.addEventFormService.trackPendingCall())
         .subscribe((response: any) => {
           if (response === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
           } else if (response.success) {
             this.termCalculations = response.data;
             this.termString = response.data.termString;
@@ -1030,7 +1090,7 @@ export class ScheduleDetailsComponent
             this.termInDays = response.data.termInDays;
             this.termInYear = response.data.termInYears;
             if (response.data.termInYears >= 100) {
-              this.addEditScheduleService.showToast(
+              this.accountingToastService.showToast(
                 'Accounting Terms',
                 'The accounting term cannot be more than 100 years.'
               );
@@ -1038,7 +1098,7 @@ export class ScheduleDetailsComponent
               this.updateScheduleDetailsValidity(false, false);
               return;
             } else {
-              this.addEditScheduleService.clearToastBySummary(
+              this.accountingToastService.clearToastBySummary(
                 'Accounting Terms'
               );
               this.updateScheduleDetailsValidity(true, true);
@@ -1054,7 +1114,7 @@ export class ScheduleDetailsComponent
             this.emitAccountingTerms();
             this.emitScheduleDetailsData();
           } else {
-            this.addEditScheduleService.showToast(
+            this.accountingToastService.showToast(
               'Accounting Term Begin Or End',
               `Saving is disabled because an error was thrown: The Period From or Period To is either outside the calendar range, or not properly configured for Calendar: ${this.portfolioSettings.leaseRecognitionCalendarID}`
             );
@@ -1065,13 +1125,47 @@ export class ScheduleDetailsComponent
   }
 
   closeReportExceptionPopup() {
-    this.reportExceptionValidationPopup = !this.reportExceptionValidationPopup;
+    this.reportExceptionValidationPopup = false;
+    this.focusLastActiveTermControl();
   }
 
   setScheduleAsException() {
     this.scheduleDetailsForm
       .get('reportingExceptions')
       .setValue(this.reportingExceptionsList[1].id);
-    this.reportExceptionValidationPopup = !this.reportExceptionValidationPopup;
+    this.reportExceptionValidationPopup = false;
+    this.focusLastActiveTermControl();
+  }
+
+  focusLastActiveTermControl(): void {
+    if (this.focusScheduled) return;
+    this.focusScheduled = true;
+    setTimeout(() => {
+      this.focusScheduled = false;
+      let elRef: ElementRef;
+      switch (this.lastActiveTermControl) {
+        case 'beginDropdown':
+          elRef = this.termBeginDropdownDDEl;
+          break;
+        case 'endDropdown':
+          elRef = this.termEndDropdownDDEl;
+          break;
+        case 'beginDate':
+          elRef = this.termBeginDropdownDDEl;
+          break;
+        case 'endDate':
+          elRef = this.termEndDropdownDDEl;
+          break;
+        default:
+          elRef = this.termBeginDropdownDDEl;
+          break;
+      }
+      // Use direct DOM focus to set focus without opening the dropdown.
+      elRef?.nativeElement?.querySelector('.dx-texteditor-input')?.focus();
+    }, 400);
+  }
+
+  onClassificationSelectionClosed() {
+    this.classificationDD.focusDropdown();
   }
 }

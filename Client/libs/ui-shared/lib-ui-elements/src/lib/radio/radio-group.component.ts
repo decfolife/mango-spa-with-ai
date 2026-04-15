@@ -31,13 +31,14 @@ import { CremRadioService } from './radio.service';
   standalone: true,
   host: {
     '[attr.role]': '"radiogroup"',
-    '[attr.aria-labelledby]': 'name',
+    '[attr.aria-label]': 'ariaLabel || name',
   },
 })
 export class CremRadioGroupComponent
   implements ControlValueAccessor, OnInit, OnChanges, OnDestroy
 {
   @Input() name: string = null;
+  @Input() ariaLabel: string = null;
   @Input() disabled = false;
 
   @Output() change = new EventEmitter<any>();

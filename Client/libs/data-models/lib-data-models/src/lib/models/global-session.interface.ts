@@ -18,4 +18,6 @@ export interface SharedInfo {
   CurrencyFormat?: string;
   // BreadCrumbs?: V06Breadcrumb[];
   BreadCrumbs?: string; // v06 has this set to a string
+  QSSearchCriteria?: string;
+  QSModuleCriteria?: string;
 }

@@ -11,5 +11,6 @@ export interface NavLinksByCategory {
   categoryLinkUrl: string;
   categorySpaUrl: string;
   categorySpaQueryParameters?: string;
+  categoryModuleID: number;
   children: SharedLeftNavLink[];
 }

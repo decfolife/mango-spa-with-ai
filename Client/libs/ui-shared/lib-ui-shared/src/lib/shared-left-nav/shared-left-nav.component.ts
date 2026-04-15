@@ -7,6 +7,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { MatMenuTrigger } from '@angular/material/menu';
+import { NavigationEnd, Router } from '@angular/router';
 import { NavLinksByCategory } from '@mango/data-models/lib-data-models';
 import { MangoAppFacade } from '@mangoSpa/src/app/+state/app/app.facade';
 import { SharedLeftNavLink } from 'libs/data-models/lib-data-models/src/lib/models/link.interface';
@@ -34,10 +35,27 @@ export class SharedLeftNavComponent implements OnChanges {
   flyOutMenuEntered: boolean = false;
   flyOutMenuOpened: boolean = false;
   flyOutEntered: boolean = false;
+  flyOutOpenedViaKeyboard: boolean = false;
+  elementToSetFocusId: string = null;
   currentFlyOutMenuTrigger: MatMenuTrigger = null;
   currentFlyOutMenuCategory: string = null;
+  currentSubChildLevelMenuList: NodeListOf<Element> = null;
+  currentSubChildIndex: number = 0;
 
-  constructor(private facade: MangoAppFacade) {}
+  constructor(private facade: MangoAppFacade, private router: Router) {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        if (!!this.elementToSetFocusId) {
+          const idToFocus = this.elementToSetFocusId;
+          this.elementToSetFocusId = null;
+          const element = document.getElementById(idToFocus);
+          if (element) {
+            element.focus();
+          }
+        }
+      }
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     for (const propName in changes) {
@@ -60,18 +78,25 @@ export class SharedLeftNavComponent implements OnChanges {
           this.setActiveLinkFromIsCurrentlyActiveLink(navLink);
         }
 
-        if (navLink && navLink.moduleID && navLink.dynamicName) {
+        if (
+          !!navLink &&
+          navLink.moduleID >= 0 &&
+          navLink.dynamicName.trim() !== ''
+        ) {
+          let idName: string = null;
+
+          idName = !!navLink.category ? navLink.category : navLink.dynamicName;
+
+          const idPrefix = !!navLink.category
+            ? 'left-nav__listItem__'
+            : 'left-nav__';
           const id =
-            'left-nav__' +
+            idPrefix +
             navLink.moduleID +
             '-' +
-            navLink.dynamicName.toLowerCase().replace(' ', '-');
+            idName.toLowerCase().replace(' ', '-').replace('.', '_');
 
-          const element = document.getElementById(id);
-
-          if (element) {
-            element.focus();
-          }
+          this.elementToSetFocusId = id;
         }
       }
     }
@@ -155,6 +180,7 @@ export class SharedLeftNavComponent implements OnChanges {
           categoryLinkUrl: currentNavLink.categoryLinkUrl,
           categorySpaUrl: currentNavLink.categorySpaUrl,
           categorySpaQueryParameters: currentNavLink.categorySpaQueryParameters,
+          categoryModuleID: currentNavLink.moduleID,
           children: [currentNavLink],
         });
       } else {
@@ -172,6 +198,7 @@ export class SharedLeftNavComponent implements OnChanges {
               categorySpaUrl: currentNavLink.categorySpaUrl,
               categorySpaQueryParameters:
                 currentNavLink.categorySpaQueryParameters,
+              categoryModuleID: currentNavLink.moduleID,
               children: [currentNavLink],
             });
       }
@@ -208,13 +235,16 @@ export class SharedLeftNavComponent implements OnChanges {
   }
 
   onNavLinkClick(navLink: SharedLeftNavLink) {
+    let navigateSpaLink = navLink;
+
     const skipSetActiveLink: boolean =
-      (navLink.hasOwnProperty('subChildLevel') &&
-        !!navLink.subChildLevel &&
-        navLink.subChildLevel > 0) ||
-      navLink.linkUrl.startsWith('#');
+      navLink.category === this.activeLink || navLink?.linkUrl?.startsWith('#');
 
     if (!skipSetActiveLink) {
+      if (navLink.subChildLevel > 0) {
+        navLink = this.getTopParentNavLink(navLink) ?? navLink;
+      }
+
       if (
         !navLink.hasOwnProperty('dynamicName') &&
         navLink.hasOwnProperty('categoryHasFlyOutMenu') &&
@@ -228,8 +258,12 @@ export class SharedLeftNavComponent implements OnChanges {
       }
     }
 
+    if (this.flyOutMenuEntered && this.flyOutEntered) {
+      this.flyOutMenuLeave();
+    }
+
     this.toActiveLink.emit(this.activeLink);
-    this.navigateSpa.emit(navLink);
+    this.navigateSpa.emit(navigateSpaLink);
   }
 
   leftNavOpened(e) {
@@ -245,7 +279,11 @@ export class SharedLeftNavComponent implements OnChanges {
     e._element.nativeElement.children[3].removeAttribute('tabindex');
   }
 
-  openFlyOutMenu(menuTrigger: MatMenuTrigger, categoryName: string) {
+  openFlyOutMenu(
+    menuTrigger: MatMenuTrigger,
+    categoryName: string,
+    viaKeyboard: boolean = false
+  ) {
     if (
       this.currentFlyOutMenuCategory !== null &&
       this.currentFlyOutMenuCategory !== categoryName
@@ -260,16 +298,36 @@ export class SharedLeftNavComponent implements OnChanges {
     this.flyOutEntered = true;
     this.flyOutMenuOpened = true;
     this.flyOutMenuEntered = false;
+    this.flyOutOpenedViaKeyboard = viaKeyboard;
+
     menuTrigger.openMenu();
+  }
+
+  onFlyOutMenuOpened(menuTrigger: MatMenuTrigger, categoryName: string) {
+    if (
+      this.flyOutOpenedViaKeyboard &&
+      this.currentFlyOutMenuCategory === categoryName
+    ) {
+      menuTrigger.menu?.focusFirstItem('keyboard');
+    }
+  }
+
+  onFlyOutMenuClosed(categoryName: string) {
+    this.flyOutOpenedViaKeyboard = false;
+
+    if (this.currentFlyOutMenuCategory === categoryName) {
+      this.flyOutMenuOpened = false;
+      this.currentFlyOutMenuTrigger = null;
+      this.currentFlyOutMenuCategory = null;
+    }
   }
 
   closeFlyOutMenu(menuTrigger: MatMenuTrigger) {
     this.flyOutEntered = false;
+    this.flyOutOpenedViaKeyboard = false;
     setTimeout(() => {
       if (!this.flyOutMenuEntered && !this.flyOutEntered) {
         menuTrigger.closeMenu();
-        this.currentFlyOutMenuTrigger = null;
-        this.currentFlyOutMenuCategory = null;
       }
     }, 200);
   }
@@ -279,11 +337,147 @@ export class SharedLeftNavComponent implements OnChanges {
     this.closeFlyOutMenu(this.currentFlyOutMenuTrigger);
   }
 
+  keydownFlyout(event: KeyboardEvent, navLink: SharedLeftNavLink) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      //Move focus to sub child level menu items if they exist
+      if (navLink.subChildLevel > 0) {
+        if (this.currentSubChildLevelMenuList !== null) {
+          let previousLinkElement = this.currentSubChildLevelMenuList[
+            this.currentSubChildIndex
+          ] as HTMLElement;
+          let increment = event.key === 'ArrowDown' ? 1 : -1;
+          this.currentSubChildIndex += increment;
+          let linkElement = this.currentSubChildLevelMenuList[
+            this.currentSubChildIndex
+          ] as HTMLElement;
+          if (linkElement) {
+            event.stopPropagation();
+            previousLinkElement.blur();
+            linkElement.focus();
+          }
+        }
+      } else {
+        this.currentSubChildLevelMenuList = null;
+        this.currentSubChildIndex = 0;
+
+        //Execution should only enter this block of code when pressing the down arrow key on a nav link that has sub child level menu items or when pressing the up arrow key to move focus back
+        //to a sub child link.
+        if (
+          (this.currentSubChildLevelMenuList === null &&
+            this.hasSubChildLevelMenuItems(navLink)) ||
+          event.key === 'ArrowUp'
+        ) {
+          //The default settings here is for the down arrow key.  The up arrow key settings are in the if statement below
+          let anchorElement = event.target as HTMLElement;
+          let hasSclMenuItems = this.hasSubChildLevelMenuItems(navLink);
+          let navLinkToGetSubChildLevelMenuItemsFrom = navLink;
+          if (event.key === 'ArrowUp') {
+            let previousSiblingNavLink =
+              this.getPreviousSiblingNavLink(navLink);
+            if (previousSiblingNavLink) {
+              hasSclMenuItems = this.hasSubChildLevelMenuItems(
+                previousSiblingNavLink
+              );
+              navLinkToGetSubChildLevelMenuItemsFrom = previousSiblingNavLink;
+              //If the format of the nav link id is changed, this logic will need to be updated
+              anchorElement = document.getElementById(
+                'left-nav__' +
+                  previousSiblingNavLink.moduleID +
+                  '-' +
+                  previousSiblingNavLink.dynamicName
+                    .toLowerCase()
+                    .replace(' ', '-')
+                    .replace('.', '_')
+              ) as HTMLElement;
+            } else {
+              return;
+            }
+          }
+
+          if (!hasSclMenuItems) {
+            return;
+          }
+
+          let parentSpanElement = anchorElement.parentElement.parentElement;
+          if (parentSpanElement.tagName.toLowerCase() === 'span') {
+            let childAnchorClassName =
+              navLinkToGetSubChildLevelMenuItemsFrom?.dynamicName
+                ?.toLowerCase()
+                ?.replace(' ', '-')
+                .replace('.', '_') +
+              '_' +
+              'subChildLevel_link';
+            const anchorTags = parentSpanElement.querySelectorAll(
+              'a.' + childAnchorClassName
+            );
+            if (anchorTags.length > 0) {
+              this.currentSubChildLevelMenuList = anchorTags;
+              // Focus on the child anchor tag based on the index which is determined by whether the user pressed the up or down arrow key
+              this.currentSubChildIndex =
+                event.key === 'ArrowDown' ? 0 : anchorTags.length - 1;
+
+              event.stopPropagation();
+              let linkElement = this.currentSubChildLevelMenuList[
+                this.currentSubChildIndex
+              ] as HTMLElement;
+              linkElement.focus();
+            }
+          }
+        }
+      }
+    }
+  }
+
   hasSubChildLevelMenuItems(leftNavLink: SharedLeftNavLink) {
     return leftNavLink.subChildLevelNavLinks !== null;
   }
 
-  hasSubChildLevelMenuItems2(subNavLink: SharedLeftNavLink) {
-    return subNavLink.subChildLevelNavLinks !== null;
+  getPreviousSiblingNavLink(
+    navLink: SharedLeftNavLink
+  ): SharedLeftNavLink | null {
+    const index = this.navigationLinks.indexOf(navLink);
+    if (index <= 0) {
+      return null;
+    }
+    return this.navigationLinks[index - 1];
+  }
+
+  getParentLinkDynamicName(navLink: SharedLeftNavLink): string {
+    const topParentNavLink = this.getTopParentNavLink(navLink);
+    return topParentNavLink ? topParentNavLink.dynamicName : '';
+  }
+
+  private getTopParentNavLink(
+    navLink: SharedLeftNavLink
+  ): SharedLeftNavLink | null {
+    if (!navLink || navLink.subChildLevel === 0) {
+      return null;
+    }
+
+    const findParent = (
+      links: SharedLeftNavLink[],
+      target: SharedLeftNavLink
+    ): SharedLeftNavLink | null => {
+      for (const link of links) {
+        if (link.subChildLevelNavLinks?.includes(target)) {
+          return link;
+        }
+        const found = findParent(link.subChildLevelNavLinks ?? [], target);
+        if (found) {
+          return found;
+        }
+      }
+      return null;
+    };
+
+    let current = navLink;
+    let parent = findParent(this.navigationLinks, current);
+
+    while (parent && parent.subChildLevel > 0) {
+      current = parent;
+      parent = findParent(this.navigationLinks, current);
+    }
+
+    return parent;
   }
 }

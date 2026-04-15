@@ -21,6 +21,7 @@ import { FormattingService } from '@accounting-summary/services/formatting.servi
 import { DevExtremeModule, DxDataGridComponent } from 'devextreme-angular';
 import { ScheduleTransaction } from '@accounting-summary/models/interfaces/schedule-transaction.interfaces';
 import { takeUntil } from 'rxjs/operators';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-schedule-transactions-popup',
@@ -75,7 +76,8 @@ export class ScheduleTransactionsPopupComponent
     private addEditScheduleService: AddEditScheduleService,
     public formattingService: FormattingService,
     public accountingSummaryService: AccountingSummaryService,
-    public transactionPopupGridColumnsService: TransactionPopupGridColumnsService
+    public transactionPopupGridColumnsService: TransactionPopupGridColumnsService,
+    private accountingToastService: AccountingToastService
   ) {}
 
   ngOnDestroy(): void {
@@ -215,7 +217,7 @@ export class ScheduleTransactionsPopupComponent
               this.dateFormat
             );
         } else {
-          this.addEditScheduleService.showToast(
+          this.accountingToastService.showToast(
             'Error',
             response.clientErrorMessage,
             'error',
@@ -247,7 +249,7 @@ export class ScheduleTransactionsPopupComponent
               this.dateFormat
             );
         } else {
-          this.addEditScheduleService.showToast(
+          this.accountingToastService.showToast(
             'Error',
             response.clientErrorMessage,
             'error',

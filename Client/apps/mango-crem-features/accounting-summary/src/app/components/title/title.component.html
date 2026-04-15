@@ -6,17 +6,16 @@
     <span class="bold-text">Lease:</span> {{ leaseName }}
   </div>
 
-  <!-- Temporarily commented out until ready -->
-  <!-- <div class="info-icon">
+  <div class="info-icon">
     <crem-icon
       [id]="accountingSummaryService.getId(componentName, 'info', 'icon')"
-      pack="solid"
-      icon="faCircleInfo"
+      pack="crem"
+      icon="cremInfo"
       color="dark"
       (click)="showObjectInfoPopup()"
     >
     </crem-icon>
-  </div> -->
+  </div>
   <div
     *ngIf="isLocked"
     [id]="accountingSummaryService.getId(componentName, 'lock', 'click')"

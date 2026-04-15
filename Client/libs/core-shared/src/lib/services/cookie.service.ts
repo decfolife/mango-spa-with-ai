@@ -118,5 +118,18 @@ export class CookieService {
 
     CookieService.setSharedInfoCookie(sharedInfo);
   }
+
+  public static setQuickSearchCookieProperties(
+    searchCriteria: string,
+    moduleCriteria: string
+  ): void {
+    let sharedInfo = CookieService.getSharedInfoCookie();
+    if (!sharedInfo) return;
+
+    sharedInfo.QSSearchCriteria = searchCriteria;
+    sharedInfo.QSModuleCriteria = moduleCriteria;
+
+    CookieService.setSharedInfoCookie(sharedInfo);
+  }
   // Shared info cookie used by both SPA and V06
 }

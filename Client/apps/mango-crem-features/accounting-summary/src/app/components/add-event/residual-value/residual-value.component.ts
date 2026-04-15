@@ -19,7 +19,7 @@ import { PreviousAccountingEvent } from '@accounting-summary/models/previous-acc
 import { Subscription } from 'rxjs';
 import { AddEventFormService } from '@accounting-summary/services/add-event-form.service';
 import { ResidualValues } from '@accounting-summary/models/interfaces/residual-values-interfaces';
-import { AddEditScheduleService } from '@accounting-summary/services/add-edit-schedule.service';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-residual-value',
@@ -62,7 +62,7 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private formattingService: FormattingService,
     public addEventFormService: AddEventFormService,
-    public addEditScheduleService: AddEditScheduleService
+    private accountingToastService: AccountingToastService
   ) {
     this.InitializeRVForm();
     this.subscription.push(
@@ -274,14 +274,14 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
     const totalAmount = Math.round(this.totalAmount * 100) / 100;
 
     if (estimatedResidualValue < 0) {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Estimated Residual Value',
         `Estimated residual value must be greater than or equal to zero.`
       );
       this.addEventFormService.isValidForCalculate('residualValue', false);
       this.addEventFormService.isValidForSave('residualValue', false);
     } else {
-      this.addEditScheduleService.clearToastBySummary(
+      this.accountingToastService.clearToastBySummary(
         'Estimated Residual Value'
       );
       this.addEventFormService.isValidForCalculate('residualValue', true);
@@ -289,27 +289,27 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
     }
 
     if (rvGuaranteed < 0) {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'RV guaranteed',
         `RV guaranteed must be greater than or equal to zero.`
       );
       this.addEventFormService.isValidForCalculate('residualValue', false);
       this.addEventFormService.isValidForSave('residualValue', false);
     } else {
-      this.addEditScheduleService.clearToastBySummary('RV guaranteed');
+      this.accountingToastService.clearToastBySummary('RV guaranteed');
       this.addEventFormService.isValidForCalculate('residualValue', true);
       this.addEventFormService.isValidForSave('residualValue', true);
     }
 
     if (RVGuaranteedBy3rdParty < 0 || RVGuaranteedBy3rdParty > rvGuaranteed) {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'RV Guaranteed by 3rd Party',
         `RV guaranteed by 3rd party must be between zero and RV guaranteed.`
       );
       this.addEventFormService.isValidForCalculate('residualValue', false);
       this.addEventFormService.isValidForSave('residualValue', false);
     } else {
-      this.addEditScheduleService.clearToastBySummary(
+      this.accountingToastService.clearToastBySummary(
         'RV Guaranteed by 3rd Party'
       );
       this.addEventFormService.isValidForCalculate('residualValue', true);
@@ -320,14 +320,14 @@ export class ResidualValueComponent implements OnInit, OnDestroy {
       guaranteedAmountReflected < 0 ||
       guaranteedAmountReflected > totalAmount
     ) {
-      this.addEditScheduleService.showToast(
+      this.accountingToastService.showToast(
         'Guaranteed Amount Reflected in Payments',
         `Guaranteed amount reflected in payments must be between zero and the total amount.`
       );
       this.addEventFormService.isValidForCalculate('residualValue', false);
       this.addEventFormService.isValidForSave('residualValue', false);
     } else {
-      this.addEditScheduleService.clearToastBySummary(
+      this.accountingToastService.clearToastBySummary(
         'Guaranteed Amount Reflected in Payments'
       );
       this.addEventFormService.isValidForCalculate('residualValue', true);

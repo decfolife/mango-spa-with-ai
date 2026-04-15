@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { PortfolioSettingsResponse } from '@accounting-summary/models/portfolio-settings-response.modal';
 import { PreviousAccountingEvent } from '@accounting-summary/models/previous-accounting-event.model';
 import { CommonDropdowns } from '@accounting-summary/models/common-dropdowns.model';
@@ -80,7 +81,21 @@ export class AddEventFormService {
 
   public isCalculateValuesAllowed$ = new BehaviorSubject<boolean>(false);
   public isSaveAllowed$ = new BehaviorSubject<boolean>(false);
+  public pendingApiCalls$ = new BehaviorSubject<number>(0);
   public ignoreButtonReset = new BehaviorSubject<boolean>(false);
+
+  trackPendingCall<T>() {
+    return (source: Observable<T>): Observable<T> => {
+      this.pendingApiCalls$.next(this.pendingApiCalls$.value + 1);
+      return source.pipe(
+        finalize(() =>
+          this.pendingApiCalls$.next(
+            Math.max(0, this.pendingApiCalls$.value - 1)
+          )
+        )
+      );
+    };
+  }
   public calculateValuesClicked = new BehaviorSubject<boolean>(false);
   public validateCalculateComponents$ = new BehaviorSubject<boolean>(false);
   public operatingClassifications: number[] = [0, 5];

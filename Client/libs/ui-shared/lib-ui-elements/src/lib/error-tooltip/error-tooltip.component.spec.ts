@@ -8,7 +8,7 @@ describe('ErrorTooltipComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ErrorTooltipComponent],
+      imports: [ErrorTooltipComponent],
     });
     fixture = TestBed.createComponent(ErrorTooltipComponent);
     component = fixture.componentInstance;

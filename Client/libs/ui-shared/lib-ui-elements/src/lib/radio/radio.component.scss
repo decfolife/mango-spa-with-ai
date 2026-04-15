@@ -53,6 +53,16 @@ $color2: $primary-light;
       }
     }
 
+    &:focus-visible {
+      + .crem-radio-label {
+        &:before {
+          outline: 2px solid $primary-light;
+          outline-offset: 2px;
+          border-color: $primary-light;
+        }
+      }
+    }
+
     &:disabled {
       + .crem-radio-label {
         &:before {

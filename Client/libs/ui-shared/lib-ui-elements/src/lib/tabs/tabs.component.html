@@ -1,18 +1,28 @@
 <ul class="tabs-nav" role="tablist">
   <li
-    role="tab"
-    tabindex="0"
+    role="presentation"
     class="tab-item__link"
-    *ngFor="let tab of tabs"
-    (click)="selectTab(tab)"
-    (keydown)="onKeyDownEvent($event, tab)"
+    *ngFor="let tab of tabs; let i = index"
     [class.active]="tab.active"
     [class.disabled]="tab.disabled"
-    [attr.id]="tab.id || null"
-    [attr.aria-selected]="tab.active"
-    [attr.aria-controls]="'tabpanel-' + (tab.id || i)"
   >
-    <a>{{ tab.title }}</a>
+    <button
+      type="button"
+      role="tab"
+      [disabled]="tab.disabled"
+      [attr.id]="tab.id || null"
+      [attr.aria-label]="
+        tab.title + ', ' + (tab.active ? 'Selected' : 'Not Selected')
+      "
+      [attr.aria-selected]="tab.active ? 'true' : 'false'"
+      [attr.aria-controls]="'tabpanel-' + (tab.id || i)"
+      [attr.aria-disabled]="tab.disabled ? 'true' : null"
+      [attr.tabindex]="tab.disabled ? '-1' : '0'"
+      (click)="selectTab(tab)"
+      (keydown)="onKeyDownEvent($event, i)"
+    >
+      {{ tab.title }}
+    </button>
   </li>
 </ul>
 <ng-content></ng-content>

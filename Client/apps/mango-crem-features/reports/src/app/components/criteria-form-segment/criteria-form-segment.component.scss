@@ -26,6 +26,7 @@
   crem-dynamic-form {
     // Fixes the crem-dropdown being cut off within the modal
     position: relative;
+
     // Fix for "System Export Batch ID" field, if ID changes this will break
     crem-dropdown {
       &#CreateSegment__ExportSystemBatchNumber_dropdown {
@@ -35,5 +36,11 @@
         }
       }
     }
+  }
+
+  #criteriaFormIncludeLeasesWithNoHierarchyID,
+  #criteriaFormINCLUDELEASESWITHNOHIERARCHYID,
+  .checkbox__container[id*='IncludeLeasesWithNoHierarchy'] {
+    padding-top: 27px !important;
   }
 }

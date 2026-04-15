@@ -14,6 +14,7 @@ import { AmortizationGridColumnsService } from '@accounting-summary/services/amo
 import { UserInfoResponse } from '@accounting-summary/models/user-info-response.modal';
 import { Subscription } from 'rxjs';
 import { DxDataGridComponent } from 'devextreme-angular';
+import { AccountingToastService } from '@accounting-summary/services/accounting-toast.service';
 
 @Component({
   selector: 'mango-je-processing-info',
@@ -55,7 +56,8 @@ export class JeProcessingInfoComponent
   constructor(
     public accountingSummaryService: AccountingSummaryService,
     public formattingService: FormattingService,
-    public jeProcessingGridColumnsService: AmortizationGridColumnsService
+    public jeProcessingGridColumnsService: AmortizationGridColumnsService,
+    private accountingToastService: AccountingToastService
   ) {}
 
   ngOnInit() {
@@ -285,24 +287,24 @@ export class JeProcessingInfoComponent
         .journalEntryProcess(periodID, actions)
         .subscribe((jeProcessResponse: any) => {
           if (jeProcessResponse === null) {
-            this.accountingSummaryService.displayContactSystemAdminMessage();
+            this.accountingToastService.displayContactSystemAdminMessage();
             this.isActionButtonDisabled = false;
           } else if (jeProcessResponse.success) {
             switch (this.changeButtonText) {
               case 'Approve':
-                this.accountingSummaryService.successNotify(
+                this.accountingToastService.successNotify(
                   'Approved Successfully'
                 );
                 break;
 
               case 'Unapprove':
-                this.accountingSummaryService.successNotify(
+                this.accountingToastService.successNotify(
                   'Unapproved Successfully'
                 );
                 break;
 
               case 'Unexport':
-                this.accountingSummaryService.successNotify(
+                this.accountingToastService.successNotify(
                   'Unexported Successfully'
                 );
                 break;
@@ -310,7 +312,7 @@ export class JeProcessingInfoComponent
             this.accountingSummaryService.jeActionTaken$.next(true);
             this.isActionButtonDisabled = false;
           } else {
-            this.accountingSummaryService.errorNotify(
+            this.accountingToastService.errorNotify(
               'The process failed. If the problem persists, please contact support.'
             );
             this.isActionButtonDisabled = false;
