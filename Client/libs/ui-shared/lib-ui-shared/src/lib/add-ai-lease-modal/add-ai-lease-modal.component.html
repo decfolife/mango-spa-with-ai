@@ -40,7 +40,9 @@
         </crem-form-item>
 
         <crem-form-item id="aet-building-container">
-          <crem-form-label [required]="true">{{ buildingObjectName }}</crem-form-label>
+          <crem-form-label [required]="true">{{
+            buildingObjectName
+          }}</crem-form-label>
           <crem-dropdown
             id="buildingId"
             #buildingId
@@ -61,7 +63,9 @@
         </crem-form-item>
 
         <crem-form-item id="aet-template-container" *ngIf="!hidePremise">
-          <crem-form-label [required]="true">{{ premiseObjectName }}</crem-form-label>
+          <crem-form-label [required]="true">{{
+            premiseObjectName
+          }}</crem-form-label>
           <crem-dropdown
             id="premiseId"
             #premiseId
@@ -82,7 +86,9 @@
         </crem-form-item>
 
         <crem-form-item *ngIf="addNewPremise">
-          <crem-form-label [required]="true">{{ premiseObjectName }} Name</crem-form-label>
+          <crem-form-label [required]="true"
+            >{{ premiseObjectName }} Name</crem-form-label
+          >
           <crem-input
             id="newPremiseName"
             #newPremiseName
@@ -97,7 +103,9 @@
         </crem-form-item>
 
         <crem-form-item id="aet-template-container" *ngIf="addNewPremise">
-          <crem-form-label [required]="true">{{ premiseObjectName }} Type</crem-form-label>
+          <crem-form-label [required]="true"
+            >{{ premiseObjectName }} Type</crem-form-label
+          >
           <crem-dropdown
             id="premiseTypeId"
             #premiseTypeId
@@ -121,7 +129,9 @@
              are omitted — these values will be extracted from the lease PDF by the AI. -->
 
         <crem-form-item id="aet-template-container">
-          <crem-form-label [required]="true">{{ leaseObjectName }} Template</crem-form-label>
+          <crem-form-label [required]="true"
+            >{{ leaseObjectName }} Template</crem-form-label
+          >
           <crem-dropdown
             id="leaseTemplateId"
             #leaseTemplateId
@@ -162,7 +172,10 @@
         </crem-form-item>
 
         <div class="layout-container pt-2">
-          <crem-form-item id="aet-accountingtype-container" class="crem-form-item-horizontal">
+          <crem-form-item
+            id="aet-accountingtype-container"
+            class="crem-form-item-horizontal"
+          >
             <crem-form-label [required]="true">Accounting Type</crem-form-label>
             <crem-dropdown
               id="accountingType"
@@ -185,7 +198,9 @@
         </div>
 
         <crem-form-item id="aet-leaseInfo-container" *ngIf="addSubLeaseWizard">
-          <crem-form-label *ngIf="addSubLeaseWizard">Parent {{ leaseObjectName }}</crem-form-label>
+          <crem-form-label *ngIf="addSubLeaseWizard"
+            >Parent {{ leaseObjectName }}</crem-form-label
+          >
           <crem-dropdown
             id="parentLease"
             #parentLease
@@ -211,13 +226,13 @@
         </div>
 
         <crem-form-item id="aet-ai-document-container">
-          <crem-form-label [required]="true">Lease Document (PDF)</crem-form-label>
-          <div class="ai-file-upload" [class.ai-file-upload--has-file]="selectedFileName">
+          <crem-form-label [required]="true">Lease Documents</crem-form-label>
+          <div class="ai-file-upload">
             <input
               #fileInput
               type="file"
-              accept=".pdf"
               multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.odt,.ods,.odp,.jpg,.jpeg,.png,.tif,.tiff,.msg,.eml,.csv,.zip"
               class="ai-file-upload__input"
               (change)="onFileSelected($event)"
             />
@@ -226,15 +241,31 @@
               [icon]="'faUpload'"
               (click)="fileInput.click(); $event.preventDefault()"
             >
-              {{ selectedFileName ? 'Change File' : 'Choose PDF' }}
+              Add Files
             </crem-button>
-            <span *ngIf="selectedFileName" class="ai-file-upload__name">
-              {{ selectedFileName }}
-            </span>
-            <span *ngIf="!selectedFileName" class="ai-file-upload__placeholder">
-              No file selected
+            <span
+              *ngIf="!selectedFiles.length"
+              class="ai-file-upload__placeholder"
+            >
+              No files selected
             </span>
           </div>
+          <ul *ngIf="selectedFiles.length" class="ai-file-list">
+            <li
+              *ngFor="let file of selectedFiles; let i = index"
+              class="ai-file-list__item"
+            >
+              <span class="ai-file-list__name">{{ file.name }}</span>
+              <button
+                type="button"
+                class="ai-file-list__remove"
+                (click)="removeFile(i)"
+                title="Remove file"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </li>
+          </ul>
         </crem-form-item>
 
         <crem-form-item id="aet-ai-amendments-container">
@@ -256,7 +287,6 @@
             placeholder="Optional notes or instructions for the AI abstraction"
           ></crem-input>
         </crem-form-item>
-
       </form>
     </div>
   </div>
@@ -266,43 +296,44 @@
       type="secondary"
       id="add_ai_lease_modal__cancel_btn"
       (click)="close()"
-    >Cancel</crem-button>
+      >Cancel</crem-button
+    >
 
     <crem-button
       type="secondary"
       id="add_ai_lease_modal__save_btn"
       (click)="save($event)"
-      [disabled]="isSaving || isSavingNew || isLaunching"
-      [icon]="isSaving ? 'faSpinner' : ''"
-      [iconPack]="isSaving ? 'solid' : ''"
-      [iconAnimation]="isSaving ? 'spin' : ''"
+      [disabled]="saveClicked"
+      [icon]="saveClicked ? 'faSpinner' : ''"
+      [iconPack]="saveClicked ? 'solid' : ''"
+      [iconAnimation]="saveClicked ? 'spin' : ''"
     >
-      <span>{{ isSaving ? 'Saving' : 'Save' }}</span>
+      <span>{{ saveClicked ? 'Saving' : 'Save' }}</span>
     </crem-button>
 
     <crem-button
       type="secondary"
       id="add_ai_lease_modal__savenew_btn"
       (click)="saveAndNew($event)"
-      [disabled]="isSaving || isSavingNew || isLaunching"
-      [icon]="isSavingNew ? 'faSpinner' : ''"
-      [iconPack]="isSavingNew ? 'solid' : ''"
-      [iconAnimation]="isSavingNew ? 'spin' : ''"
+      [disabled]="saveClicked"
+      [icon]="saveClicked ? 'faSpinner' : ''"
+      [iconPack]="saveClicked ? 'solid' : ''"
+      [iconAnimation]="saveClicked ? 'spin' : ''"
       [dataId]="'save_new'"
     >
-      <span>{{ isSavingNew ? 'Saving' : 'Save & New' }}</span>
+      <span>{{ saveClicked ? 'Saving' : 'Save & New' }}</span>
     </crem-button>
 
     <crem-button
       id="add_ai_lease_modal__launch_btn"
       type="primary"
       (click)="launch($event)"
-      [disabled]="isSaving || isSavingNew || isLaunching"
-      [icon]="isLaunching ? 'faSpinner' : ''"
-      [iconPack]="isLaunching ? 'solid' : ''"
-      [iconAnimation]="isLaunching ? 'spin' : ''"
+      [disabled]="isSubmitting"
+      [icon]="isSubmitting ? 'faSpinner' : ''"
+      [iconPack]="isSubmitting ? 'solid' : ''"
+      [iconAnimation]="isSubmitting ? 'spin' : ''"
     >
-      <span>{{ isLaunching ? 'Saving' : 'Launch' }}</span>
+      <span>{{ isSubmitting ? 'Launching' : 'Launch' }}</span>
     </crem-button>
   </div>
 </crem-modal>
