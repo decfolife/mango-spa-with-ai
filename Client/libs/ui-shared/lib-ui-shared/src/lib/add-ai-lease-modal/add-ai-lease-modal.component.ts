@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, DoCheck, Inject } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
@@ -15,9 +15,13 @@ import { AddLeaseModalComponent } from '../add-lease-modal/add-lease-modal.compo
   templateUrl: './add-ai-lease-modal.component.html',
   styleUrls: ['./add-ai-lease-modal.component.scss'],
 })
-export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
-  selectedFileName: string | null = null;
-  selectedFile: File | null = null;
+export class AddAiLeaseModalComponent extends AddLeaseModalComponent implements DoCheck {
+  selectedFiles: File[] = [];
+
+  isSaving = false;
+  isSavingNew = false;
+  isLaunching = false;
+  private _prevSaveClicked = false;
 
   constructor(
     public override dialogRef: MatDialogRef<AddAiLeaseModalComponent>,
@@ -37,6 +41,16 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     }
   ) {
     super(dialogRef, formWizardService, dashboardService, router, dataService, toastService, facade, data);
+  }
+
+  ngDoCheck(): void {
+    // Reset per-button spinner flags when the parent finishes saving
+    if (this._prevSaveClicked && !this.saveClicked) {
+      this.isSaving = false;
+      this.isSavingNew = false;
+      this.isLaunching = false;
+    }
+    this._prevSaveClicked = this.saveClicked;
   }
 
   override setupAddLeaseFormGroup(): void {
@@ -61,45 +75,46 @@ export class AddAiLeaseModalComponent extends AddLeaseModalComponent {
     this.dynName = this.data.objectTypeName ?? 'Lease';
   }
 
+  get selectedFileName(): string | null {
+    if (this.selectedFiles.length === 0) return null;
+    if (this.selectedFiles.length === 1) return this.selectedFiles[0].name;
+    return `${this.selectedFiles.length} files selected`;
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
-      this.selectedFile = input.files[0];
-      this.selectedFileName = this.selectedFile.name;
-      this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFile);
+      this.selectedFiles = Array.from(input.files);
+      this.addLeaseFormGroup.get('leaseDocument').setValue(this.selectedFiles);
     }
   }
 
-  override save(e: any): void {
+  private validateForm(): boolean {
     if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
       this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
         position: 'bottom right',
         maxWidth: '350px',
       });
-      return;
+      return false;
     }
+    return true;
+  }
+
+  override save(e: any): void {
+    if (!this.validateForm()) return;
+    this.isSaving = true;
     super.save(e);
   }
 
   override saveAndNew(e: any): void {
-    if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
-      this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
-        position: 'bottom right',
-        maxWidth: '350px',
-      });
-      return;
-    }
+    if (!this.validateForm()) return;
+    this.isSavingNew = true;
     super.saveAndNew(e);
   }
 
   override launch(e: any): void {
-    if (!this.addLeaseFormGroup.valid || !this.datesAreValid()) {
-      this.toastService.show(VALIDATION_ERROR, '', ToastState.ERROR, {
-        position: 'bottom right',
-        maxWidth: '350px',
-      });
-      return;
-    }
+    if (!this.validateForm()) return;
+    this.isLaunching = true;
     super.launch(e);
   }
 }

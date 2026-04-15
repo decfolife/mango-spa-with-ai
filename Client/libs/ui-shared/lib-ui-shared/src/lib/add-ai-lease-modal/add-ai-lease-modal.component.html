@@ -217,6 +217,7 @@
               #fileInput
               type="file"
               accept=".pdf"
+              multiple
               class="ai-file-upload__input"
               (change)="onFileSelected($event)"
             />
@@ -271,37 +272,37 @@
       type="secondary"
       id="add_ai_lease_modal__save_btn"
       (click)="save($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
+      [disabled]="isSaving || isSavingNew || isLaunching"
+      [icon]="isSaving ? 'faSpinner' : ''"
+      [iconPack]="isSaving ? 'solid' : ''"
+      [iconAnimation]="isSaving ? 'spin' : ''"
     >
-      <span>{{ saveClicked ? 'Saving' : 'Save' }}</span>
+      <span>{{ isSaving ? 'Saving' : 'Save' }}</span>
     </crem-button>
 
     <crem-button
       type="secondary"
       id="add_ai_lease_modal__savenew_btn"
       (click)="saveAndNew($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
+      [disabled]="isSaving || isSavingNew || isLaunching"
+      [icon]="isSavingNew ? 'faSpinner' : ''"
+      [iconPack]="isSavingNew ? 'solid' : ''"
+      [iconAnimation]="isSavingNew ? 'spin' : ''"
       [dataId]="'save_new'"
     >
-      <span>{{ saveClicked ? 'Saving' : 'Save & New' }}</span>
+      <span>{{ isSavingNew ? 'Saving' : 'Save & New' }}</span>
     </crem-button>
 
     <crem-button
       id="add_ai_lease_modal__launch_btn"
       type="primary"
       (click)="launch($event)"
-      [disabled]="saveClicked"
-      [icon]="saveClicked ? 'faSpinner' : ''"
-      [iconPack]="saveClicked ? 'solid' : ''"
-      [iconAnimation]="saveClicked ? 'spin' : ''"
+      [disabled]="isSaving || isSavingNew || isLaunching"
+      [icon]="isLaunching ? 'faSpinner' : ''"
+      [iconPack]="isLaunching ? 'solid' : ''"
+      [iconAnimation]="isLaunching ? 'spin' : ''"
     >
-      <span>{{ saveClicked ? 'Saving' : 'Launch' }}</span>
+      <span>{{ isLaunching ? 'Saving' : 'Launch' }}</span>
     </crem-button>
   </div>
 </crem-modal>
